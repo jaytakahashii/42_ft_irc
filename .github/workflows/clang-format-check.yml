@@ -1,0 +1,21 @@
+name: Clang Format Check
+
+on: [pull_request]
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - "ex00/src"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: CPP formatting check with clang-format
+        uses: jaytakahashii/clang-format-check@v3
+        with:
+          path: "${{ matrix.path }}"
+          style: "Google"
