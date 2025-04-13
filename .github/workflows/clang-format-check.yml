@@ -9,7 +9,7 @@ jobs:
       matrix:
         path:
           - "ft_irc/src"
-          - "ft_ifc/include"
+          - "ft_irc/include"
 
     steps:
       - name: Checkout code
