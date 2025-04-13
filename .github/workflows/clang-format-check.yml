@@ -8,7 +8,8 @@ jobs:
     strategy:
       matrix:
         path:
-          - "ex00/src"
+          - "ft_irc/src"
+          - "ft_irc/include"
 
     steps:
       - name: Checkout code
