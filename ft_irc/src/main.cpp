@@ -1,6 +1,7 @@
-#include "pollServer.hpp"
+#include "PollServer.hpp"
 
 int main() {
-  run_poll_server(4242);
+  PollServer server(4242);  // 任意のポート
+  server.run();
   return 0;
 }
