@@ -113,6 +113,18 @@ void PollServer::handleClientMessage(size_t index) {
 
   std::cout << "📩 Received from fd " << _fds[index].fd << ": " << buffer;
 
+  // 👇 追加部分：他クライアントにメッセージを送信
+  for (size_t i = 1; i < _fds.size(); ++i) {
+    if (i != index) {  // 自分には送らない
+      int result = send(_fds[i].fd, buffer, bytes, 0);
+      if (result == -1) {
+        std::cerr << "❌ Failed to send to fd " << _fds[i].fd << ": "
+                  << strerror(errno) << std::endl;
+      }
+    }
+  }
+
+  // exit処理はそのまま
   if (std::strncmp(buffer, "exit", 4) == 0) {
     std::cout << "👋 Exit received from fd " << _fds[index].fd << std::endl;
     close(_fds[index].fd);
