@@ -1,6 +1,6 @@
-#include <iostream>
+#include "pollServer.hpp"
 
 int main() {
-  std::cout << "Hello, World!" << std::endl;
+  run_poll_server(4242);
   return 0;
 }

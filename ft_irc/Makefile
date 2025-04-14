@@ -7,7 +7,8 @@ OBJ_DIR			= .obj/
 
 INCLUDE_DIR	= include/
 INCLUDE			= -I $(INCLUDE_DIR)
-HEADERS			= color.hpp
+HEADERS			= color.hpp \
+							pollServer.hpp
 HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
 
 DEPS				= $(HEADER) $(MAKEFILE)
@@ -20,7 +21,8 @@ SANITIZE		= -fsanitize=address -g3
 RM					= rm -rf
 
 SRC_DIR			= src/
-SRC_FILES		=	SimpleServer.cpp
+SRC_FILES		=	main.cpp \
+							pollServer.cpp
 
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJS				= $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
