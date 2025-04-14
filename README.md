@@ -61,7 +61,7 @@ C++で実装する IRC サーバープロジェクトです。
 | 種別     | 規則           | 例                              |
 | -------- | -------------- | ------------------------------- |
 | クラス名 | UpperCamelCase | `UserSession`, `IrcServer`      |
-| 変数名   | snake_case     | `_client_fd`, `_buffer`, `idx`         |
+| 変数名   | snake_case     | `_client_fd`, `_buffer`, `idx`  |
 | 関数名   | lowerCamelCase | `sendMessage()`, `handleJoin()` |
 
 ### ✅ コーディングスタイル
@@ -79,7 +79,7 @@ C++で実装する IRC サーバープロジェクトです。
 - コードレビュー後にマージ（レビュー必須は今後導入予定）
 - **CI チェック（clang-format, build check）通過必須**
 
-### ✅ Commit メッセージ規則 (`git-cz` 推奨 *後述)
+### ✅ Commit メッセージ規則 (`git-cz` 推奨 \*後述)
 
 ```bash
 <type>(対象): <概要>
@@ -95,30 +95,32 @@ feat(ENV): add .env.example file
 
 1. packege.json をインストール
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 2. clang-format(vscode 拡張機能) のインストールと設定
 
-    - VSCode の拡張機能から `clang-format` をインストール
-    - VSCode の設定ファイルに次の内容を追加
-    ```json
-    "files.autoSave": "onFocusChange",
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "editor.defaultFormatter": "ms-vscode.cpptools",
-    "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-    ```
-    - ファイルが保存されるたびに自動でフォーマットされる
+   - VSCode の拡張機能から `clang-format` をインストール
+   - VSCode の設定ファイルに次の内容を追加
+
+   ```json
+   "files.autoSave": "onFocusChange",
+   "editor.formatOnSave": true,
+   "editor.formatOnType": true,
+   "editor.defaultFormatter": "ms-vscode.cpptools",
+   "files.insertFinalNewline": true,
+   "files.trimFinalNewlines": true,
+   ```
+
+   - ファイルが保存されるたびに自動でフォーマットされる
 
 3. `git-cz` (commit-lint) の使い方
 
-    - コミットしたいファイルを `git add` する
-    - 対象ファイルやディレクトリがステージングにある状態で `npx git-cz` を実行
-    - `alias cz='npx git-cz'` などとしておくと楽？
-  
+   - コミットしたいファイルを `git add` する
+   - 対象ファイルやディレクトリがステージングにある状態で `npx git-cz` を実行
+   - `alias cz='npx git-cz'` などとしておくと楽？
+
 ## ✅ CI について
 
 ### clang-format-check
@@ -132,4 +134,3 @@ feat(ENV): add .env.example file
 - ビルドが失敗した場合は、エラーを表示
 - `./ft_irc` を実行して、サーバーが起動することを確認
 - `valgrind --leak-check=full -error-exitcode=1 ./ft_irc` を実行して、メモリリークがないことを確認
-
