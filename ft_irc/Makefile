@@ -20,7 +20,7 @@ SANITIZE		= -fsanitize=address -g3
 RM					= rm -rf
 
 SRC_DIR			= src/
-SRC_FILES		=	main.cpp
+SRC_FILES		=	SimpleServer.cpp
 
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJS				= $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
