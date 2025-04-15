@@ -2,21 +2,18 @@
 
 #include <sstream>
 
-ParsedCommand Parser::parse(const std::string& line) {
-  ParsedCommand cmd;
-  std::istringstream iss(line);
-  std::string token;
+Parser::Parser() {
+}
 
-  if (line[0] == ':') {
-    iss >> token;
-    cmd.prefix = token.substr(1);
-  }
+Parser::~Parser() {
+}
 
-  if (iss >> token)
-    cmd.command = token;
-
-  while (iss >> token)
-    cmd.params.push_back(token);
-
+Command Parser::parse(const std::string& input) {
+  Command cmd;
+  std::istringstream iss(input);
+  iss >> cmd.name;
+  std::string arg;
+  while (iss >> arg)
+    cmd.args.push_back(arg);
   return cmd;
 }

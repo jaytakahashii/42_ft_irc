@@ -10,9 +10,9 @@ INCLUDE			= -I $(INCLUDE_DIR)
 HEADERS			= color.hpp \
 							Server.hpp \
 							Client.hpp \
-							CommandHandler.hpp \
-							Parser.hpp \
-							Channel.hpp
+							Command.hpp \
+							CommandDispatcher.hpp \
+							Parser.hpp
 HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
 
 DEPS				= $(HEADER) $(MAKEFILE)
@@ -28,9 +28,9 @@ SRC_DIR			= src/
 SRC_FILES		=	main.cpp \
 							Server.cpp \
 							Client.cpp \
-							CommandHandler.cpp \
-							Parser.cpp \
-							Channel.cpp
+							Command.cpp \
+							CommandDispatcher.cpp \
+							Parser.cpp
 
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJS				= $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))

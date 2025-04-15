@@ -1,134 +1,100 @@
 #include "Server.hpp"
 
-#include <cstring>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
-Server::Server(int port) : _port(port), _serverSocket(-1) {
+#include <cstring>
+#include <iostream>
+
+#include "Client.hpp"
+#include "CommandDispatcher.hpp"
+#include "Parser.hpp"
+
+Server::Server(int port)
+    : _port(port), _parser(new Parser()), _dispatcher(new CommandDispatcher()) {
+  setupServerSocket();
 }
 
 Server::~Server() {
-  if (_serverSocket != -1)
-    close(_serverSocket);
+  for (size_t i = 0; i < _pollfds.size(); ++i)
+    close(_pollfds[i].fd);
+  for (std::map<int, Client*>::iterator it = _clients.begin();
+       it != _clients.end(); ++it)
+    delete it->second;
+  delete _parser;
+  delete _dispatcher;
 }
 
-void Server::initSocket() {
-  _serverSocket = socket(AF_INET, SOCK_STREAM, 0);  // ソケット作成
-  if (_serverSocket == -1)
-    throw std::runtime_error("socket() failed");
-
-  setNonBlocking(_serverSocket);
-
-  int opt = 1;
-  setsockopt(_serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
+void Server::setupServerSocket() {
+  _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+  fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
   sockaddr_in addr;
+  memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(_port);
+  bind(_serverSocket, (sockaddr*)&addr, sizeof(addr));
+  listen(_serverSocket, SOMAXCONN);
 
-  if (bind(_serverSocket, (struct sockaddr*)&addr, sizeof(addr)) < 0)
-    throw std::runtime_error("bind() failed");
-
-  if (listen(_serverSocket, SOMAXCONN) < 0)
-    throw std::runtime_error("listen() failed");
-
-  struct pollfd serverPollFd = {_serverSocket, POLLIN, 0};
-  _pollFds.push_back(serverPollFd);
-
-  std::cout << "[Server] Listening on port " << _port << std::endl;
-}
-
-void Server::setNonBlocking(int fd) {
-  int flags = fcntl(fd, F_GETFL, 0);
-  if (flags == -1)
-    throw std::runtime_error("fcntl(F_GETFL) failed");
-  if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-    throw std::runtime_error("fcntl(F_SETFL) failed");
-}
-
-void Server::acceptNewClient() {
-  struct sockaddr_in clientAddr;
-  socklen_t clientLen = sizeof(clientAddr);
-
-  int clientFd =
-      accept(_serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
-  if (clientFd < 0) {
-    std::cerr << "accept() failed: " << strerror(errno) << std::endl;
-    return;
-  }
-
-  std::cout << "New client connected: FD = " << clientFd << std::endl;
-
-  // pollfdに追加
-  struct pollfd pfd;
-  pfd.fd = clientFd;
-  pfd.events = POLLIN;
-  _pollFds.push_back(pfd);
-
-  // Clientインスタンスの生成・登録
-  try {
-    _clients[clientFd] = new Client(clientFd);
-  } catch (const std::exception& e) {
-    std::cerr << "Client allocation failed: " << e.what() << std::endl;
-    close(clientFd);
-    return;
-  }
-}
-
-void Server::handleClientData(int clientFd) {
-  char buffer[1024];
-  ssize_t bytesReceived = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
-
-  if (bytesReceived <= 0) {
-    std::cout << "[Server] Client disconnected: FD = " << clientFd << std::endl;
-    for (size_t i = 1; i < _pollFds.size(); ++i) {
-      if (_pollFds[i].fd == clientFd) {
-        removeClient(i);
-        break;
-      }
-    }
-  } else {
-    buffer[bytesReceived] = '\0';
-    std::cout << "[Client " << clientFd << "] " << buffer << std::endl;
-    // 今後：ここでParser→Command処理へ渡す
-  }
-}
-
-void Server::removeClient(int index) {
-  int clientFd = _pollFds[index].fd;
-  std::cout << "Client disconnected: FD = " << clientFd << std::endl;
-
-  // ソケットクローズ
-  close(clientFd);
-
-  // pollfdリストから削除
-  _pollFds.erase(_pollFds.begin() + index);
-
-  // Clientオブジェクトの削除とマップからの除去
-  std::map<int, Client*>::iterator it = _clients.find(clientFd);
-  if (it != _clients.end()) {
-    delete it->second;
-    _clients.erase(it);
-  }
+  pollfd serverPollFd;
+  serverPollFd.fd = _serverSocket;
+  serverPollFd.events = POLLIN;
+  _pollfds.push_back(serverPollFd);
 }
 
 void Server::run() {
-  initSocket();
-
   while (true) {
-    int pollCount = poll(_pollFds.data(), _pollFds.size(), -1);
-    if (pollCount < 0) {
-      perror("poll");
-      break;
-    }
+    if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
+      continue;
 
-    for (size_t i = 0; i < _pollFds.size(); ++i) {
-      if (_pollFds[i].revents & POLLIN) {
-        if (_pollFds[i].fd == _serverSocket) {
-          acceptNewClient();
-        } else {
-          handleClientData(_pollFds[i].fd);
-        }
+    for (size_t i = 0; i < _pollfds.size(); ++i) {
+      if (_pollfds[i].revents & POLLIN) {
+        if (_pollfds[i].fd == _serverSocket)
+          handleNewConnection();
+        else
+          handleClientActivity(i);
       }
     }
   }
+}
+
+void Server::handleNewConnection() {
+  int clientFd = accept(_serverSocket, NULL, NULL);
+  fcntl(clientFd, F_SETFL, O_NONBLOCK);
+  _pollfds.push_back((pollfd){clientFd, POLLIN, 0});
+  _clients[clientFd] = new Client(clientFd);
+  std::cout << "New client connected: " << clientFd << std::endl;
+}
+
+void Server::handleClientActivity(size_t index) {
+  char buffer[512];
+  int clientFd = _pollfds[index].fd;
+  int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+  if (bytesRead <= 0) {
+    removeClient(index);
+    return;
+  }
+  buffer[bytesRead] = '\0';
+  Client* client = _clients[clientFd];
+  client->getReadBuffer() += buffer;
+
+  // 簡易的な改行終端検出
+  size_t pos;
+  while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
+    std::string line = client->getReadBuffer().substr(0, pos);
+    client->getReadBuffer().erase(0, pos + 1);
+    Command cmd = _parser->parse(line);
+    _dispatcher->dispatch(cmd, *client);
+  }
+}
+
+void Server::removeClient(size_t index) {
+  int clientFd = _pollfds[index].fd;
+  std::cout << "Client disconnected: " << clientFd << std::endl;
+  close(clientFd);
+  delete _clients[clientFd];
+  _clients.erase(clientFd);
+  _pollfds.erase(_pollfds.begin() + index);
 }

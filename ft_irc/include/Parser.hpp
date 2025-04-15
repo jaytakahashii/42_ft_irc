@@ -1,15 +1,10 @@
 #pragma once
-
-#include <string>
-#include <vector>
-
-struct ParsedCommand {
-  std::string prefix;
-  std::string command;
-  std::vector<std::string> params;
-};
+#include "Command.hpp"
 
 class Parser {
  public:
-  static ParsedCommand parse(const std::string& line);
+  Parser();
+  ~Parser();
+
+  Command parse(const std::string& input);
 };
