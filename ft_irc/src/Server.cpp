@@ -82,7 +82,12 @@ void Server::handleNewConnection() {
 
   // クライアントのソケットを非ブロッキングモードに設定
   fcntl(clientFd, F_SETFL, O_NONBLOCK);
-  _pollfds.push_back((pollfd){clientFd, POLLIN, 0});
+
+  struct pollfd clientPollFd;
+  clientPollFd.fd = clientFd;
+  clientPollFd.events = POLLIN;  // POLLIN : Readable
+  clientPollFd.revents = 0;
+  _pollfds.push_back(clientPollFd);  // pollfdに追加
 
   // クライアントのソケットを管理するためのClientオブジェクトを作成
   _clients[clientFd] = new Client(clientFd);
