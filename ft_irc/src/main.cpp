@@ -6,7 +6,8 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  int port = std::atoi(argv[1]);
+  int port = atoi(argv[1]);
+
   try {
     Server server(port);
     server.run();
