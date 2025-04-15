@@ -1,13 +1,16 @@
 #pragma once
 #include <poll.h>
+#include <stdlib.h>
 
+#include <iostream>
 #include <map>
-#include <string>
 #include <vector>
 
 class Client;
 class Parser;
 class CommandDispatcher;
+
+#define ERROR -1
 
 class Server {
  private:
@@ -27,5 +30,5 @@ class Server {
   Server(int port);
   ~Server();
 
-  void run();
+  void run();  // Main loop for the server
 };

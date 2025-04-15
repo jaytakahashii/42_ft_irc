@@ -11,6 +11,7 @@
 #include "Client.hpp"
 #include "CommandDispatcher.hpp"
 #include "Parser.hpp"
+#include "color.hpp"
 
 Server::Server(int port)
     : _port(port), _parser(new Parser()), _dispatcher(new CommandDispatcher()) {
@@ -27,20 +28,35 @@ Server::~Server() {
   delete _dispatcher;
 }
 
+// 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
 void Server::setupServerSocket() {
-  _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+  // AF_INET : IPv4 (IPv6 : AF_INET6)
+  // SOCK_STREAM : TCP
+  // 0 : Any protocol (usually TCP)
+  _serverSocket = socket(AF_INET, SOCK_STREAM, 0);  // Create socket
+
+  // Set the socket to non-blocking mode
+  // F_SETFL : Set file descriptor flags
+  // O_NONBLOCK : Non-blocking mode
   fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
+
   sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons(_port);
-  bind(_serverSocket, (sockaddr*)&addr, sizeof(addr));
-  listen(_serverSocket, SOMAXCONN);
+  addr.sin_family = AF_INET;          // IPv4
+  addr.sin_addr.s_addr = INADDR_ANY;  // Any address
+  addr.sin_port = htons(_port);       // Port number
+
+  // Bind the socket to the address and port
+  bind(_serverSocket, (sockaddr*)&addr, sizeof(addr));  // register socket
+
+  listen(_serverSocket, SOMAXCONN);  // Listen for incoming connections
+
+  std::cout << BOLDWHITE "🎵 Server listening on port " RESET << _port
+            << std::endl;
 
   pollfd serverPollFd;
   serverPollFd.fd = _serverSocket;
-  serverPollFd.events = POLLIN;
+  serverPollFd.events = POLLIN;  // POLLIN : Readable
   _pollfds.push_back(serverPollFd);
 }
 
@@ -61,24 +77,39 @@ void Server::run() {
 }
 
 void Server::handleNewConnection() {
+  // 新しいクライアントの接続を受け入れる
   int clientFd = accept(_serverSocket, NULL, NULL);
+
+  // クライアントのソケットを非ブロッキングモードに設定
   fcntl(clientFd, F_SETFL, O_NONBLOCK);
   _pollfds.push_back((pollfd){clientFd, POLLIN, 0});
+
+  // クライアントのソケットを管理するためのClientオブジェクトを作成
   _clients[clientFd] = new Client(clientFd);
-  std::cout << "New client connected: " << clientFd << std::endl;
+  std::cout << "👶 New client connected: " << clientFd << std::endl;
 }
 
+// クライアントからのデータを受信し、処理する
+// index : pollfdsのインデックス (クライアントのソケット)
 void Server::handleClientActivity(size_t index) {
   char buffer[512];
+
+  // clientFd : pollfdsのfd (クライアントのソケット)
   int clientFd = _pollfds[index].fd;
+
+  // recv : ソケットからデータを受信
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    removeClient(index);
+    removeClient(index);  // クライアントが切断された場合
     return;
   }
+
+  // 受信したデータを文字列として扱う
   buffer[bytesRead] = '\0';
+
+  // クライアントのソケットに対応するClientオブジェクトを取得
   Client* client = _clients[clientFd];
-  client->getReadBuffer() += buffer;
+  client->getReadBuffer() += buffer;  // char* -> std::string
 
   // 簡易的な改行終端検出
   size_t pos;
@@ -90,11 +121,12 @@ void Server::handleClientActivity(size_t index) {
   }
 }
 
+// クライアントを削除する (leaks防止)
 void Server::removeClient(size_t index) {
   int clientFd = _pollfds[index].fd;
   std::cout << "Client disconnected: " << clientFd << std::endl;
-  close(clientFd);
-  delete _clients[clientFd];
-  _clients.erase(clientFd);
-  _pollfds.erase(_pollfds.begin() + index);
+  close(clientFd);                           // Close the socket
+  delete _clients[clientFd];                 // Delete the Client object
+  _clients.erase(clientFd);                  // Remove from map
+  _pollfds.erase(_pollfds.begin() + index);  // Remove from pollfds
 }

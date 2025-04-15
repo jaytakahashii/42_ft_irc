@@ -18,7 +18,7 @@ HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
 DEPS				= $(HEADER) $(MAKEFILE)
 
 CXX					= c++
-# CXXFLAGS		= -Wall -Wextra -Werror -std=c++98
+CXXFLAGS		= -Wall -Wextra -Werror -std=c++98
 PEDANT			= -pedantic
 SANITIZE		= -fsanitize=address -g3
 
