@@ -1,5 +1,7 @@
 #include "Server.hpp"
 
+#include <cstring>
+
 Server::Server(int port) : _port(port), _serverSocket(-1) {
 }
 
@@ -44,16 +46,32 @@ void Server::setNonBlocking(int fd) {
 }
 
 void Server::acceptNewClient() {
-  int clientFd = accept(_serverSocket, NULL, NULL);
-  if (clientFd < 0)
+  struct sockaddr_in clientAddr;
+  socklen_t clientLen = sizeof(clientAddr);
+
+  int clientFd =
+      accept(_serverSocket, (struct sockaddr*)&clientAddr, &clientLen);
+  if (clientFd < 0) {
+    std::cerr << "accept() failed: " << strerror(errno) << std::endl;
     return;
+  }
 
-  setNonBlocking(clientFd);
+  std::cout << "New client connected: FD = " << clientFd << std::endl;
 
-  struct pollfd clientPollFd = {clientFd, POLLIN, 0};
-  _pollFds.push_back(clientPollFd);
+  // pollfdに追加
+  struct pollfd pfd;
+  pfd.fd = clientFd;
+  pfd.events = POLLIN;
+  _pollFds.push_back(pfd);
 
-  std::cout << "[Server] New client connected: FD = " << clientFd << std::endl;
+  // Clientインスタンスの生成・登録
+  try {
+    _clients[clientFd] = new Client(clientFd);
+  } catch (const std::exception& e) {
+    std::cerr << "Client allocation failed: " << e.what() << std::endl;
+    close(clientFd);
+    return;
+  }
 }
 
 void Server::handleClientData(int clientFd) {
@@ -76,8 +94,21 @@ void Server::handleClientData(int clientFd) {
 }
 
 void Server::removeClient(int index) {
-  close(_pollFds[index].fd);
+  int clientFd = _pollFds[index].fd;
+  std::cout << "Client disconnected: FD = " << clientFd << std::endl;
+
+  // ソケットクローズ
+  close(clientFd);
+
+  // pollfdリストから削除
   _pollFds.erase(_pollFds.begin() + index);
+
+  // Clientオブジェクトの削除とマップからの除去
+  std::map<int, Client*>::iterator it = _clients.find(clientFd);
+  if (it != _clients.end()) {
+    delete it->second;
+    _clients.erase(it);
+  }
 }
 
 void Server::run() {

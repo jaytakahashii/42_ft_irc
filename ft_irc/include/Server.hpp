@@ -11,11 +11,14 @@
 #include <string>
 #include <vector>
 
+#include "Client.hpp"
+
 class Server {
  private:
   int _port;
   int _serverSocket;
   std::vector<struct pollfd> _pollFds;
+  std::map<int, Client*> _clients;
 
   void initSocket();                    // ソケット初期化
   void acceptNewClient();               // 新規接続処理

@@ -4,17 +4,21 @@
 
 class Client {
  public:
-  Client();
   Client(int fd);
   ~Client();
 
   int getFd() const;
-  void setNickname(const std::string& nickname);
   const std::string& getNickname() const;
+  const std::string& getUsername() const;
+  bool isRegistered() const;
 
-  // 状態情報（登録済みか、ユーザー名など）も管理予定
+  void setNickname(const std::string& nickname);
+  void setUsername(const std::string& username);
+  void setRegistered(bool status);
 
  private:
   int _fd;
   std::string _nickname;
+  std::string _username;
+  bool _isRegistered;
 };
