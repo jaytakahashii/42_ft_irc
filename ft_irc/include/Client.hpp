@@ -14,7 +14,7 @@ class Client {
   ~Client();
 
   int getFd() const;
-  std::string& getReadBuffer();
+  std::string& getReadBuffer();  // Buffer for incoming messages
   void sendMessage(const std::string& message) const;
   bool isFullyRegistered() const;
   const std::string& getNickname() const;

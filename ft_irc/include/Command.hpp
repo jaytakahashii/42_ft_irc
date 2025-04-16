@@ -3,6 +3,6 @@
 #include <vector>
 
 struct Command {
-  std::string name;
-  std::vector<std::string> args;
+  std::string name;               // a.g. "NICK", "USER", "JOIN", etc.
+  std::vector<std::string> args;  // arguments for the command
 };
