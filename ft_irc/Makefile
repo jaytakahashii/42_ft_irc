@@ -10,7 +10,7 @@ INCLUDE			= -I $(INCLUDE_DIR)
 HEADERS			= color.hpp \
 							Server.hpp \
 							Client.hpp \
-							Command.hpp \
+							ICommand.hpp \
 							CommandDispatcher.hpp \
 							Parser.hpp
 HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
@@ -28,7 +28,6 @@ SRC_DIR			= src/
 SRC_FILES		=	main.cpp \
 							Server.cpp \
 							Client.cpp \
-							Command.cpp \
 							CommandDispatcher.cpp \
 							Parser.cpp
 

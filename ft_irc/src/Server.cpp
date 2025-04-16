@@ -113,15 +113,15 @@ void Server::handleClientActivity(size_t index) {
   buffer[bytesRead] = '\0';
 
   // クライアントのソケットに対応するClientオブジェクトを取得
-  Client* client = _clients[clientFd];
-  client->getReadBuffer() += buffer;  // char* -> std::string
+  Client* client = _clients[clientFd];  // 一旦ポインタを取得 (別名)
+  client->getReadBuffer() += buffer;    // char* -> std::string
 
   // 簡易的な改行終端検出
   size_t pos;
   while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
-    Command cmd = _parser->parse(line);
+    ICommand cmd = _parser->parse(line);
     _dispatcher->dispatch(cmd, *client);
   }
 }

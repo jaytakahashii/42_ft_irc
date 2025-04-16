@@ -6,9 +6,10 @@
 #include <map>
 #include <vector>
 
-class Client;
-class Parser;
-class CommandDispatcher;
+#include "Client.hpp"
+#include "CommandDispatcher.hpp"
+#include "ICommand.hpp"
+#include "Parser.hpp"
 
 #define ERROR -1
 

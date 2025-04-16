@@ -10,7 +10,7 @@ CommandDispatcher::CommandDispatcher() {
 CommandDispatcher::~CommandDispatcher() {
 }
 
-void CommandDispatcher::dispatch(const Command& cmd, Client& client) {
+void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
 
@@ -28,11 +28,15 @@ void CommandDispatcher::dispatch(const Command& cmd, Client& client) {
     // handlePrivmsg(cmd, client);
   } else if (cmd.name == "PONG") {
     // handlePong(cmd, client);
+  } else {
+    std::string msg = ":server 421 " + client.getNickname() + " " + cmd.name +
+                      " :Unknown command\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
   }
   // 他のコマンドもここに追加予定
 }
 
-void CommandDispatcher::handleNick(const Command& cmd, Client& client) {
+void CommandDispatcher::handleNick(const ICommand& cmd, Client& client) {
   if (cmd.args.empty()) {
     std::string msg = ":server 431 * :No nickname given\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
@@ -47,7 +51,7 @@ void CommandDispatcher::handleNick(const Command& cmd, Client& client) {
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
-void CommandDispatcher::handleUser(const Command& cmd, Client& client) {
+void CommandDispatcher::handleUser(const ICommand& cmd, Client& client) {
   if (cmd.args.size() < 4) {
     client.sendMessage(":server 461 " + client.getNickname() +
                        " USER :Not enough parameters\r\n");
@@ -65,7 +69,7 @@ void CommandDispatcher::handleUser(const Command& cmd, Client& client) {
   }
 }
 
-void CommandDispatcher::handlePing(const Command& cmd, Client& client) {
+void CommandDispatcher::handlePing(const ICommand& cmd, Client& client) {
   if (cmd.args.empty()) {
     client.sendMessage(":server PONG :No arguments provided\r\n");
     return;
