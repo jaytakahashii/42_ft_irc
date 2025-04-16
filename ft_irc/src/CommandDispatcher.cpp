@@ -86,11 +86,22 @@ void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
   }
 
   std::string channelName = cmd.args[0];
+  // チャンネル名の先頭が '#' でない場合はエラー
+  if (channelName.empty() || channelName[0] != '#') {
+    client.sendMessage(":server 403 " + client.getNickname() + " " +
+                       channelName + " :No such channel\r\n");
+    return;
+  }
+
+  // チャンネルが存在しない場合は新規作成
   if (_channels.find(channelName) == _channels.end()) {
     _channels[channelName] = new Channel(channelName);
   }
 
+  // チャンネルに参加する
   Channel* channel = _channels[channelName];  // チャンネルを取得
+
+  // すでに参加している場合はエラー
   if (!channel->hasClient(&client)) {
     channel->addClient(&client);
 
@@ -113,5 +124,10 @@ void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
                        channelName + " :" + names + "\r\n");
     client.sendMessage(":server 366 " + client.getNickname() + " " +
                        channelName + " :End of /NAMES list\r\n");
+  }
+  // すでに参加している場合は何もしない
+  else {
+    client.sendMessage(":server 443 " + client.getNickname() + " " +
+                       channelName + " :You are already on that channel\r\n");
   }
 }
