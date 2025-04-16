@@ -6,12 +6,12 @@
 #include <map>
 #include <vector>
 
-#include "Client.hpp"
-#include "CommandDispatcher.hpp"
-#include "ICommand.hpp"
-#include "Parser.hpp"
-
 #define ERROR -1
+
+// forward declarations
+class Client;
+class Parser;
+class CommandDispatcher;
 
 class Server {
  private:

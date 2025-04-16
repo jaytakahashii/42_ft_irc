@@ -21,7 +21,7 @@ void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
   } else if (cmd.name == "PING") {
     handlePing(cmd, client);
   } else if (cmd.name == "JOIN") {
-    // handleJoin(cmd, client);
+    handleJoin(cmd, client);
   } else if (cmd.name == "PART") {
     // handlePart(cmd, client);
   } else if (cmd.name == "PRIVMSG") {
@@ -77,4 +77,41 @@ void CommandDispatcher::handlePing(const ICommand& cmd, Client& client) {
 
   std::string pongMsg = ":server PONG " + cmd.args[0] + "\r\n";
   client.sendMessage(pongMsg);
+}
+
+void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
+  if (cmd.args.empty()) {
+    client.sendMessage("461 JOIN :Not enough parameters\r\n");
+    return;
+  }
+
+  std::string channelName = cmd.args[0];
+  if (_channels.find(channelName) == _channels.end()) {
+    _channels[channelName] = new Channel(channelName);
+  }
+
+  Channel* channel = _channels[channelName];  // チャンネルを取得
+  if (!channel->hasClient(&client)) {
+    channel->addClient(&client);
+
+    // JOIN通知をそのチャンネルの全員に送信
+    std::string joinMsg = ":" + client.getNickname() + "!" +
+                          client.getUsername() + "@localhost JOIN " +
+                          channelName + "\r\n";
+    for (std::set<Client*>::iterator it = channel->getClients().begin();
+         it != channel->getClients().end(); ++it) {
+      (*it)->sendMessage(joinMsg);
+    }
+
+    // 参加者一覧（353）、終了（366）
+    std::string names;
+    for (std::set<Client*>::iterator it = channel->getClients().begin();
+         it != channel->getClients().end(); ++it) {
+      names += (*it)->getNickname() + " ";
+    }
+    client.sendMessage(":server 353 " + client.getNickname() + " = " +
+                       channelName + " :" + names + "\r\n");
+    client.sendMessage(":server 366 " + client.getNickname() + " " +
+                       channelName + " :End of /NAMES list\r\n");
+  }
 }

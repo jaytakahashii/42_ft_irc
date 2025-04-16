@@ -12,6 +12,7 @@ HEADERS			= color.hpp \
 							Client.hpp \
 							ICommand.hpp \
 							CommandDispatcher.hpp \
+							Channel.hpp \
 							Parser.hpp
 HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
 
@@ -29,6 +30,7 @@ SRC_FILES		=	main.cpp \
 							Server.cpp \
 							Client.cpp \
 							CommandDispatcher.cpp \
+							Channel.cpp \
 							Parser.cpp
 
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
