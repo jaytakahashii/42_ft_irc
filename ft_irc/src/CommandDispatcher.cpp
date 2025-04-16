@@ -19,7 +19,7 @@ void CommandDispatcher::dispatch(const Command& cmd, Client& client) {
   } else if (cmd.name == "USER") {
     handleUser(cmd, client);
   } else if (cmd.name == "PING") {
-    // handlePing(cmd, client);
+    handlePing(cmd, client);
   } else if (cmd.name == "JOIN") {
     // handleJoin(cmd, client);
   } else if (cmd.name == "PART") {
@@ -63,4 +63,14 @@ void CommandDispatcher::handleUser(const Command& cmd, Client& client) {
         client.getNickname() + "!" + client.getUsername() + "@localhost\r\n";
     client.sendMessage(welcomeMsg);
   }
+}
+
+void CommandDispatcher::handlePing(const Command& cmd, Client& client) {
+  if (cmd.args.empty()) {
+    client.sendMessage(":server PONG :No arguments provided\r\n");
+    return;
+  }
+
+  std::string pongMsg = ":server PONG " + cmd.args[0] + "\r\n";
+  client.sendMessage(pongMsg);
 }
