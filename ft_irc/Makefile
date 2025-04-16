@@ -1,6 +1,6 @@
 MAKEFILE 		= Makefile
 
-NAME				= ft_irc
+NAME				= ircserv
 
 SRC_DIR			= src/
 OBJ_DIR			= .obj/
