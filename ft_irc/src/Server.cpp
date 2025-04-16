@@ -122,7 +122,7 @@ void Server::handleClientActivity(size_t index) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
     ICommand cmd = _parser->parse(line);
-    _dispatcher->dispatch(cmd, *client);
+    _dispatcher->dispatch(cmd, *client, _clients);
   }
 }
 

@@ -10,7 +10,8 @@ CommandDispatcher::CommandDispatcher() {
 CommandDispatcher::~CommandDispatcher() {
 }
 
-void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
+void CommandDispatcher::dispatch(const ICommand& cmd, Client& client,
+                                 std::map<int, Client*>& clients) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
 
@@ -25,7 +26,7 @@ void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
   } else if (cmd.name == "PART") {
     // handlePart(cmd, client);
   } else if (cmd.name == "PRIVMSG") {
-    // handlePrivmsg(cmd, client);
+    handlePrivmsg(cmd, client, clients);
   } else if (cmd.name == "PONG") {
     // handlePong(cmd, client);
   } else {
@@ -129,5 +130,55 @@ void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
   else {
     client.sendMessage(":server 443 " + client.getNickname() + " " +
                        channelName + " :You are already on that channel\r\n");
+  }
+}
+
+void CommandDispatcher::handlePrivmsg(const ICommand& cmd, Client& client,
+                                      std::map<int, Client*>& clients) {
+  if (cmd.args.size() < 2) {
+    client.sendMessage(":server 411 " + client.getNickname() +
+                       " :No recipient given\r\n");
+    return;
+  }
+
+  std::string target = cmd.args[0];
+  std::string message = cmd.args[1];
+
+  // チャンネルにメッセージを送信
+  if (target[0] == '#') {
+    Channel* channel = _channels[target];
+    if (channel) {
+      std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
+                            " :" + message + "\r\n";
+      for (std::set<Client*>::iterator it = channel->getClients().begin();
+           it != channel->getClients().end(); ++it) {
+        (*it)->sendMessage(privmsg);
+      }
+    } else {
+      client.sendMessage(":server 403 " + client.getNickname() + " " + target +
+                         " :No such channel\r\n");
+    }
+  }
+  // ユーザーにメッセージを送信
+  else {
+    Client* recipient = NULL;
+    // クライアントのリストから受信者を検索
+    for (std::map<int, Client*>::iterator it = clients.begin();
+         it != clients.end(); ++it) {
+      if ((*it).second->getNickname() == target) {
+        recipient = (*it).second;
+        break;
+      }
+    }
+
+    // 受信者が見つかった場合
+    if (recipient) {
+      std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
+                            " :" + message + "\r\n";
+      recipient->sendMessage(privmsg);
+    } else {  // 受信者が見つからない場合
+      client.sendMessage(":server 401 " + client.getNickname() + " " + target +
+                         " :No such nick/channel\r\n");
+    }
   }
 }
