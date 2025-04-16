@@ -8,4 +8,5 @@ class CommandDispatcher {
   ~CommandDispatcher();
 
   void dispatch(const Command& cmd, Client& client);
+  void handleNick(const Command& cmd, Client& client);
 };
