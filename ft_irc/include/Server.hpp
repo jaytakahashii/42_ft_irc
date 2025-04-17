@@ -14,14 +14,19 @@ class Parser;
 class CommandDispatcher;
 class Channel;
 
+struct ServerState {
+  std::string host;
+  int port;
+  std::string password;
+  std::map<std::string, Channel*> channels;
+  std::map<int, Client*> clients;
+};
+
 class Server {
  private:
-  int _port;
-  std::string _password;
+  ServerState _state;
   int _serverSocket;
   std::vector<struct pollfd> _pollfds;
-  std::map<int, Client*> _clients;
-  std::map<std::string, Channel*> _channels;
   Parser* _parser;
   CommandDispatcher* _dispatcher;
 

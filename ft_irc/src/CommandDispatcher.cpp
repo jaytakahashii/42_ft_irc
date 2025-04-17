@@ -4,10 +4,13 @@
 
 #include <iostream>
 
-CommandDispatcher::CommandDispatcher(std::string& password,
-                                     std::map<std::string, Channel*>& channels,
-                                     std::map<int, Client*>& clients)
-    : _password(password), _channels(channels), _clients(clients) {
+CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
+  _commandHandlers["PASS"] = &CommandDispatcher::handlePass;
+  _commandHandlers["NICK"] = &CommandDispatcher::handleNick;
+  _commandHandlers["USER"] = &CommandDispatcher::handleUser;
+  _commandHandlers["PING"] = &CommandDispatcher::handlePing;
+  _commandHandlers["JOIN"] = &CommandDispatcher::handleJoin;
+  _commandHandlers["PRIVMSG"] = &CommandDispatcher::handlePrivmsg;
 }
 
 CommandDispatcher::~CommandDispatcher() {
@@ -64,7 +67,7 @@ void CommandDispatcher::handlePass(const SCommand& cmd, Client& client) {
   }
 
   std::string password = cmd.args[0];
-  if (password == _password) {
+  if (password == _state.password) {
     client.setAuthenticated(true);
   } else {
     std::string msg = ":server 464 Password incorrect\r\n";
@@ -130,12 +133,12 @@ void CommandDispatcher::handleJoin(const SCommand& cmd, Client& client) {
   }
 
   // チャンネルが存在しない場合は新規作成
-  if (_channels.find(channelName) == _channels.end()) {
-    _channels[channelName] = new Channel(channelName);
+  if (_state.channels.find(channelName) == _state.channels.end()) {
+    _state.channels[channelName] = new Channel(channelName);
   }
 
   // チャンネルに参加する
-  Channel* channel = _channels[channelName];  // チャンネルを取得
+  Channel* channel = _state.channels[channelName];  // チャンネルを取得
 
   // すでに参加している場合はエラー
   if (!channel->hasClient(&client)) {
@@ -180,7 +183,7 @@ void CommandDispatcher::handlePrivmsg(const SCommand& cmd, Client& client) {
 
   // チャンネルにメッセージを送信
   if (target[0] == '#') {
-    Channel* channel = _channels[target];
+    Channel* channel = _state.channels[target];
     if (channel) {
       std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
                             " :" + message + "\r\n";
@@ -197,8 +200,8 @@ void CommandDispatcher::handlePrivmsg(const SCommand& cmd, Client& client) {
   else {
     Client* recipient = NULL;
     // クライアントのリストから受信者を検索
-    for (std::map<int, Client*>::iterator it = _clients.begin();
-         it != _clients.end(); ++it) {
+    for (std::map<int, Client*>::iterator it = _state.clients.begin();
+         it != _state.clients.end(); ++it) {
       if ((*it).second->getNickname() == target) {
         recipient = (*it).second;
         break;

@@ -13,17 +13,21 @@
 #include "Parser.hpp"
 #include "color.hpp"
 
-Server::Server(int port, std::string password)
-    : _port(port), _password(password), _parser(new Parser()) {
+Server::Server(int port, std::string password) : _parser(new Parser()) {
+  _state.host = "localhost";
+  _state.port = port;
+  _state.password = password;
+  _state.channels = std::map<std::string, Channel*>();
+  _state.clients = std::map<int, Client*>();
   setupServerSocket();
-  _dispatcher = new CommandDispatcher(_password, _channels, _clients);
+  _dispatcher = new CommandDispatcher(_state);
 }
 
 Server::~Server() {
   for (size_t i = 0; i < _pollfds.size(); ++i)
     close(_pollfds[i].fd);
-  for (std::map<int, Client*>::iterator it = _clients.begin();
-       it != _clients.end(); ++it)
+  for (std::map<int, Client*>::iterator it = _state.clients.begin();
+       it != _state.clients.end(); ++it)
     delete it->second;
   delete _parser;
   delete _dispatcher;
@@ -43,16 +47,16 @@ void Server::setupServerSocket() {
 
   sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;          // IPv4
-  addr.sin_addr.s_addr = INADDR_ANY;  // Any address
-  addr.sin_port = htons(_port);       // Port number
+  addr.sin_family = AF_INET;           // IPv4
+  addr.sin_addr.s_addr = INADDR_ANY;   // Any address
+  addr.sin_port = htons(_state.port);  // Port number
 
   // Bind the socket to the address and port
   bind(_serverSocket, (sockaddr*)&addr, sizeof(addr));  // register socket
 
   listen(_serverSocket, SOMAXCONN);  // Listen for incoming connections
 
-  std::cout << BOLDWHITE "🎵 Server listening on port " RESET << _port
+  std::cout << BOLDWHITE "🎵 Server listening on port " RESET << _state.port
             << std::endl;
 
   pollfd serverPollFd;
@@ -91,7 +95,7 @@ void Server::handleNewConnection() {
   _pollfds.push_back(clientPollFd);  // pollfdに追加
 
   // クライアントのソケットを管理するためのClientオブジェクトを作成
-  _clients[clientFd] = new Client(clientFd);
+  _state.clients[clientFd] = new Client(clientFd);
   std::cout << "👶 New client connected: " << clientFd << std::endl;
 }
 
@@ -114,8 +118,8 @@ void Server::handleClientActivity(size_t index) {
   buffer[bytesRead] = '\0';
 
   // クライアントのソケットに対応するClientオブジェクトを取得
-  Client* client = _clients[clientFd];  // 一旦ポインタを取得 (別名)
-  client->getReadBuffer() += buffer;    // char* -> std::string
+  Client* client = _state.clients[clientFd];  // 一旦ポインタを取得 (別名)
+  client->getReadBuffer() += buffer;          // char* -> std::string
 
   // 簡易的な改行終端検出
   size_t pos;
@@ -132,7 +136,7 @@ void Server::removeClient(size_t index) {
   int clientFd = _pollfds[index].fd;
   std::cout << "Client disconnected: " << clientFd << std::endl;
   close(clientFd);                           // Close the socket
-  delete _clients[clientFd];                 // Delete the Client object
-  _clients.erase(clientFd);                  // Remove from map
+  delete _state.clients[clientFd];           // Delete the Client object
+  _state.clients.erase(clientFd);            // Remove from map
   _pollfds.erase(_pollfds.begin() + index);  // Remove from pollfds
 }

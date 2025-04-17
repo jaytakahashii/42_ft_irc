@@ -6,14 +6,12 @@
 
 class CommandDispatcher {
  private:
-  std::string& _password;
-  std::map<std::string, Channel*>& _channels;
-  std::map<int, Client*>& _clients;
+  ServerState& _state;
+  std::map<std::string, void (CommandDispatcher::*)(const SCommand&, Client&)>
+      _commandHandlers;
 
  public:
-  CommandDispatcher(std::string& password,
-                    std::map<std::string, Channel*>& channels,
-                    std::map<int, Client*>& clients);
+  CommandDispatcher(ServerState& state);
   ~CommandDispatcher();
 
   void dispatch(const SCommand& cmd, Client& client);
