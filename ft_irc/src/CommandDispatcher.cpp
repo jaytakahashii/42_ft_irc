@@ -9,6 +9,7 @@
 #include "CommandDispatcher.hpp"
 
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <iostream>
 
@@ -20,6 +21,7 @@ CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
   _commandHandlers["JOIN"] = &CommandDispatcher::handleJoin;
   _commandHandlers["PART"] = &CommandDispatcher::handlePart;
   _commandHandlers["PRIVMSG"] = &CommandDispatcher::handlePrivmsg;
+  _commandHandlers["QUIT"] = &CommandDispatcher::handleQuit;
   // Add more command handlers as needed
 }
 
@@ -269,6 +271,29 @@ void CommandDispatcher::handlePrivmsg(const SCommand& cmd, Client& client) {
     } else {  // 受信者が見つからない場合
       client.sendMessage(":server 401 " + client.getNickname() + " " + target +
                          " :No such nick/channel\r\n");
+    }
+  }
+}
+
+void CommandDispatcher::handleQuit(const SCommand& cmd, Client& client) {
+  std::string quitMsg = ":" + client.getNickname() + " " + cmd.name + "\r\n";
+  for (std::map<int, Client*>::iterator it = _state.clients.begin();
+       it != _state.clients.end(); ++it) {
+    (*it).second->sendMessage(quitMsg);
+  }
+  close(client.getFd());
+  _state.clients.erase(client.getFd());
+
+  // チャンネルからクライアントを削除
+  for (std::map<std::string, Channel*>::iterator it = _state.channels.begin();
+       it != _state.channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (channel->hasClient(&client)) {
+      channel->removeClient(&client);
+      if (channel->getClientCount() == 0) {
+        delete channel;
+        _state.channels.erase(it->first);
+      }
     }
   }
 }
