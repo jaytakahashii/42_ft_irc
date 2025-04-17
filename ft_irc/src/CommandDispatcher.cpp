@@ -11,6 +11,7 @@ CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
   _commandHandlers["PING"] = &CommandDispatcher::handlePing;
   _commandHandlers["JOIN"] = &CommandDispatcher::handleJoin;
   _commandHandlers["PRIVMSG"] = &CommandDispatcher::handlePrivmsg;
+  // Add more command handlers as needed
 }
 
 CommandDispatcher::~CommandDispatcher() {
@@ -27,28 +28,18 @@ void CommandDispatcher::dispatch(const SCommand& cmd, Client& client) {
     return;
   }
 
-  if (cmd.name == "PASS") {
-    handlePass(cmd, client);
-  } else if (cmd.name == "NICK") {
-    handleNick(cmd, client);
-  } else if (cmd.name == "USER") {
-    handleUser(cmd, client);
-  } else if (cmd.name == "PING") {
-    handlePing(cmd, client);
-  } else if (cmd.name == "JOIN") {
-    handleJoin(cmd, client);
-  } else if (cmd.name == "PART") {
-    // handlePart(cmd, client);
-  } else if (cmd.name == "PRIVMSG") {
-    handlePrivmsg(cmd, client);
-  } else if (cmd.name == "PONG") {
-    // handlePong(cmd, client);
-  } else {
-    std::string msg = ":server 421 " + client.getNickname() + " " + cmd.name +
-                      " :Unknown command\r\n";
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+  for (std::map<std::string, void (CommandDispatcher::*)(
+                                 const SCommand&, Client&)>::iterator it =
+           _commandHandlers.begin();
+       it != _commandHandlers.end(); ++it) {
+    if (cmd.name == it->first) {
+      (this->*(it->second))(cmd, client);
+      return;
+    }
   }
-  // 他のコマンドもここに追加予定
+  std::string msg = ":server 421 " + client.getNickname() + " " + cmd.name +
+                    " :Unknown command\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
 void CommandDispatcher::handlePass(const SCommand& cmd, Client& client) {
