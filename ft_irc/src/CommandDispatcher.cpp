@@ -1,3 +1,11 @@
+/**
+ * @file CommandDispatcher.cpp
+ * @brief CommandDispatcher class implementation
+ * このクラスは、IRCサーバーのコマンドを処理するためのクラスです。
+ * コマンドのディスパッチ、各コマンドのハンドリングを行います。
+ * コマンドは、クライアントから送信された文字列を解析して生成されます。
+ */
+
 #include "CommandDispatcher.hpp"
 
 #include <sys/socket.h>
@@ -17,6 +25,13 @@ CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
 CommandDispatcher::~CommandDispatcher() {
 }
 
+/**
+ * @brief コマンドをディスパッチする
+ * @param cmd コマンド (SCommand: cmd.name -> コマンド名, cmd.args -> 引数)
+ * @param client クライアント
+ * @details
+ * コマンド名に応じて、適切なハンドラを呼び出します。
+ */
 void CommandDispatcher::dispatch(const SCommand& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
