@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-Client::Client(int fd) : _fd(fd) {
+Client::Client(int fd) : _fd(fd), _authenticated(false) {
 }
 
 Client::~Client() {
@@ -10,6 +10,14 @@ Client::~Client() {
 
 int Client::getFd() const {
   return _fd;
+}
+
+bool Client::isAuthenticated() const {
+  return _authenticated;
+}
+
+void Client::setAuthenticated(bool authenticated) {
+  _authenticated = authenticated;
 }
 
 std::string& Client::getReadBuffer() {

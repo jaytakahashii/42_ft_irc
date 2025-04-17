@@ -4,6 +4,7 @@
 class Client {
  private:
   int _fd;
+  bool _authenticated;
   std::string _readBuffer;
   std::string _nickname;
   std::string _username;
@@ -14,6 +15,8 @@ class Client {
   ~Client();
 
   int getFd() const;
+  bool isAuthenticated() const;
+  void setAuthenticated(bool authenticated);
   std::string& getReadBuffer();  // Buffer for incoming messages
   void sendMessage(const std::string& message) const;
   bool isFullyRegistered() const;

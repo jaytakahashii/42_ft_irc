@@ -4,9 +4,10 @@
 
 #include <iostream>
 
-CommandDispatcher::CommandDispatcher(std::map<std::string, Channel*>& channels,
+CommandDispatcher::CommandDispatcher(std::string& password,
+                                     std::map<std::string, Channel*>& channels,
                                      std::map<int, Client*>& clients)
-    : _channels(channels), _clients(clients) {
+    : _password(password), _channels(channels), _clients(clients) {
 }
 
 CommandDispatcher::~CommandDispatcher() {
@@ -16,7 +17,16 @@ void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
 
-  if (cmd.name == "NICK") {
+  if (!client.isAuthenticated() && cmd.name != "PASS") {
+    std::string msg =
+        ":server 451 " + client.getNickname() + " :You have not registered\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  }
+
+  if (cmd.name == "PASS") {
+    handlePass(cmd, client);
+  } else if (cmd.name == "NICK") {
     handleNick(cmd, client);
   } else if (cmd.name == "USER") {
     handleUser(cmd, client);
@@ -36,6 +46,30 @@ void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
     send(client.getFd(), msg.c_str(), msg.size(), 0);
   }
   // 他のコマンドもここに追加予定
+}
+
+void CommandDispatcher::handlePass(const ICommand& cmd, Client& client) {
+  if (cmd.args.empty()) {
+    std::string msg = ":server 461 " + client.getNickname() +
+                      " PASS :Not enough parameters\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  }
+
+  if (client.isAuthenticated()) {
+    std::string msg = ":server 462 " + client.getNickname() +
+                      " PASS :You may not reregister\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    return;
+  }
+
+  std::string password = cmd.args[0];
+  if (password == _password) {
+    client.setAuthenticated(true);
+  } else {
+    std::string msg = ":server 464 Password incorrect\r\n";
+    send(client.getFd(), msg.c_str(), msg.size(), 0);
+  }
 }
 
 void CommandDispatcher::handleNick(const ICommand& cmd, Client& client) {

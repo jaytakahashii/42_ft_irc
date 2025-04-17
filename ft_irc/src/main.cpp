@@ -3,12 +3,13 @@
 #include "Server.hpp"
 
 int main(int argc, char** argv) {
-  if (argc != 2) {
-    std::cerr << "Usage: ./ft_irc <port>" << std::endl;
+  if (argc != 3) {
+    std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
     return ERROR;
   }
   int port = atoi(argv[1]);
-  Server server(port);
+  std::string password = argv[2];
+  Server server(port, password);
   server.run();
   return 0;
 }

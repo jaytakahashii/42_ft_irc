@@ -17,6 +17,7 @@ class Channel;
 class Server {
  private:
   int _port;
+  std::string _password;
   int _serverSocket;
   std::vector<struct pollfd> _pollfds;
   std::map<int, Client*> _clients;
@@ -30,7 +31,7 @@ class Server {
   void removeClient(size_t index);
 
  public:
-  Server(int port);
+  Server(int port, std::string password);
   ~Server();
 
   void run();  // Main loop for the server

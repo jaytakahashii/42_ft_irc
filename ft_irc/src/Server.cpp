@@ -13,9 +13,10 @@
 #include "Parser.hpp"
 #include "color.hpp"
 
-Server::Server(int port) : _port(port), _parser(new Parser()) {
+Server::Server(int port, std::string password)
+    : _port(port), _password(password), _parser(new Parser()) {
   setupServerSocket();
-  _dispatcher = new CommandDispatcher(_channels, _clients);
+  _dispatcher = new CommandDispatcher(_password, _channels, _clients);
 }
 
 Server::~Server() {
