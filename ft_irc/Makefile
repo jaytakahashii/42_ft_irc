@@ -10,7 +10,7 @@ INCLUDE			= -I $(INCLUDE_DIR)
 HEADERS			= color.hpp \
 							Server.hpp \
 							Client.hpp \
-							ICommand.hpp \
+							SCommand.hpp \
 							CommandDispatcher.hpp \
 							Channel.hpp \
 							Parser.hpp

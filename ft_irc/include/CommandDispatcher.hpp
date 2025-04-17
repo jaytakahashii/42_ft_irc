@@ -1,7 +1,7 @@
 #pragma once
 #include "Channel.hpp"
 #include "Client.hpp"
-#include "ICommand.hpp"
+#include "SCommand.hpp"
 #include "Server.hpp"
 
 class CommandDispatcher {
@@ -16,11 +16,11 @@ class CommandDispatcher {
                     std::map<int, Client*>& clients);
   ~CommandDispatcher();
 
-  void dispatch(const ICommand& cmd, Client& client);
-  void handlePass(const ICommand& cmd, Client& client);
-  void handleNick(const ICommand& cmd, Client& client);
-  void handleUser(const ICommand& cmd, Client& client);
-  void handlePing(const ICommand& cmd, Client& client);
-  void handleJoin(const ICommand& cmd, Client& client);
-  void handlePrivmsg(const ICommand& cmd, Client& client);
+  void dispatch(const SCommand& cmd, Client& client);
+  void handlePass(const SCommand& cmd, Client& client);
+  void handleNick(const SCommand& cmd, Client& client);
+  void handleUser(const SCommand& cmd, Client& client);
+  void handlePing(const SCommand& cmd, Client& client);
+  void handleJoin(const SCommand& cmd, Client& client);
+  void handlePrivmsg(const SCommand& cmd, Client& client);
 };

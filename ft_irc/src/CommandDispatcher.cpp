@@ -13,7 +13,7 @@ CommandDispatcher::CommandDispatcher(std::string& password,
 CommandDispatcher::~CommandDispatcher() {
 }
 
-void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
+void CommandDispatcher::dispatch(const SCommand& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
 
@@ -48,7 +48,7 @@ void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
   // 他のコマンドもここに追加予定
 }
 
-void CommandDispatcher::handlePass(const ICommand& cmd, Client& client) {
+void CommandDispatcher::handlePass(const SCommand& cmd, Client& client) {
   if (cmd.args.empty()) {
     std::string msg = ":server 461 " + client.getNickname() +
                       " PASS :Not enough parameters\r\n";
@@ -72,7 +72,7 @@ void CommandDispatcher::handlePass(const ICommand& cmd, Client& client) {
   }
 }
 
-void CommandDispatcher::handleNick(const ICommand& cmd, Client& client) {
+void CommandDispatcher::handleNick(const SCommand& cmd, Client& client) {
   if (cmd.args.empty()) {
     std::string msg = ":server 431 * :No nickname given\r\n";
     send(client.getFd(), msg.c_str(), msg.size(), 0);
@@ -87,7 +87,7 @@ void CommandDispatcher::handleNick(const ICommand& cmd, Client& client) {
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
-void CommandDispatcher::handleUser(const ICommand& cmd, Client& client) {
+void CommandDispatcher::handleUser(const SCommand& cmd, Client& client) {
   if (cmd.args.size() < 4) {
     client.sendMessage(":server 461 " + client.getNickname() +
                        " USER :Not enough parameters\r\n");
@@ -105,7 +105,7 @@ void CommandDispatcher::handleUser(const ICommand& cmd, Client& client) {
   }
 }
 
-void CommandDispatcher::handlePing(const ICommand& cmd, Client& client) {
+void CommandDispatcher::handlePing(const SCommand& cmd, Client& client) {
   if (cmd.args.empty()) {
     client.sendMessage(":server PONG :No arguments provided\r\n");
     return;
@@ -115,7 +115,7 @@ void CommandDispatcher::handlePing(const ICommand& cmd, Client& client) {
   client.sendMessage(pongMsg);
 }
 
-void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
+void CommandDispatcher::handleJoin(const SCommand& cmd, Client& client) {
   if (cmd.args.empty()) {
     client.sendMessage("461 JOIN :Not enough parameters\r\n");
     return;
@@ -168,7 +168,7 @@ void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
   }
 }
 
-void CommandDispatcher::handlePrivmsg(const ICommand& cmd, Client& client) {
+void CommandDispatcher::handlePrivmsg(const SCommand& cmd, Client& client) {
   if (cmd.args.size() < 2) {
     client.sendMessage(":server 411 " + client.getNickname() +
                        " :No recipient given\r\n");

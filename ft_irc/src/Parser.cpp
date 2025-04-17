@@ -2,8 +2,8 @@
 
 #include <sstream>
 
-ICommand Parser::parse(const std::string& input) {
-  ICommand cmd;
+SCommand Parser::parse(const std::string& input) {
+  SCommand cmd;
   std::istringstream iss(input);
   iss >> cmd.name;
   std::string arg;
