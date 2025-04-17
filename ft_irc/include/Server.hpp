@@ -12,6 +12,7 @@
 class Client;
 class Parser;
 class CommandDispatcher;
+class Channel;
 
 class Server {
  private:
@@ -19,6 +20,7 @@ class Server {
   int _serverSocket;
   std::vector<struct pollfd> _pollfds;
   std::map<int, Client*> _clients;
+  std::map<std::string, Channel*> _channels;
   Parser* _parser;
   CommandDispatcher* _dispatcher;
 

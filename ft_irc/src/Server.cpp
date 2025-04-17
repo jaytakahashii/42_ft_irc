@@ -13,9 +13,9 @@
 #include "Parser.hpp"
 #include "color.hpp"
 
-Server::Server(int port)
-    : _port(port), _parser(new Parser()), _dispatcher(new CommandDispatcher()) {
+Server::Server(int port) : _port(port), _parser(new Parser()) {
   setupServerSocket();
+  _dispatcher = new CommandDispatcher(_channels, _clients);
 }
 
 Server::~Server() {
@@ -122,7 +122,7 @@ void Server::handleClientActivity(size_t index) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
     ICommand cmd = _parser->parse(line);
-    _dispatcher->dispatch(cmd, *client, _clients);
+    _dispatcher->dispatch(cmd, *client);
   }
 }
 

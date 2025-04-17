@@ -4,14 +4,15 @@
 
 #include <iostream>
 
-CommandDispatcher::CommandDispatcher() {
+CommandDispatcher::CommandDispatcher(std::map<std::string, Channel*>& channels,
+                                     std::map<int, Client*>& clients)
+    : _channels(channels), _clients(clients) {
 }
 
 CommandDispatcher::~CommandDispatcher() {
 }
 
-void CommandDispatcher::dispatch(const ICommand& cmd, Client& client,
-                                 std::map<int, Client*>& clients) {
+void CommandDispatcher::dispatch(const ICommand& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
 
@@ -26,7 +27,7 @@ void CommandDispatcher::dispatch(const ICommand& cmd, Client& client,
   } else if (cmd.name == "PART") {
     // handlePart(cmd, client);
   } else if (cmd.name == "PRIVMSG") {
-    handlePrivmsg(cmd, client, clients);
+    handlePrivmsg(cmd, client);
   } else if (cmd.name == "PONG") {
     // handlePong(cmd, client);
   } else {
@@ -133,8 +134,7 @@ void CommandDispatcher::handleJoin(const ICommand& cmd, Client& client) {
   }
 }
 
-void CommandDispatcher::handlePrivmsg(const ICommand& cmd, Client& client,
-                                      std::map<int, Client*>& clients) {
+void CommandDispatcher::handlePrivmsg(const ICommand& cmd, Client& client) {
   if (cmd.args.size() < 2) {
     client.sendMessage(":server 411 " + client.getNickname() +
                        " :No recipient given\r\n");
@@ -163,8 +163,8 @@ void CommandDispatcher::handlePrivmsg(const ICommand& cmd, Client& client,
   else {
     Client* recipient = NULL;
     // クライアントのリストから受信者を検索
-    for (std::map<int, Client*>::iterator it = clients.begin();
-         it != clients.end(); ++it) {
+    for (std::map<int, Client*>::iterator it = _clients.begin();
+         it != _clients.end(); ++it) {
       if ((*it).second->getNickname() == target) {
         recipient = (*it).second;
         break;
