@@ -20,5 +20,6 @@ class CommandDispatcher {
   void handleUser(const SCommand& cmd, Client& client);
   void handlePing(const SCommand& cmd, Client& client);
   void handleJoin(const SCommand& cmd, Client& client);
+  void handlePart(const SCommand& cmd, Client& client);
   void handlePrivmsg(const SCommand& cmd, Client& client);
 };

@@ -18,4 +18,5 @@ class Channel {
   void removeClient(Client* client);
   const std::set<Client*>& getClients() const;
   bool hasClient(Client* client) const;
+  int getClientCount() const;
 };

@@ -27,3 +27,7 @@ const std::set<Client*>& Channel::getClients() const {
 bool Channel::hasClient(Client* client) const {
   return _clients.count(client) > 0;
 }
+
+int Channel::getClientCount() const {
+  return _clients.size();
+}

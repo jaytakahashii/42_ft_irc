@@ -18,6 +18,7 @@ CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
   _commandHandlers["USER"] = &CommandDispatcher::handleUser;
   _commandHandlers["PING"] = &CommandDispatcher::handlePing;
   _commandHandlers["JOIN"] = &CommandDispatcher::handleJoin;
+  _commandHandlers["PART"] = &CommandDispatcher::handlePart;
   _commandHandlers["PRIVMSG"] = &CommandDispatcher::handlePrivmsg;
   // Add more command handlers as needed
 }
@@ -174,6 +175,52 @@ void CommandDispatcher::handleJoin(const SCommand& cmd, Client& client) {
   else {
     client.sendMessage(":server 443 " + client.getNickname() + " " +
                        channelName + " :You are already on that channel\r\n");
+  }
+}
+
+void CommandDispatcher::handlePart(const SCommand& cmd, Client& client) {
+  if (cmd.args.empty()) {
+    client.sendMessage("461 PART :Not enough parameters\r\n");
+    return;
+  }
+
+  std::string channelName = cmd.args[0];
+
+  // チャンネルが存在しない場合はエラー
+  if (_state.channels.find(channelName) == _state.channels.end()) {
+    client.sendMessage(":server 403 " + client.getNickname() + " " +
+                       channelName + " :No such channel\r\n");
+    return;
+  }
+
+  Channel* channel = _state.channels[channelName];  // チャンネルを取得
+
+  // チャンネルに参加していない場合はエラー
+  if (!channel->hasClient(&client)) {
+    client.sendMessage(":server 442 " + client.getNickname() + " " +
+                       channelName + " :You're not on that channel\r\n");
+    return;
+  }
+
+  // チャンネルから退出する
+  channel->removeClient(&client);
+
+  // PART通知をそのチャンネルの全員に送信
+  std::string partMsg = ":" + client.getNickname() + "!" +
+                        client.getUsername() + "@localhost PART " +
+                        channelName + "\r\n";
+  for (std::set<Client*>::iterator it = channel->getClients().begin();
+       it != channel->getClients().end(); ++it) {
+    (*it)->sendMessage(partMsg);
+  }
+  // チャンネルに参加者がいなくなった場合、チャンネルを削除
+  if (channel->getClientCount() == 0) {
+    delete channel;
+    _state.channels.erase(channelName);
+  } else {
+    // チャンネルに参加者がいる場合、PARTメッセージを送信
+    client.sendMessage(":server 331 " + client.getNickname() + " " +
+                       channelName + " :You have left the channel\r\n");
   }
 }
 
