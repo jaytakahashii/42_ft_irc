@@ -3,6 +3,7 @@ MAKEFILE 		= Makefile
 NAME				= ircserv
 
 SRC_DIR			= src/
+IRC_DIR			= irc/
 CMD_DIR			= commands/
 UTIL_DIR		= utils/
 OBJ_DIR			= .obj/
@@ -23,6 +24,8 @@ CMD_H				= PassCommand.hpp \
 UTIL_H			= utils.hpp \
 							color.hpp
 
+IRC_H				= numericsReplies.hpp
+
 HEADERS			= Server.hpp \
 							Client.hpp \
 							CommandDispatcher.hpp \
@@ -31,6 +34,7 @@ HEADERS			= Server.hpp \
 
 HEADERS			+= $(addprefix $(CMD_DIR), $(CMD_H))
 HEADERS			+= $(addprefix $(UTIL_DIR), $(UTIL_H))
+HEADERS			+= $(addprefix $(IRC_DIR), $(IRC_H))
 HEADER			+= $(addprefix $(INC_DIR), $(HEADERS))
 DEPS				= $(HEADER) $(MAKEFILE)
 

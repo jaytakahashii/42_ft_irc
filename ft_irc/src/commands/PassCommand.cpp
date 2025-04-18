@@ -2,11 +2,12 @@
 
 #include <sys/socket.h>
 
+#include "irc/numericsReplies.hpp"
+
 void PassCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
   if (cmd.args.empty()) {
-    std::string msg = ":server 461 " + client.getNickname() +
-                      " PASS :Not enough parameters\r\n";
+    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
   }

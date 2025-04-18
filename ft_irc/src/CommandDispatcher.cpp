@@ -41,15 +41,9 @@ CommandDispatcher::~CommandDispatcher() {
 }
 
 void CommandDispatcher::dispatch(const commandS& cmd, Client& client) {
+  // debug用の出力
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
-
-  if (!client.isAuthenticated() && cmd.name != "PASS") {
-    std::string msg =
-        ":server 451 " + client.getNickname() + " :You have not registered\r\n";
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
-    return;
-  }
 
   if (_commandHandlers.find(cmd.name) != _commandHandlers.end()) {
     _commandHandlers[cmd.name]->execute(cmd, client, _state);
