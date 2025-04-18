@@ -1,9 +1,7 @@
 #pragma once
-#include <poll.h>
-#include <stdlib.h>
 
-#include <iostream>
 #include <map>
+#include <string>
 #include <vector>
 
 #define ERROR -1
@@ -32,8 +30,8 @@ class Server {
 
   void setupServerSocket();
   void handleNewConnection();
-  void handleClientActivity(size_t index);
-  void removeClient(size_t index);
+  void handleClientActivity(std::size_t index);
+  void removeClient(std::size_t index);
 
  public:
   Server(int port, std::string password);

@@ -2,16 +2,17 @@
 
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include <cstring>
 #include <iostream>
+#include <string>
 
 #include "Client.hpp"
 #include "CommandDispatcher.hpp"
 #include "Parser.hpp"
-#include "color.hpp"
 
 Server::Server(int port, std::string password) : _parser(new Parser()) {
   _state.host = "localhost";
@@ -46,7 +47,7 @@ void Server::setupServerSocket() {
   fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
 
   sockaddr_in addr;
-  memset(&addr, 0, sizeof(addr));
+  std::memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;           // IPv4
   addr.sin_addr.s_addr = INADDR_ANY;   // Any address
   addr.sin_port = htons(_state.port);  // Port number
@@ -56,8 +57,7 @@ void Server::setupServerSocket() {
 
   listen(_serverSocket, SOMAXCONN);  // Listen for incoming connections
 
-  std::cout << BOLDWHITE "🎵 Server listening on port " RESET << _state.port
-            << std::endl;
+  std::cout << "Server listening on port " << _state.port << std::endl;
 
   pollfd serverPollFd;
   serverPollFd.fd = _serverSocket;
@@ -96,7 +96,7 @@ void Server::handleNewConnection() {
 
   // クライアントのソケットを管理するためのClientオブジェクトを作成
   _state.clients[clientFd] = new Client(clientFd);
-  std::cout << "👶 New client connected: " << clientFd << std::endl;
+  std::cout << "New client connected: " << clientFd << std::endl;
 }
 
 // クライアントからのデータを受信し、処理する
