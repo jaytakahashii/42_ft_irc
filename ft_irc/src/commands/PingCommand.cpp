@@ -6,7 +6,7 @@
 #include "Server.hpp"
 
 void PingCommand::execute(const commandS& cmd, Client& client,
-                          ServerState& state) {
+                          serverStateS& state) {
   if (cmd.args.size() < 1) {
     // state が unused なのでとりあえず表示 TODO
     client.sendMessage(state.password + ":server 461 " + client.getNickname() +

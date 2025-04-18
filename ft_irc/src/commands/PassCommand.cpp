@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 
 void PassCommand::execute(const commandS& cmd, Client& client,
-                          ServerState& state) {
+                          serverStateS& state) {
   if (cmd.args.empty()) {
     std::string msg = ":server 461 " + client.getNickname() +
                       " PASS :Not enough parameters\r\n";

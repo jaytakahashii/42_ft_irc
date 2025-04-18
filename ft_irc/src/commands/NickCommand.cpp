@@ -3,7 +3,7 @@
 #include <sys/socket.h>
 
 void NickCommand::execute(const commandS& cmd, Client& client,
-                          ServerState& state) {
+                          serverStateS& state) {
   if (cmd.args.empty()) {
     // state が unused なのでとりあえず表示 TODO
     std::string msg = state.password + ":server 431 * :No nickname given\r\n";

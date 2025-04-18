@@ -24,7 +24,7 @@
 #include "commands/TopicCommand.hpp"
 #include "commands/UserCommand.hpp"
 
-CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
+CommandDispatcher::CommandDispatcher(serverStateS& state) : _state(state) {
   _commandHandlers["PASS"] = new PassCommand();
   _commandHandlers["NICK"] = new NickCommand();
   _commandHandlers["USER"] = new UserCommand();

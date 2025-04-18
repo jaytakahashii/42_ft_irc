@@ -4,7 +4,7 @@
 #include "Client.hpp"
 
 void PrivmsgCommand::execute(const commandS& cmd, Client& client,
-                             ServerState& state) {
+                             serverStateS& state) {
   if (cmd.args.size() < 2) {
     client.sendMessage(":server 411 " + client.getNickname() +
                        " :No recipient given\r\n");

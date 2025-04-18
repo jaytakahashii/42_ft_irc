@@ -5,7 +5,7 @@
 #include "Channel.hpp"
 
 void JoinCommand::execute(const commandS& cmd, Client& client,
-                          ServerState& state) {
+                          serverStateS& state) {
   if (cmd.args.empty()) {
     client.sendMessage("461 JOIN :Not enough parameters\r\n");
     return;

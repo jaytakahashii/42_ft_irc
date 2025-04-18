@@ -13,7 +13,7 @@ struct commandS {
 class ICommand {
  public:
   virtual void execute(const commandS& cmd, Client& client,
-                       ServerState& state) = 0;
+                       serverStateS& state) = 0;
   // clang-format off
   virtual ~ICommand() {}
   // clang-format on

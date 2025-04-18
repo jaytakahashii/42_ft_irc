@@ -12,7 +12,7 @@ class Parser;
 class CommandDispatcher;
 class Channel;
 
-struct ServerState {
+struct serverStateS {
   std::string host;
   int port;
   std::string password;
@@ -22,7 +22,7 @@ struct ServerState {
 
 class Server {
  private:
-  ServerState _state;
+  serverStateS _state;
   int _serverSocket;
   std::vector<struct pollfd> _pollfds;
   Parser* _parser;

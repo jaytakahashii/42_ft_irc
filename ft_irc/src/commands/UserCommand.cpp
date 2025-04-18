@@ -6,7 +6,7 @@
 #include "Server.hpp"
 
 void UserCommand::execute(const commandS& cmd, Client& client,
-                          ServerState& state) {
+                          serverStateS& state) {
   if (cmd.args.size() < 4) {
     // state が unused なのでとりあえず表示 TODO
     client.sendMessage(state.password + ":server 461 " + client.getNickname() +

@@ -5,7 +5,7 @@
 #include "Channel.hpp"
 
 void PartCommand::execute(const commandS& cmd, Client& client,
-                          ServerState& state) {
+                          serverStateS& state) {
   if (cmd.args.empty()) {
     client.sendMessage("461 PART :Not enough parameters\r\n");
     return;
