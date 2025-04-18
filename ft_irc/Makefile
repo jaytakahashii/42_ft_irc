@@ -3,19 +3,28 @@ MAKEFILE 		= Makefile
 NAME				= ircserv
 
 SRC_DIR			= src/
+CMD_DIR			= commands/
 OBJ_DIR			= .obj/
 
-INCLUDE_DIR	= include/
-INCLUDE			= -I $(INCLUDE_DIR)
-HEADERS			= color.hpp \
-							Server.hpp \
+INC_DIR			= include/
+INC					= -I $(INC_DIR)
+CMD_H				= PassCommand.hpp \
+							NickCommand.hpp \
+							UserCommand.hpp \
+							JoinCommand.hpp \
+							PartCommand.hpp \
+							PingCommand.hpp \
+							PrivmsgCommand.hpp \
+							QuitCommand.hpp
+
+HEADERS			= Server.hpp \
 							Client.hpp \
-							SCommand.hpp \
 							CommandDispatcher.hpp \
 							Channel.hpp \
 							Parser.hpp
-HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
 
+HEADERS			+= $(addprefix $(CMD_DIR), $(CMD_H))
+HEADER			+= $(addprefix $(INC_DIR), $(HEADERS))
 DEPS				= $(HEADER) $(MAKEFILE)
 
 CXX					= c++
@@ -26,6 +35,15 @@ SANITIZE		= -fsanitize=address -g3
 RM					= rm -rf
 
 SRC_DIR			= src/
+CMD_SRC			= PassCommand.cpp \
+							NickCommand.cpp \
+							UserCommand.cpp \
+							JoinCommand.cpp \
+							PartCommand.cpp \
+							PingCommand.cpp \
+							PrivmsgCommand.cpp \
+							QuitCommand.cpp
+
 SRC_FILES		=	main.cpp \
 							Server.cpp \
 							Client.cpp \
@@ -33,6 +51,7 @@ SRC_FILES		=	main.cpp \
 							Channel.cpp \
 							Parser.cpp
 
+SRC_FILES		+= $(addprefix $(CMD_DIR), $(CMD_SRC))
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJS				= $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 
@@ -55,9 +74,10 @@ $(NAME): $(OBJ_DIR) $(OBJS) $(DEPS)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)$(CMD_DIR)
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 clean:
 	$(RM) $(OBJ_DIR)
