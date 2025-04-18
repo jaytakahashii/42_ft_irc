@@ -1,5 +1,7 @@
 #include "Channel.hpp"
 
+#include <algorithm>
+
 #include "Client.hpp"
 
 Channel::Channel(const std::string& name) : _name(name) {
@@ -30,4 +32,23 @@ bool Channel::hasClient(Client* client) const {
 
 int Channel::getClientCount() const {
   return _clients.size();
+}
+
+void Channel::addOperator(const std::string& operatorName) {
+  _operators.push_back(operatorName);
+}
+
+bool Channel::isOperator(const std::string& operatorName) const {
+  return std::find(_operators.begin(), _operators.end(), operatorName) !=
+         _operators.end();
+}
+
+void Channel::removeOperator(const std::string& operatorName) {
+  _operators.erase(
+      std::remove(_operators.begin(), _operators.end(), operatorName),
+      _operators.end());
+}
+
+const std::vector<std::string>& Channel::getOperators() const {
+  return _operators;
 }
