@@ -5,9 +5,16 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
+#include "numericsReplies/400-499.hpp"
 
 void QuitCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    client.sendMessage(msg);
+    return;
+  }
+
   std::string quitMsg = ":" + client.getNickname() + " " + cmd.name + "\r\n";
   for (std::map<int, Client*>::iterator it = state.clients.begin();
        it != state.clients.end(); ++it) {

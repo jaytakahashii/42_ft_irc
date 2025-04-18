@@ -2,9 +2,16 @@
 
 #include "Channel.hpp"
 #include "Client.hpp"
+#include "numericsReplies/400-499.hpp"
 
 void TopicCommand::execute(const commandS& cmd, Client& client,
                            serverStateS& state) {
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    client.sendMessage(msg);
+    return;
+  }
+
   if (cmd.args.size() != 1 && cmd.args.size() != 2) {
     client.sendMessage("461 TOPIC :Not enough parameters\r\n");
     return;

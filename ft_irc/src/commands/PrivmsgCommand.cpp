@@ -2,9 +2,15 @@
 
 #include "Channel.hpp"
 #include "Client.hpp"
-
+#include "numericsReplies/400-499.hpp"
 void PrivmsgCommand::execute(const commandS& cmd, Client& client,
                              serverStateS& state) {
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    client.sendMessage(msg);
+    return;
+  }
+
   if (cmd.args.size() < 2) {
     client.sendMessage(":server 411 " + client.getNickname() +
                        " :No recipient given\r\n");

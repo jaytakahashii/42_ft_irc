@@ -1,9 +1,16 @@
 #include "commands/JoinCommand.hpp"
 
 #include "Channel.hpp"
+#include "numericsReplies/400-499.hpp"
 
 void JoinCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    client.sendMessage(msg);
+    return;
+  }
+
   if (cmd.args.empty()) {
     client.sendMessage("461 JOIN :Not enough parameters\r\n");
     return;

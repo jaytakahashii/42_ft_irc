@@ -1,9 +1,15 @@
 #include "commands/PartCommand.hpp"
 
 #include "Channel.hpp"
-
+#include "numericsReplies/400-499.hpp"
 void PartCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    client.sendMessage(msg);
+    return;
+  }
+
   if (cmd.args.empty()) {
     client.sendMessage("461 PART :Not enough parameters\r\n");
     return;

@@ -48,4 +48,5 @@ void UserCommand::execute(const commandS& cmd, Client& client,
   client.setRegistered(true);
   std::string msg = irc::numericReplies::RPL_WELCOME(
       client.getNickname(), client.getUsername(), state.host);
+  client.sendMessage(msg);
 }
