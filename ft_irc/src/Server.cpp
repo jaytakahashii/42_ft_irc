@@ -146,6 +146,7 @@ void Server::_processClientBuffer(Client* client) {
   while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
+    // コマンドをパースして実行
     commandS cmd = _parser->parse(line);
     _dispatcher->dispatch(cmd, *client);
   }
