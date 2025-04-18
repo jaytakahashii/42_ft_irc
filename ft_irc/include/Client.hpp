@@ -5,7 +5,7 @@ class Client {
  private:
   int _fd;
   bool _authenticated;
-  bool _isRegistered;
+  bool _registered;
   std::string _readBuffer;
   std::string _nickname;
   std::string _username;
@@ -25,7 +25,6 @@ class Client {
   bool isValidRealname(const std::string& realname) const;
   std::string& getReadBuffer();  // Buffer for incoming messages
   void sendMessage(const std::string& message) const;
-  bool isFullyRegistered() const;
   const std::string& getNickname() const;
   const std::string& getUsername() const;
   const std::string& getRealname() const;

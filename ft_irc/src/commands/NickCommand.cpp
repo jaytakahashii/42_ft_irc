@@ -9,20 +9,21 @@ void NickCommand::execute(const commandS& cmd, Client& client,
   if (!client.isAuthenticated()) {
     // TODO: ?
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    client.sendMessage(msg);
     return;
   }
 
   if (cmd.args.empty()) {
     std::string msg = irc::numericReplies::ERR_NONICKNAMEGIVEN();
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    client.sendMessage(msg);
     return;
   }
 
   std::string nickname = cmd.args[0];
   if (client.isValidNickname(nickname) == false) {
     std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(nickname);
-    send(client.getFd(), msg.c_str(), msg.size(), 0);
+    client.sendMessage(msg);
+    client.sendMessage(state.host);  // unused params error対策
     return;
   }
 

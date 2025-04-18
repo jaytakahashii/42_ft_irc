@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-Client::Client(int fd) : _fd(fd), _authenticated(false) {
+Client::Client(int fd) : _fd(fd), _authenticated(false), _registered(false) {
 }
 
 Client::~Client() {
@@ -21,11 +21,11 @@ void Client::setAuthenticated(bool authenticated) {
 }
 
 bool Client::isRegistered() const {
-  return _isRegistered;
+  return _registered;
 }
 
 void Client::setRegistered(bool isRegistered) {
-  _isRegistered = isRegistered;
+  _registered = isRegistered;
 }
 
 bool Client::isValidNickname(const std::string& nickname) const {
@@ -49,10 +49,6 @@ std::string& Client::getReadBuffer() {
 
 void Client::sendMessage(const std::string& message) const {
   send(_fd, message.c_str(), message.size(), 0);
-}
-
-bool Client::isFullyRegistered() const {
-  return !_nickname.empty() && !_username.empty() && !_realname.empty();
 }
 
 const std::string& Client::getNickname() const {
