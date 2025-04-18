@@ -9,12 +9,13 @@ class Parser;
 class CommandDispatcher;
 class Channel;
 
+// Serverの状態を保持する構造体 (他のクラスに渡す)
 struct serverStateS {
   std::string host;
   int port;
   std::string password;
-  std::map<std::string, Channel*> channels;
-  std::map<int, Client*> clients;
+  std::map<std::string, Channel*> channels;  // チャンネルのリスト
+  std::map<int, Client*> clients;            // クライアントのリスト
 };
 
 class Server {
@@ -25,10 +26,11 @@ class Server {
   Parser* _parser;
   CommandDispatcher* _dispatcher;
 
-  void setupServerSocket();
-  void handleNewConnection();
-  void handleClientActivity(std::size_t index);
-  void removeClient(std::size_t index);
+  void _setupServerSocket();
+  void _handleNewConnection();
+  void _handleClientActivity(std::size_t index);
+  void _removeClient(std::size_t index);
+  bool _isValidPassword();
 
  public:
   Server(int port, std::string password);

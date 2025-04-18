@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -13,14 +14,21 @@
 #include "Client.hpp"
 #include "CommandDispatcher.hpp"
 #include "Parser.hpp"
+#include "utils/utils.hpp"
 
+// Serverのコンストラクタ
 Server::Server(int port, std::string password) : _parser(new Parser()) {
+  if (!_isValidPassword()) {
+    printError("Invalid password.");
+    delete _parser;  // パスワードが無効な場合はParserを削除
+    exit(EXIT_FAILURE);
+  }
   _state.host = "localhost";
   _state.port = port;
   _state.password = password;
   _state.channels = std::map<std::string, Channel*>();
   _state.clients = std::map<int, Client*>();
-  setupServerSocket();
+  _setupServerSocket();
   _dispatcher = new CommandDispatcher(_state);
 }
 
@@ -34,8 +42,15 @@ Server::~Server() {
   delete _dispatcher;
 }
 
+// passwordのValidation
+bool Server::_isValidPassword() {
+  // TODO : パスワードの検証を実装
+  // ここでは単純にパスワードが空でないことを確認
+  return !_state.password.empty();
+}
+
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
-void Server::setupServerSocket() {
+void Server::_setupServerSocket() {
   // AF_INET : IPv4 (IPv6 : AF_INET6)
   // SOCK_STREAM : TCP
   // 0 : Any protocol (usually TCP)
@@ -73,15 +88,15 @@ void Server::run() {
     for (size_t i = 0; i < _pollfds.size(); ++i) {
       if (_pollfds[i].revents & POLLIN) {
         if (_pollfds[i].fd == _serverSocket)
-          handleNewConnection();
+          _handleNewConnection();
         else
-          handleClientActivity(i);
+          _handleClientActivity(i);
       }
     }
   }
 }
 
-void Server::handleNewConnection() {
+void Server::_handleNewConnection() {
   // 新しいクライアントの接続を受け入れる
   int clientFd = accept(_serverSocket, NULL, NULL);
 
@@ -101,7 +116,7 @@ void Server::handleNewConnection() {
 
 // クライアントからのデータを受信し、処理する
 // index : pollfdsのインデックス (クライアントのソケット)
-void Server::handleClientActivity(size_t index) {
+void Server::_handleClientActivity(size_t index) {
   char buffer[512];
 
   // clientFd : pollfdsのfd (クライアントのソケット)
@@ -110,7 +125,7 @@ void Server::handleClientActivity(size_t index) {
   // recv : ソケットからデータを受信
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    removeClient(index);  // クライアントが切断された場合
+    _removeClient(index);  // クライアントが切断された場合
     return;
   }
 
@@ -132,7 +147,7 @@ void Server::handleClientActivity(size_t index) {
 }
 
 // クライアントを削除する (leaks防止)
-void Server::removeClient(size_t index) {
+void Server::_removeClient(size_t index) {
   int clientFd = _pollfds[index].fd;
   std::cout << "Client disconnected: " << clientFd << std::endl;
   close(clientFd);                           // Close the socket
