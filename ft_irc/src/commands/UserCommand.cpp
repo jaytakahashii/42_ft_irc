@@ -1,7 +1,5 @@
 #include "commands/UserCommand.hpp"
 
-#include <sys/socket.h>
-
 #include "Client.hpp"
 #include "Server.hpp"
 

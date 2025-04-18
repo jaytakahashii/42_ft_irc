@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "Client.hpp"
+class Client;
 
 class Channel {
  private:

@@ -1,14 +1,5 @@
 #include "commands/TopicCommand.hpp"
 
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include <algorithm>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-
 #include "Channel.hpp"
 #include "Client.hpp"
 

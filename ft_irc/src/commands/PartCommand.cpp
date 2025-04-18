@@ -1,7 +1,5 @@
 #include "commands/PartCommand.hpp"
 
-#include <sys/socket.h>
-
 #include "Channel.hpp"
 
 void PartCommand::execute(const commandS& cmd, Client& client,

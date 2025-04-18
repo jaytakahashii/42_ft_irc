@@ -1,7 +1,5 @@
 #include "commands/JoinCommand.hpp"
 
-#include <sys/socket.h>
-
 #include "Channel.hpp"
 
 void JoinCommand::execute(const commandS& cmd, Client& client,
