@@ -20,6 +20,29 @@ void Client::setAuthenticated(bool authenticated) {
   _authenticated = authenticated;
 }
 
+bool Client::isRegistered() const {
+  return _isRegistered;
+}
+
+void Client::setRegistered(bool isRegistered) {
+  _isRegistered = isRegistered;
+}
+
+bool Client::isValidNickname(const std::string& nickname) const {
+  // TODO
+  return !nickname.empty() && nickname.size() <= 9;
+}
+
+bool Client::isValidUsername(const std::string& username) const {
+  // TODO
+  return !username.empty() && username.size() <= 9;
+}
+
+bool Client::isValidRealname(const std::string& realname) const {
+  // TODO
+  return !realname.empty() && realname.size() <= 9;
+}
+
 std::string& Client::getReadBuffer() {
   return _readBuffer;
 }
