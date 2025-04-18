@@ -4,10 +4,18 @@
 
 #include "numericsReplies/400-499.hpp"
 
+/**
+ * @numericsReplies
+ * ERR_NONICKNAMEGIVEN: 引数なし
+ * ERR_ERRONEUSNICKNAME: invalid nickname
+ * ERR_NICKNAMEINUSE: already used
+ * ERR_UNAVAILRESOURCE: blocked by the nick delay mechanism.
+ * ERR_RESTRICTED: nickname is restricted.
+ */
 void NickCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
+  // before PASS command
   if (!client.isAuthenticated()) {
-    // TODO: ?
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
     return;
@@ -20,7 +28,7 @@ void NickCommand::execute(const commandS& cmd, Client& client,
   }
 
   std::string nickname = cmd.args[0];
-  if (client.isValidNickname(nickname) == false) {
+  if (!client.isValidNickname(nickname)) {
     std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(nickname);
     client.sendMessage(msg);
     client.sendMessage(state.host);  // unused params error対策

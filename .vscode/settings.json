@@ -78,6 +78,7 @@
     "ALREADYREGISTRED",
     "ERRONEUSNICKNAME",
     "ircserv",
+    "NICKNAMEINUSE",
     "NONICKNAMEGIVEN",
     "PASSWDMISMATCH",
     "pollfds",
