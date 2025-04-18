@@ -3,7 +3,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-void PrivmsgCommand::execute(const SCommand& cmd, Client& client,
+void PrivmsgCommand::execute(const commandS& cmd, Client& client,
                              ServerState& state) {
   if (cmd.args.size() < 2) {
     client.sendMessage(":server 411 " + client.getNickname() +

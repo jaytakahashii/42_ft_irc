@@ -1,7 +1,6 @@
 #pragma once
 #include "Channel.hpp"
 #include "Client.hpp"
-#include "SCommand.hpp"
 #include "Server.hpp"
 #include "commands/ICommand.hpp"
 
@@ -14,5 +13,5 @@ class CommandDispatcher {
   CommandDispatcher(ServerState& state);
   ~CommandDispatcher();
 
-  void dispatch(const SCommand& cmd, Client& client);
+  void dispatch(const commandS& cmd, Client& client);
 };

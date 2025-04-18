@@ -47,7 +47,7 @@ CommandDispatcher::~CommandDispatcher() {
  * @details
  * コマンド名に応じて、適切なハンドラを呼び出します。
  */
-void CommandDispatcher::dispatch(const SCommand& cmd, Client& client) {
+void CommandDispatcher::dispatch(const commandS& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
 

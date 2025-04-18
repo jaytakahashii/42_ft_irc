@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-void NickCommand::execute(const SCommand& cmd, Client& client,
+void NickCommand::execute(const commandS& cmd, Client& client,
                           ServerState& state) {
   if (cmd.args.empty()) {
     // state が unused なのでとりあえず表示 TODO

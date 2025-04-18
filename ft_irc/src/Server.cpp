@@ -126,7 +126,7 @@ void Server::handleClientActivity(size_t index) {
   while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
-    SCommand cmd = _parser->parse(line);
+    commandS cmd = _parser->parse(line);
     _dispatcher->dispatch(cmd, *client);
   }
 }

@@ -5,7 +5,7 @@
 #include "Client.hpp"
 #include "Server.hpp"
 
-void PingCommand::execute(const SCommand& cmd, Client& client,
+void PingCommand::execute(const commandS& cmd, Client& client,
                           ServerState& state) {
   if (cmd.args.size() < 1) {
     // state が unused なのでとりあえず表示 TODO

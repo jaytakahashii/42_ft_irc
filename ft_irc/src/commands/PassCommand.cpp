@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-void PassCommand::execute(const SCommand& cmd, Client& client,
+void PassCommand::execute(const commandS& cmd, Client& client,
                           ServerState& state) {
   if (cmd.args.empty()) {
     std::string msg = ":server 461 " + client.getNickname() +

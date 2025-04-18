@@ -12,7 +12,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-void KickCommand::execute(const SCommand& cmd, Client& client,
+void KickCommand::execute(const commandS& cmd, Client& client,
                           ServerState& state) {
   if (cmd.args.size() < 2) {
     client.sendMessage("461 KICK :Not enough parameters\r\n");

@@ -6,7 +6,7 @@
 #include "Client.hpp"
 #include "Server.hpp"
 
-void QuitCommand::execute(const SCommand& cmd, Client& client,
+void QuitCommand::execute(const commandS& cmd, Client& client,
                           ServerState& state) {
   std::string quitMsg = ":" + client.getNickname() + " " + cmd.name + "\r\n";
   for (std::map<int, Client*>::iterator it = state.clients.begin();

@@ -3,5 +3,5 @@
 
 class PrivmsgCommand : public ICommand {
  public:
-  void execute(const SCommand& cmd, Client& client, ServerState& state);
+  void execute(const commandS& cmd, Client& client, ServerState& state);
 };

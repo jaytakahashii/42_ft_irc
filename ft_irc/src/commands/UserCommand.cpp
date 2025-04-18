@@ -5,7 +5,7 @@
 #include "Client.hpp"
 #include "Server.hpp"
 
-void UserCommand::execute(const SCommand& cmd, Client& client,
+void UserCommand::execute(const commandS& cmd, Client& client,
                           ServerState& state) {
   if (cmd.args.size() < 4) {
     // state が unused なのでとりあえず表示 TODO

@@ -1,7 +1,7 @@
 #pragma once
-#include "SCommand.hpp"
+#include "commands/ICommand.hpp"
 
 class Parser {
  public:
-  SCommand parse(const std::string& input);
+  commandS parse(const std::string& input);
 };

@@ -12,7 +12,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-void TopicCommand::execute(const SCommand& cmd, Client& client,
+void TopicCommand::execute(const commandS& cmd, Client& client,
                            ServerState& state) {
   if (cmd.args.size() != 1 && cmd.args.size() != 2) {
     client.sendMessage("461 TOPIC :Not enough parameters\r\n");
