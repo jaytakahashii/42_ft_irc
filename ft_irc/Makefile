@@ -4,6 +4,7 @@ NAME				= ircserv
 
 SRC_DIR			= src/
 CMD_DIR			= commands/
+UTIL_DIR		= utils/
 OBJ_DIR			= .obj/
 
 INC_DIR			= include/
@@ -19,6 +20,9 @@ CMD_H				= PassCommand.hpp \
 							KickCommand.hpp \
 							TopicCommand.hpp \
 
+UTIL_H			= utils.hpp \
+							color.hpp
+
 HEADERS			= Server.hpp \
 							Client.hpp \
 							CommandDispatcher.hpp \
@@ -26,6 +30,7 @@ HEADERS			= Server.hpp \
 							Parser.hpp
 
 HEADERS			+= $(addprefix $(CMD_DIR), $(CMD_H))
+HEADERS			+= $(addprefix $(UTIL_DIR), $(UTIL_H))
 HEADER			+= $(addprefix $(INC_DIR), $(HEADERS))
 DEPS				= $(HEADER) $(MAKEFILE)
 
@@ -48,6 +53,8 @@ CMD_SRC			= PassCommand.cpp \
 							KickCommand.cpp \
 							TopicCommand.cpp
 
+UTIL_SRC		= utils.cpp
+
 SRC_FILES		=	main.cpp \
 							Server.cpp \
 							Client.cpp \
@@ -56,6 +63,7 @@ SRC_FILES		=	main.cpp \
 							Parser.cpp
 
 SRC_FILES		+= $(addprefix $(CMD_DIR), $(CMD_SRC))
+SRC_FILES		+= $(addprefix $(UTIL_DIR), $(UTIL_SRC))
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJS				= $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 
@@ -79,6 +87,7 @@ $(NAME): $(OBJ_DIR) $(OBJS) $(DEPS)
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(OBJ_DIR)$(CMD_DIR)
+	@mkdir -p $(OBJ_DIR)$(UTIL_DIR)
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
