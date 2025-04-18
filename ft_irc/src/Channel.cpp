@@ -62,3 +62,18 @@ void Channel::removeOperator(const std::string& operatorName) {
 const std::vector<std::string>& Channel::getOperators() const {
   return _operators;
 }
+
+void Channel::setTopic(const std::string& topic) {
+  _topic = topic;
+}
+
+const std::string& Channel::getTopic() const {
+  return _topic;
+}
+
+void Channel::sendToAll(const std::string& message) const {
+  for (std::set<Client*>::const_iterator it = _clients.begin();
+       it != _clients.end(); ++it) {
+    (*it)->sendMessage(message);
+  }
+}

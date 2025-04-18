@@ -21,6 +21,7 @@
 #include "commands/PingCommand.hpp"
 #include "commands/PrivmsgCommand.hpp"
 #include "commands/QuitCommand.hpp"
+#include "commands/TopicCommand.hpp"
 #include "commands/UserCommand.hpp"
 
 CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
@@ -33,6 +34,7 @@ CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
   _commandHandlers["PING"] = new PingCommand();
   _commandHandlers["QUIT"] = new QuitCommand();
   _commandHandlers["KICK"] = new KickCommand();
+  _commandHandlers["TOPIC"] = new TopicCommand();
 }
 
 CommandDispatcher::~CommandDispatcher() {

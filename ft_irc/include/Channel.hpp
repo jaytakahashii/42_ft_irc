@@ -10,6 +10,7 @@ class Channel {
   std::string _name;
   std::set<Client*> _clients;
   std::vector<std::string> _operators;
+  std::string _topic;
 
  public:
   Channel(const std::string& name);
@@ -26,4 +27,7 @@ class Channel {
   bool isOperator(const std::string& operatorName) const;
   void removeOperator(const std::string& operatorName);
   const std::vector<std::string>& getOperators() const;
+  void setTopic(const std::string& topic);
+  const std::string& getTopic() const;
+  void sendToAll(const std::string& message) const;
 };
