@@ -22,6 +22,7 @@ void JoinCommand::execute(const SCommand& cmd, Client& client,
   // チャンネルが存在しない場合は新規作成
   if (state.channels.find(channelName) == state.channels.end()) {
     state.channels[channelName] = new Channel(channelName);
+    state.channels[channelName]->addOperator(client.getNickname());
   }
 
   // チャンネルに参加する
