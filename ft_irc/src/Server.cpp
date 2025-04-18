@@ -33,11 +33,22 @@ Server::Server(int port, std::string password) : _parser(new Parser()) {
 }
 
 Server::~Server() {
+  // pollfdのクリーンアップ
   for (size_t i = 0; i < _pollfds.size(); ++i)
     close(_pollfds[i].fd);
+
+  // クライアントとチャンネルのクリーンアップ
   for (std::map<int, Client*>::iterator it = _state.clients.begin();
        it != _state.clients.end(); ++it)
     delete it->second;
+  for (std::map<std::string, Channel*>::iterator it = _state.channels.begin();
+       it != _state.channels.end(); ++it)
+    delete it->second;
+
+  // ソケットのクリーンアップ
+  close(_serverSocket);
+
+  // ParserとCommandDispatcherのクリーンアップ
   delete _parser;
   delete _dispatcher;
 }

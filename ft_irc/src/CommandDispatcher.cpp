@@ -34,18 +34,12 @@ CommandDispatcher::CommandDispatcher(serverStateS& state) : _state(state) {
   _commandHandlers["QUIT"] = new QuitCommand();
   _commandHandlers["KICK"] = new KickCommand();
   _commandHandlers["TOPIC"] = new TopicCommand();
+  // TODO : 他のコマンドもここに追加
 }
 
 CommandDispatcher::~CommandDispatcher() {
 }
 
-/**
- * @brief コマンドをディスパッチする
- * @param cmd コマンド (SCommand: cmd.name -> コマンド名, cmd.args -> 引数)
- * @param client クライアント
- * @details
- * コマンド名に応じて、適切なハンドラを呼び出します。
- */
 void CommandDispatcher::dispatch(const commandS& cmd, Client& client) {
   std::cout << "Dispatching command: " << cmd.name << " from client "
             << client.getFd() << std::endl;
