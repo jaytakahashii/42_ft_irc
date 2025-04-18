@@ -1,5 +1,7 @@
 #include <iostream>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "Server.hpp"
 
@@ -8,8 +10,7 @@ int main(int argc, char** argv) {
     std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
     return ERROR;
   }
-  std::string portStr = argv[1];
-  int port = std::stoi(portStr);
+  int port = atoi(argv[1]);
   std::string password = argv[2];
   Server server(port, password);
   server.run();
