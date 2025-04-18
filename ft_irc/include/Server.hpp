@@ -4,9 +4,6 @@
 #include <string>
 #include <vector>
 
-#define ERROR -1
-
-// forward declarations
 class Client;
 class Parser;
 class CommandDispatcher;

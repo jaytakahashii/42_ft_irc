@@ -4,6 +4,8 @@
 
 #include "Server.hpp"
 
+#define ERROR -1
+
 int main(int argc, char** argv) {
   if (argc != 3) {
     std::cerr << "Usage: ./ft_irc <port> <password>" << std::endl;
