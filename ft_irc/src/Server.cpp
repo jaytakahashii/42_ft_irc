@@ -41,9 +41,6 @@ Server::~Server() {
   for (std::map<int, Client*>::iterator it = _state.clients.begin();
        it != _state.clients.end(); ++it)
     delete it->second;
-  for (std::map<std::string, Channel*>::iterator it = _state.channels.begin();
-       it != _state.channels.end(); ++it)
-    delete it->second;
 
   // ソケットのクリーンアップ
   close(_serverSocket);
