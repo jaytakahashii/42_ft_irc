@@ -18,6 +18,16 @@ void Channel::addClient(Client* client) {
   _clients.insert(client);
 }
 
+Client* Channel::getClient(const std::string& nickname) const {
+  for (std::set<Client*>::const_iterator it = _clients.begin();
+       it != _clients.end(); ++it) {
+    if ((*it)->getNickname() == nickname) {
+      return *it;
+    }
+  }
+  return NULL;
+}
+
 void Channel::removeClient(Client* client) {
   _clients.erase(client);
 }

@@ -15,7 +15,8 @@ CMD_H				= PassCommand.hpp \
 							PartCommand.hpp \
 							PingCommand.hpp \
 							PrivmsgCommand.hpp \
-							QuitCommand.hpp
+							QuitCommand.hpp \
+							KickCommand.hpp
 
 HEADERS			= Server.hpp \
 							Client.hpp \
@@ -42,7 +43,8 @@ CMD_SRC			= PassCommand.cpp \
 							PartCommand.cpp \
 							PingCommand.cpp \
 							PrivmsgCommand.cpp \
-							QuitCommand.cpp
+							QuitCommand.cpp \
+							KickCommand.cpp
 
 SRC_FILES		=	main.cpp \
 							Server.cpp \

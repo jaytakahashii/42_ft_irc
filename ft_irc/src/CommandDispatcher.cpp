@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include "commands/JoinCommand.hpp"
+#include "commands/KickCommand.hpp"
 #include "commands/NickCommand.hpp"
 #include "commands/PartCommand.hpp"
 #include "commands/PassCommand.hpp"
@@ -31,6 +32,7 @@ CommandDispatcher::CommandDispatcher(ServerState& state) : _state(state) {
   _commandHandlers["PRIVMSG"] = new PrivmsgCommand();
   _commandHandlers["PING"] = new PingCommand();
   _commandHandlers["QUIT"] = new QuitCommand();
+  _commandHandlers["KICK"] = new KickCommand();
 }
 
 CommandDispatcher::~CommandDispatcher() {

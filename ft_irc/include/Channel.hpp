@@ -17,6 +17,7 @@ class Channel {
 
   const std::string& getName() const;
   void addClient(Client* client);
+  Client* getClient(const std::string& nickname) const;
   void removeClient(Client* client);
   const std::set<Client*>& getClients() const;
   bool hasClient(Client* client) const;
