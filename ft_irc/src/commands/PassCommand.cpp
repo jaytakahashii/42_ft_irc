@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-#include "irc/numericsReplies.hpp"
+#include "numericsReplies/400-499.hpp"
 
 void PassCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
