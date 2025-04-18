@@ -13,8 +13,7 @@ void PassCommand::execute(const commandS& cmd, Client& client,
   }
 
   if (client.isAuthenticated()) {
-    std::string msg = ":server 462 " + client.getNickname() +
-                      " PASS :You may not reregister\r\n";
+    std::string msg = irc::numericReplies::ERR_ALREADYREGISTRED();
     send(client.getFd(), msg.c_str(), msg.size(), 0);
     return;
   }
@@ -22,7 +21,7 @@ void PassCommand::execute(const commandS& cmd, Client& client,
   if (cmd.args[0] == state.password) {
     client.setAuthenticated(true);
   } else {
-    std::string msg = ":server 464 Password incorrect\r\n";
+    std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH();
     send(client.getFd(), msg.c_str(), msg.size(), 0);
   }
 }
