@@ -30,7 +30,8 @@ class Server {
   void _handleNewConnection();
   void _handleClientActivity(std::size_t index);
   void _removeClient(std::size_t index);
-  bool _isValidPassword();
+  bool _isValidPassword(const std::string& password) const;
+  void _processClientBuffer(Client* client);
 
  public:
   Server(int port, std::string password);

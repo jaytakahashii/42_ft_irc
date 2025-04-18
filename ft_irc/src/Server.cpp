@@ -18,7 +18,7 @@
 
 // Serverのコンストラクタ
 Server::Server(int port, std::string password) : _parser(new Parser()) {
-  if (!_isValidPassword()) {
+  if (!_isValidPassword(password)) {
     printError("Invalid password.");
     delete _parser;  // パスワードが無効な場合はParserを削除
     exit(EXIT_FAILURE);
@@ -43,10 +43,10 @@ Server::~Server() {
 }
 
 // passwordのValidation
-bool Server::_isValidPassword() {
+bool Server::_isValidPassword(const std::string& password) const {
   // TODO : パスワードの検証を実装
   // ここでは単純にパスワードが空でないことを確認
-  return !_state.password.empty();
+  return !password.empty();
 }
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
@@ -136,7 +136,12 @@ void Server::_handleClientActivity(size_t index) {
   Client* client = _state.clients[clientFd];  // 一旦ポインタを取得 (別名)
   client->getReadBuffer() += buffer;          // char* -> std::string
 
-  // 簡易的な改行終端検出
+  _processClientBuffer(client);  // クライアントのバッファを処理
+}
+
+// クライアントのバッファを処理する
+void Server::_processClientBuffer(Client* client) {
+  // TODO : 現時点では簡易的な実装
   size_t pos;
   while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
     std::string line = client->getReadBuffer().substr(0, pos);
