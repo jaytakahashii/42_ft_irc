@@ -6,7 +6,7 @@
 #    By: shonakam <shonakam@student.42tokyo.jp>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/03/09 03:21:52 by shonakam          #+#    #+#              #
-#    Updated: 2025/04/20 12:59:20 by shonakam         ###   ########.fr        #
+#    Updated: 2025/04/20 13:12:47 by shonakam         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,4 +26,4 @@ test_parser:
 	@$(CXX) $(CXXFLAGS) -o test_parser $(parser)
 	@./test_parser; rm -f test_parser
 
-.PHONY: parser
+.PHONY: test_parser

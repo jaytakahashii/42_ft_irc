@@ -6,7 +6,7 @@
 /*   By: shonakam <shonakam@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 11:03:53 by shonakam          #+#    #+#             */
-/*   Updated: 2025/04/20 12:19:17 by shonakam         ###   ########.fr       */
+/*   Updated: 2025/04/20 20:33:01 by shonakam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
  * [prefix(option)] [command] [command parameter(up to 15)]
  * 
  * in	: [:username!~user@host PRIVMSG #channel :Hello, World!]
- * out	: Cmmand(enum)
+ * out	: ParsedResult
  */
 
 enum Command {
@@ -34,40 +34,49 @@ enum Command {
 	PING,
 	PONG,
 	QUIT,
+	KICK,
+	INVITE,
+	TOPIC,
+	MODE,
+	// MODE_I,
+	// MODE_T,
+	// MODE_K,
+	// MODE_O,
+	// MODE_L,
 	INVALID
 };
 
+struct commandS {
+	std::string					prefix;
+	Command						cmd;
+	std::vector<std::string>	args;
+};
+
 class Parser {
-	private:
-		void	handleJoin(const std::vector<std::string>& args);
-		void	handlePart(const std::vector<std::string>& args);
-		void	handlePrivmsg(const std::vector<std::string>& args);
-		void	handleNick(const std::vector<std::string>& args);
-		void	handleUser(const std::vector<std::string>& args);
-		void	handlePing(const std::vector<std::string>& args);
-		void	handlePong(const std::vector<std::string>& args);
-		void	handleQuit(const std::vector<std::string>& args);
-	
-		bool	isValidCommand(const std::string& cmd);
-		bool	isValidNick(const std::string& nick);
-		bool	isValidChannel(const std::string& channel);
-		bool	isValidMessage(const std::string& message);
-		
-		bool	isPrefix(const std::string& message);
-		std::string	extractPrefix(const std::string& message);
+	private:	
+		bool						isValidCommand(const std::string& cmd);
+		bool						isValidArgLength(const std::vector<std::string>& args, const Command cmd);
+
+		void						setCommand(std::istringstream& iss, commandS& result);
+		void						setMode(std::istringstream& iss, commandS& result);
+		void						setPrefix(std::istringstream& iss, commandS& result);
+		void						setArguments(std::string msg, commandS& result);
 
 	public:
+		// == OCCF ========================================
 		Parser();
 		Parser(const Parser& other);
 		Parser &operator=(const Parser& other);
 		~Parser();
 
-		Command						parseCommand(const std::string& message);
-		std::vector<std::string>	parseArguments(const std::string& message);
-		std::string					getErrorMessage(Command cmd);
+		commandS				parseCommand(const std::string& message);
 
 		class InvalidCommandException : public std::exception {
+			private:
+				std::string			_msg;
 			public :
+				explicit InvalidCommandException(const std::string& msg = "Invalid command");
+				virtual ~InvalidCommandException() throw();
 				virtual const char	*what() const throw();
 		};
 };
