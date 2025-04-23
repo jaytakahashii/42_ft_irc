@@ -19,8 +19,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client,
   std::string channelName = cmd.args[0];
   // チャンネル名の先頭が '#' でない場合はエラー
   if (channelName.empty() || channelName[0] != '#') {
-    client.sendMessage(":server 403 " + client.getNickname() + " " +
-                       channelName + " :No such channel\r\n");
+    std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(channelName);
+    client.sendMessage(msg);
     return;
   }
 
