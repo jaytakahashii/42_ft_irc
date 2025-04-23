@@ -23,7 +23,7 @@ void UserCommand::execute(const commandS& cmd, Client& client,
     return;
   }
 
-  if (cmd.args.size() != 4) {
+  if (cmd.args.size() < 4) {
     std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
     client.sendMessage(msg);
     return;
