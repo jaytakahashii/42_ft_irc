@@ -23,6 +23,7 @@ Server::Server(int port, std::string password) : _parser(new Parser()) {
     delete _parser;  // パスワードが無効な場合はParserを削除
     exit(EXIT_FAILURE);
   }
+  _state.serverName = "irc.42tokyo.jp";
   _state.host = "localhost";
   _state.port = port;
   _state.password = password;
