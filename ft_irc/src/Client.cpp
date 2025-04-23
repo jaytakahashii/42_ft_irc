@@ -1,8 +1,24 @@
 #include "Client.hpp"
 
+#include <netdb.h>
 #include <sys/socket.h>
 
+std::string Client::_getClientHostname() const {
+  struct sockaddr_storage addr;
+  socklen_t len = sizeof(addr);
+  char host[NI_MAXHOST];
+
+  if (getpeername(_fd, (struct sockaddr*)&addr, &len) == 0) {
+    if (getnameinfo((struct sockaddr*)&addr, len, host, sizeof(host), NULL, 0,
+                    NI_NUMERICHOST) == 0) {
+      return std::string(host);
+    }
+  }
+  return std::string("unknown");
+}
+
 Client::Client(int fd) : _fd(fd), _authenticated(false), _registered(false) {
+  _hostname = _getClientHostname();
 }
 
 Client::~Client() {
