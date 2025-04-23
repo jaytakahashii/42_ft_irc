@@ -5,6 +5,11 @@
 namespace irc {
 namespace numericReplies {
 
+// 403
+inline std::string ERR_NOSUCHCHANNEL(const std::string& channel) {
+  return ":server 403 " + channel + " :No such channel\r\n";
+}
+
 // 431
 inline std::string ERR_NONICKNAMEGIVEN() {
   return ":server 431 :No nickname given\r\n";
