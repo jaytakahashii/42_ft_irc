@@ -7,7 +7,7 @@
 #include "utils/utils.hpp"
 
 static bool isValidPort(int port) {
-  return (port > 0 && port <= 65535);
+  return (port >= 0 && port <= 65535);
 }
 
 int main(int argc, char** argv) {
