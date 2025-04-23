@@ -29,8 +29,31 @@ void Client::setRegistered(bool isRegistered) {
 }
 
 bool Client::isValidNickname(const std::string& nickname) const {
-  // TODO
-  return !nickname.empty() && nickname.size() <= 9;
+  /**
+   * Should be 1-9 characters long
+   * Should not contain spaces, colons
+   * Should start with a alphabetic character or special character
+   * Special characters: "[", "\", "]", "^", "_", "`", "{", "|", "}"
+   * Special characters ASCIIs: 91, 92, 93, 94, 95, 96, 123, 124, 125
+   */
+  if (nickname.empty() || nickname.size() > 9) {
+    return false;
+  }
+
+  char first = nickname[0];
+  if (!isalpha(first) &&
+      std::string("[]\\^_`{|}").find(first) == std::string::npos) {
+    return false;
+  }
+
+  for (size_t i = 1; i < nickname.size(); ++i) {
+    char c = nickname[i];
+    if (!isalnum(c) && std::string("[]\\^_`{|}").find(c) == std::string::npos) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 bool Client::isValidUsername(const std::string& username) const {
