@@ -7,11 +7,16 @@
 
 void UserCommand::execute(const commandS& cmd, Client& client,
                           serverStateS& state) {
+  if (!client.isAuthenticated()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    client.sendMessage(msg);
+    return;
+  }
   if (client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_ALREADYREGISTRED();
     client.sendMessage(msg);
+    return;
   }
-
   if (client.getNickname().empty()) {
     std::string msg = irc ::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
