@@ -28,7 +28,7 @@ jobs:
       - name: 🚀 Run executable to check behavior
         run: |
           chmod +x ./ircserv
-          ./ircserv &
+          ./ircserv 4242 password &
           sleep 1
           pkill ft_irc || true
 
