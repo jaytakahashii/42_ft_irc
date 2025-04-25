@@ -48,9 +48,11 @@ void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
     }
     realName += cmd.args[i];
   }
+  std::string serverName = server.getServerName();
+  (void)serverName;
   client.setRealname(realName);
   client.setRegistered(true);
   std::string msg = irc::numericReplies::RPL_WELCOME(
-      client.getNickname(), client.getUsername(), server.getServerName());
+      client.getNickname(), client.getUsername(), client.getHostname());
   client.sendMessage(msg);
 }

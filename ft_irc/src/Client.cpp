@@ -113,3 +113,7 @@ void Client::setUsername(const std::string& username) {
 void Client::setRealname(const std::string& realname) {
   _realname = realname;
 }
+
+const std::string& Client::getHostname() const {
+  return _hostname;
+}

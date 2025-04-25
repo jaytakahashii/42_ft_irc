@@ -38,4 +38,6 @@ class Client {
   void setNickname(const std::string& nickname);
   void setUsername(const std::string& username);
   void setRealname(const std::string& realname);
+
+  const std::string& getHostname() const;
 };
