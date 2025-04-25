@@ -4,11 +4,12 @@
 #include <string>
 #include <vector>
 
+#include "Parser.hpp"
+
 class Client;
 class CommandDispatcher;
 class Channel;
-#include "Parser.hpp"
-#include "commands/ICommand.hpp"
+class ICommand;
 
 class Server {
  private:
@@ -34,6 +35,7 @@ class Server {
 
   Server(int port, std::string password);
   ~Server();
+
   std::string getServerName() const;
   std::string getServerPassword() const;
 
