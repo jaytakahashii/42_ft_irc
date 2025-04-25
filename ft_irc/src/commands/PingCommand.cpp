@@ -6,8 +6,7 @@
 #include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
 
-void PingCommand::execute(const commandS& cmd, Client& client,
-                          serverStateS& state) {
+void PingCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
@@ -15,8 +14,9 @@ void PingCommand::execute(const commandS& cmd, Client& client,
   }
 
   if (cmd.args.size() < 1) {
-    // state が unused なのでとりあえず表示 TODO
-    client.sendMessage(state.password + ":server 461 " + client.getNickname() +
+    // server が unused なのでとりあえず表示 TODO
+    std::string password = server.getServerPassword();
+    client.sendMessage(password + ":server 461 " + client.getNickname() +
                        " PING :Not enough parameters\r\n");
     return;
   }

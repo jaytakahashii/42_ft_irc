@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "Client.hpp"
-#include "Server.hpp"
+class Server;
 
 struct commandS {
   std::string prefix;             // a.g. ":nickname!username@hostname"
@@ -13,8 +13,7 @@ struct commandS {
 
 class ICommand {
  public:
-  virtual void execute(const commandS& cmd, Client& client,
-                       serverStateS& state) = 0;
+  virtual void execute(const commandS& cmd, Client& client, Server& server) = 0;
   // clang-format off
   virtual ~ICommand() {}
   // clang-format on

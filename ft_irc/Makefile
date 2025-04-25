@@ -29,7 +29,6 @@ REP_H				= 001-099.hpp \
 
 HEADERS			= Server.hpp \
 							Client.hpp \
-							CommandDispatcher.hpp \
 							Channel.hpp \
 							Parser.hpp
 
@@ -63,7 +62,6 @@ UTIL_SRC		= utils.cpp
 SRC_FILES		=	main.cpp \
 							Server.cpp \
 							Client.cpp \
-							CommandDispatcher.cpp \
 							Channel.cpp \
 							Parser.cpp
 

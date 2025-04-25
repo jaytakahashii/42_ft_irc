@@ -3,5 +3,5 @@
 
 class PartCommand : public ICommand {
  public:
-  void execute(const commandS& cmd, Client& client, serverStateS& state);
+  void execute(const commandS& cmd, Client& client, Server& server);
 };

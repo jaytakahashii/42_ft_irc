@@ -1,10 +1,10 @@
 #include "commands/JoinCommand.hpp"
 
 #include "Channel.hpp"
+#include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
 
-void JoinCommand::execute(const commandS& cmd, Client& client,
-                          serverStateS& state) {
+void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
@@ -25,13 +25,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client,
   }
 
   // チャンネルが存在しない場合は新規作成
-  if (state.channels.find(channelName) == state.channels.end()) {
-    state.channels[channelName] = new Channel(channelName);
-    state.channels[channelName]->addOperator(client.getNickname());
+  if (server.channels.find(channelName) == server.channels.end()) {
+    server.channels[channelName] = new Channel(channelName);
+    server.channels[channelName]->addOperator(client.getNickname());
   }
 
   // チャンネルに参加する
-  Channel* channel = state.channels[channelName];  // チャンネルを取得
+  Channel* channel = server.channels[channelName];  // チャンネルを取得
 
   // すでに参加している場合はエラー
   if (!channel->hasClient(&client)) {

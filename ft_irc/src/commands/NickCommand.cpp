@@ -2,6 +2,7 @@
 
 #include <sys/socket.h>
 
+#include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
 
 /**
@@ -12,8 +13,7 @@
  * ERR_UNAVAILRESOURCE: blocked by the nick delay mechanism.
  * ERR_RESTRICTED: nickname is restricted.
  */
-void NickCommand::execute(const commandS& cmd, Client& client,
-                          serverStateS& state) {
+void NickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   // before PASS command
   if (!client.isAuthenticated()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
@@ -31,7 +31,7 @@ void NickCommand::execute(const commandS& cmd, Client& client,
   if (!client.isValidNickname(nickname)) {
     std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(nickname);
     client.sendMessage(msg);
-    client.sendMessage(state.host);  // unused params error対策
+    client.sendMessage(server.getServerName());  // unused    // TODO
     return;
   }
 

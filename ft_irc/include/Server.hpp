@@ -5,38 +5,37 @@
 #include <vector>
 
 class Client;
-class Parser;
 class CommandDispatcher;
 class Channel;
-
-// Serverの状態を保持する構造体 (他のクラスに渡す)
-struct serverStateS {
-  std::string serverName;
-  std::string host;
-  int port;
-  std::string password;
-  std::map<std::string, Channel*> channels;  // チャンネルのリスト
-  std::map<int, Client*> clients;            // クライアントのリスト
-};
+#include "Parser.hpp"
+#include "commands/ICommand.hpp"
 
 class Server {
  private:
-  serverStateS _state;
   int _serverSocket;
+  std::string _serverName;
+  int _port;
+  std::string _password;
   std::vector<struct pollfd> _pollfds;
-  Parser* _parser;
-  CommandDispatcher* _dispatcher;
+  Parser _parser;
+  std::map<std::string, ICommand*> _commandHandlers;
 
   void _setupServerSocket();
   void _handleNewConnection();
   void _handleClientActivity(std::size_t index);
   void _removeClient(std::size_t index);
-  bool _isValidPassword(const std::string& password) const;
   void _processClientBuffer(Client* client);
+  void _commandDispatch(const commandS& cmd, Client& client);
+  void _addCommandHandlers();
 
  public:
+  std::map<std::string, Channel*> channels;  // チャンネルのリスト
+  std::map<int, Client*> clients;            // クライアントのリスト
+
   Server(int port, std::string password);
   ~Server();
+  std::string getServerName() const;
+  std::string getServerPassword() const;
 
   void run();  // Main loop for the server
 };
