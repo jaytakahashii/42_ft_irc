@@ -104,7 +104,7 @@ inline std::string ERR_BADCHANMASK(const std::string& channel) {
 }
 
 // 481
-inline std::string ERR_NOPRIVILEGES(const std::string& mode) {
+inline std::string ERR_NOPRIVILEGES() {
   return ":server 481 :Permission Denied - You're not an IRC operator\r\n";
 }
 
