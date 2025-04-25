@@ -2,10 +2,11 @@
 
 #include "Channel.hpp"
 #include "Client.hpp"
+#include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
 
 void TopicCommand::execute(const commandS& cmd, Client& client,
-                           serverStateS& state) {
+                           Server& server) {
   if (!client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
@@ -20,12 +21,12 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
   std::string channelName = cmd.args[0];
 
   // チャンネルが存在しない場合はエラー
-  if (state.channels.find(channelName) == state.channels.end()) {
+  if (server.channels.find(channelName) == server.channels.end()) {
     client.sendMessage(":server 403 " + client.getNickname() + " " +
                        channelName + " :No such channel\r\n");
     return;
   }
-  Channel* channel = state.channels[channelName];
+  Channel* channel = server.channels[channelName];
   // チャンネルに参加していない場合はエラー
   if (!channel->hasClient(&client)) {
     client.sendMessage(":server 442 " + client.getNickname() + " " +

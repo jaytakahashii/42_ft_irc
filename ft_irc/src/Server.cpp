@@ -12,25 +12,28 @@
 #include <string>
 
 #include "Client.hpp"
-#include "CommandDispatcher.hpp"
 #include "Parser.hpp"
+#include "commands/JoinCommand.hpp"
+#include "commands/KickCommand.hpp"
+#include "commands/NickCommand.hpp"
+#include "commands/PartCommand.hpp"
+#include "commands/PassCommand.hpp"
+#include "commands/PingCommand.hpp"
+#include "commands/PrivmsgCommand.hpp"
+#include "commands/QuitCommand.hpp"
+#include "commands/TopicCommand.hpp"
+#include "commands/UserCommand.hpp"
 #include "utils/utils.hpp"
 
 // Serverのコンストラクタ
-Server::Server(int port, std::string password) : _parser(new Parser()) {
-  if (!_isValidPassword(password)) {
-    printError("Invalid password.");
-    delete _parser;  // パスワードが無効な場合はParserを削除
-    exit(EXIT_FAILURE);
-  }
-  _state.serverName = "irc.42tokyo.jp";
-  _state.host = "localhost";
-  _state.port = port;
-  _state.password = password;
-  _state.channels = std::map<std::string, Channel*>();
-  _state.clients = std::map<int, Client*>();
+Server::Server(int port, std::string password)
+    : _serverName("irc.42tokyo.jp"),
+      _port(port),
+      _password(password),
+      channels(std::map<std::string, Channel*>()),
+      clients(std::map<int, Client*>()) {
   _setupServerSocket();
-  _dispatcher = new CommandDispatcher(_state);
+  _addCommandHandlers();
 }
 
 Server::~Server() {
@@ -39,23 +42,12 @@ Server::~Server() {
     close(_pollfds[i].fd);
 
   // クライアントとチャンネルのクリーンアップ
-  for (std::map<int, Client*>::iterator it = _state.clients.begin();
-       it != _state.clients.end(); ++it)
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it)
     delete it->second;
 
   // ソケットのクリーンアップ
   close(_serverSocket);
-
-  // ParserとCommandDispatcherのクリーンアップ
-  delete _parser;
-  delete _dispatcher;
-}
-
-// passwordのValidation
-bool Server::_isValidPassword(const std::string& password) const {
-  // TODO : パスワードの検証を実装
-  // ここでは単純にパスワードが空でないことを確認
-  return !password.empty();
 }
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
@@ -72,16 +64,16 @@ void Server::_setupServerSocket() {
 
   sockaddr_in addr;
   std::memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;           // IPv4
-  addr.sin_addr.s_addr = INADDR_ANY;   // Any address
-  addr.sin_port = htons(_state.port);  // Port number
+  addr.sin_family = AF_INET;          // IPv4
+  addr.sin_addr.s_addr = INADDR_ANY;  // Any address
+  addr.sin_port = htons(_port);       // Port number
 
   // Bind the socket to the address and port
   bind(_serverSocket, (sockaddr*)&addr, sizeof(addr));  // register socket
 
   listen(_serverSocket, SOMAXCONN);  // Listen for incoming connections
 
-  std::cout << "Server listening on port " << _state.port << std::endl;
+  std::cout << "Server listening on port " << _port << std::endl;
 
   pollfd serverPollFd;
   serverPollFd.fd = _serverSocket;
@@ -119,7 +111,7 @@ void Server::_handleNewConnection() {
   _pollfds.push_back(clientPollFd);  // pollfdに追加
 
   // クライアントのソケットを管理するためのClientオブジェクトを作成
-  _state.clients[clientFd] = new Client(clientFd);
+  clients[clientFd] = new Client(clientFd);
   std::cout << "New client connected: " << clientFd << std::endl;
 }
 
@@ -142,8 +134,8 @@ void Server::_handleClientActivity(size_t index) {
   buffer[bytesRead] = '\0';
 
   // クライアントのソケットに対応するClientオブジェクトを取得
-  Client* client = _state.clients[clientFd];  // 一旦ポインタを取得 (別名)
-  client->getReadBuffer() += buffer;          // char* -> std::string
+  Client* client = clients[clientFd];  // 一旦ポインタを取得 (別名)
+  client->getReadBuffer() += buffer;   // char* -> std::string
 
   _processClientBuffer(client);  // クライアントのバッファを処理
 }
@@ -156,8 +148,8 @@ void Server::_processClientBuffer(Client* client) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
     // コマンドをパースして実行
-    commandS cmd = _parser->parse(line);
-    _dispatcher->dispatch(cmd, *client);
+    commandS cmd = _parser.parse(line);
+    _commandDispatch(cmd, *client);  // コマンドをディスパッチ
   }
 }
 
@@ -166,7 +158,43 @@ void Server::_removeClient(size_t index) {
   int clientFd = _pollfds[index].fd;
   std::cout << "Client disconnected: " << clientFd << std::endl;
   close(clientFd);                           // Close the socket
-  delete _state.clients[clientFd];           // Delete the Client object
-  _state.clients.erase(clientFd);            // Remove from map
+  delete clients[clientFd];                  // Delete the Client object
+  clients.erase(clientFd);                   // Remove from map
   _pollfds.erase(_pollfds.begin() + index);  // Remove from pollfds
+}
+
+void Server::_commandDispatch(const commandS& cmd, Client& client) {
+  // debug用の出力
+  std::cout << "Dispatching command: " << cmd.name << " from client "
+            << client.getFd() << std::endl;
+
+  if (_commandHandlers.find(cmd.name) != _commandHandlers.end()) {
+    _commandHandlers[cmd.name]->execute(cmd, client, *this);
+    return;
+  }
+  std::string msg = ":server 421 " + client.getNickname() + " " + cmd.name +
+                    " :Unknown command\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
+}
+
+void Server::_addCommandHandlers() {
+  _commandHandlers["PASS"] = new PassCommand();
+  _commandHandlers["NICK"] = new NickCommand();
+  _commandHandlers["USER"] = new UserCommand();
+  _commandHandlers["JOIN"] = new JoinCommand();
+  _commandHandlers["PART"] = new PartCommand();
+  _commandHandlers["PRIVMSG"] = new PrivmsgCommand();
+  _commandHandlers["PING"] = new PingCommand();
+  _commandHandlers["QUIT"] = new QuitCommand();
+  _commandHandlers["KICK"] = new KickCommand();
+  _commandHandlers["TOPIC"] = new TopicCommand();
+  // TODO : 他のコマンドもここに追加
+}
+
+std::string Server::getServerName() const {
+  return _serverName;
+}
+
+std::string Server::getServerPassword() const {
+  return _password;
 }

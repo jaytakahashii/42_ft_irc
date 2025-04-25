@@ -5,8 +5,7 @@
 #include "numericsReplies/001-099.hpp"
 #include "numericsReplies/400-499.hpp"
 
-void UserCommand::execute(const commandS& cmd, Client& client,
-                          serverStateS& state) {
+void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isAuthenticated()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
@@ -52,6 +51,6 @@ void UserCommand::execute(const commandS& cmd, Client& client,
   client.setRealname(realName);
   client.setRegistered(true);
   std::string msg = irc::numericReplies::RPL_WELCOME(
-      client.getNickname(), client.getUsername(), state.host);
+      client.getNickname(), client.getUsername(), server.getServerName());
   client.sendMessage(msg);
 }

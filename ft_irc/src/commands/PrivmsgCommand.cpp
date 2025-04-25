@@ -2,9 +2,11 @@
 
 #include "Channel.hpp"
 #include "Client.hpp"
+#include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
+
 void PrivmsgCommand::execute(const commandS& cmd, Client& client,
-                             serverStateS& state) {
+                             Server& server) {
   if (!client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
@@ -22,7 +24,7 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
 
   // チャンネルにメッセージを送信
   if (target[0] == '#') {
-    Channel* channel = state.channels[target];
+    Channel* channel = server.channels[target];
     if (channel) {
       std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
                             " :" + message + "\r\n";
@@ -39,8 +41,8 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
   else {
     Client* recipient = NULL;
     // クライアントのリストから受信者を検索
-    for (std::map<int, Client*>::iterator it = state.clients.begin();
-         it != state.clients.end(); ++it) {
+    for (std::map<int, Client*>::iterator it = server.clients.begin();
+         it != server.clients.end(); ++it) {
       if ((*it).second->getNickname() == target) {
         recipient = (*it).second;
         break;

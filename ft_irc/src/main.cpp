@@ -10,6 +10,10 @@ static bool isValidPort(int port) {
   return (port > 0 && port <= 65535);
 }
 
+static bool isValidPassword(const std::string& password) {
+  return !password.empty();
+}
+
 int main(int argc, char** argv) {
   if (argc != 3) {
     printError("Usage: ./ircserv <port> <password>");
@@ -22,6 +26,11 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
   std::string password = argv[2];
+
+  if (!isValidPassword(password)) {
+    printError("Invalid password.");
+    return EXIT_FAILURE;
+  }
 
   Server server(port, password);
   server.run();
