@@ -6,10 +6,12 @@ class Client {
   int _fd;
   bool _authenticated;  // PASS
   bool _registered;     // PASS -> NICK -> USER
+  std::string _hostname;
   std::string _readBuffer;
   std::string _nickname;
   std::string _username;
   std::string _realname;
+  std::string _getClientHostname() const;
 
  public:
   Client(int fd);

@@ -30,4 +30,6 @@ class Channel {
   void setTopic(const std::string& topic);
   const std::string& getTopic() const;
   void sendToAll(const std::string& message) const;
+
+  bool isValidName(const std::string& name) const;
 };

@@ -11,6 +11,7 @@ class Channel;
 
 // Serverの状態を保持する構造体 (他のクラスに渡す)
 struct serverStateS {
+  std::string serverName;
   std::string host;
   int port;
   std::string password;

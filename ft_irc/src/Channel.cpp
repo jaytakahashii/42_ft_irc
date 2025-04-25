@@ -77,3 +77,46 @@ void Channel::sendToAll(const std::string& message) const {
     (*it)->sendMessage(message);
   }
 }
+
+static bool isInvalidChannelChar(char c) {
+  // forbidden: space, ^G, comma, NULL, BELL, CR, LF
+  return (c == ' ' || c == 0x07 || c == ',' || c == 0x00 || c == 0x0D ||
+          c == 0x0A);
+}
+
+bool Channel::isValidName(const std::string& name) const {
+  /**
+   * Should be started with a '&', '#', '!', or '+'
+   * Should be between 1 and 50 characters long
+   * should not contain spaces, ^G(ASCII7), comma (,), NULL, BELL, CR, LF
+   * Names are case insensitive (e.g. #channel and #Channel are the same)
+   */
+  if (name.length() < 1 || name.length() > 50) {
+    return false;
+  }
+
+  if (name[0] == '!' && name.length() >= 6) {
+    for (int i = 1; i <= 5; ++i) {
+      if (!std::isupper(name[i]) && !std::isdigit(name[i])) {
+        return false;
+      }
+    }
+    for (std::size_t i = 6; i < name.length(); ++i) {
+      if (isInvalidChannelChar(name[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (name[0] != '&' && name[0] != '#' && name[0] != '+') {
+    return false;
+  }
+
+  for (std::size_t i = 1; i < name.length(); ++i) {
+    if (isInvalidChannelChar(name[i])) {
+      return false;
+    }
+  }
+  return true;
+}
