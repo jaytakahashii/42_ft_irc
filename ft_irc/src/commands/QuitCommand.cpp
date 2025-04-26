@@ -14,13 +14,15 @@ void QuitCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  std::string quitMsg = ":" + client.getNickname() + " " + cmd.name + "\r\n";
-  for (std::map<int, Client*>::iterator it = server.clients.begin();
-       it != server.clients.end(); ++it) {
-    (*it).second->sendMessage(quitMsg);
+  std::string quitMessage = "";
+  if (cmd.args.size() > 0) {
+    std::string quitMessage = cmd.args[0];
   }
-  close(client.getFd());
-  server.clients.erase(client.getFd());
+  std::string quitMsg = ":" + client.getNickname() + "!" +
+                        client.getUsername() + "@" + client.getHostname() +
+                        " QUIT :" + quitMessage;
+  // 全てのクライアントにQUITメッセージを送信
+  server.sendAllClients(quitMsg);
 
   // チャンネルからクライアントを削除
   for (std::map<std::string, Channel*>::iterator it = server.channels.begin();

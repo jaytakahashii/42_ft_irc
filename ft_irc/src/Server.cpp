@@ -11,6 +11,7 @@
 #include <iostream>
 #include <string>
 
+#include "Channel.hpp"  // Ensure the Channel class is fully defined
 #include "Client.hpp"
 #include "Parser.hpp"
 #include "commands/JoinCommand.hpp"
@@ -214,4 +215,11 @@ bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
     }
   }
   return false;
+}
+
+void Server::sendAllClients(const std::string& message) {
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    it->second->sendMessage(message);
+  }
 }
