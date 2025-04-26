@@ -201,3 +201,13 @@ std::string Server::getServerName() const {
 std::string Server::getServerPassword() const {
   return _password;
 }
+
+bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    if (it->second->getNickname() == nickname) {
+      return true;
+    }
+  }
+  return false;
+}

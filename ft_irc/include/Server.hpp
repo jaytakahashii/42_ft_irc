@@ -39,5 +39,7 @@ class Server {
   std::string getServerName() const;
   std::string getServerPassword() const;
 
+  bool isAlreadyUsedNickname(const std::string& nickname) const;
+
   void run();  // Main loop for the server
 };

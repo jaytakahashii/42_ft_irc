@@ -31,7 +31,12 @@ void NickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isValidNickname(nickname)) {
     std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(nickname);
     client.sendMessage(msg);
-    client.sendMessage(server.getServerName());  // unused    // TODO
+    return;
+  }
+
+  if (server.isAlreadyUsedNickname(nickname)) {
+    std::string msg = irc::numericReplies::ERR_NICKNAMEINUSE(nickname);
+    client.sendMessage(msg);
     return;
   }
 
