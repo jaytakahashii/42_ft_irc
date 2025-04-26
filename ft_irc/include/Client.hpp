@@ -11,6 +11,7 @@ class Client {
   std::string _nickname;
   std::string _username;
   std::string _realname;
+
   std::string _getClientHostname() const;
 
  public:
