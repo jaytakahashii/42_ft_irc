@@ -120,5 +120,10 @@ inline std::string ERR_RESTRICTED() {
   return "irc.42tokyo.jp 484 :Your connection is restricted!\r\n";
 }
 
+// 491
+inline std::string ERR_NOOPERHOST() {
+  return "irc.42tokyo.jp 491 :No O-lines for your host\r\n";
+}
+
 }  // namespace numericReplies
 }  // namespace irc

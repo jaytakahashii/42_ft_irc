@@ -142,3 +142,11 @@ void Client::setRealname(const std::string& realname) {
 const std::string& Client::getHostname() const {
   return _hostname;
 }
+
+bool Client::isOperator() const {
+  return _isOperator;
+}
+
+void Client::setOperator(bool isOperator) {
+  _isOperator = isOperator;
+}

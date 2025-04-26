@@ -11,5 +11,10 @@ inline std::string RPL_TOPIC(const std::string& channel,
   return "irc.42tokyo.jp 332 " + channel + " :" + topic + "\r\n";
 }
 
+// 381
+inline std::string RPL_YOUREOPER() {
+  return "irc.42tokyo.jp 381 :You are now an IRC operator\r\n";
+}
+
 }  // namespace numericReplies
 }  // namespace irc

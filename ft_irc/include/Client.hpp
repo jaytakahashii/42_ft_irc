@@ -42,4 +42,7 @@ class Client {
   void setRealname(const std::string& realname);
 
   const std::string& getHostname() const;
+
+  bool isOperator() const;
+  void setOperator(bool isOperator);
 };

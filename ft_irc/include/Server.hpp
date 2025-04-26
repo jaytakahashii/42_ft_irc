@@ -11,6 +11,8 @@ class CommandDispatcher;
 class Channel;
 class ICommand;
 
+#define AUTHORIZED_HOSTS "127.0.0.1"
+
 class Server {
  private:
   int _serverSocket;
