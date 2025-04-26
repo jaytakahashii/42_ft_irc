@@ -23,6 +23,7 @@
 #include "commands/QuitCommand.hpp"
 #include "commands/TopicCommand.hpp"
 #include "commands/UserCommand.hpp"
+#include "numericsReplies/400-499.hpp"
 #include "utils/utils.hpp"
 
 // Serverのコンストラクタ
@@ -174,8 +175,8 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
     _commandHandlers[cmd.name]->execute(cmd, client, *this);
     return;
   }
-  std::string msg = ":server 421 " + client.getNickname() + " " + cmd.name +
-                    " :Unknown command\r\n";
+
+  std::string msg = irc::numericReplies::ERR_UNKNOWNCOMMAND(cmd.name);
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 

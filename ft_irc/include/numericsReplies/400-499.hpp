@@ -28,6 +28,11 @@ inline std::string ERR_TOOMANYTARGETS(const std::string& target,
          abortMessage + "\r\n";
 }
 
+// 421
+inline std::string ERR_UNKNOWNCOMMAND(const std::string& command) {
+  return ":server 421 " + command + " :Unknown command\r\n";
+}
+
 // 431
 inline std::string ERR_NONICKNAMEGIVEN() {
   return ":server 431 :No nickname given\r\n";
