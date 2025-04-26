@@ -73,13 +73,37 @@ bool Client::isValidNickname(const std::string& nickname) const {
 }
 
 bool Client::isValidUsername(const std::string& username) const {
-  // TODO
-  return !username.empty() && username.size() <= 9;
+  /**
+   * * Should be 1-15 characters long
+   * * Should not contain NUL, CR, LR, " ", "@"
+   */
+  if (username.empty() || username.size() > 15) {
+    return false;
+  }
+  for (size_t i = 0; i < username.size(); ++i) {
+    char c = username[i];
+    if (c == '\0' || c == '\r' || c == '\n' || c == ' ' || c == '@') {
+      return false;
+    }
+  }
+  return true;
 }
 
 bool Client::isValidRealname(const std::string& realname) const {
-  // TODO
-  return !realname.empty() && realname.size() <= 9;
+  /**
+   * * Should be 1-15 characters long
+   * * Should not contain NUL, CR, LR, " ", "@"
+   */
+  if (realname.empty() || realname.size() > 15) {
+    return false;
+  }
+  for (size_t i = 0; i < realname.size(); ++i) {
+    char c = realname[i];
+    if (c == '\0' || c == '\r' || c == '\n' || c == ' ' || c == '@') {
+      return false;
+    }
+  }
+  return true;
 }
 
 std::string& Client::getReadBuffer() {

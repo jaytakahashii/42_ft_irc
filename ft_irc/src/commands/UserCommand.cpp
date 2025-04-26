@@ -5,17 +5,28 @@
 #include "numericsReplies/001-099.hpp"
 #include "numericsReplies/400-499.hpp"
 
+/**
+ * * @brief UserCommand constructor
+ * * @numericReplies
+ * * RPL_WELCOME
+ * * ERR_NEEDMOREPARAMS
+ * * ERR_ALREADYREGISTRED
+ * * @example
+ * * USER <user> <mode> <unused> <realname>
+ */
 void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isAuthenticated()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
     return;
   }
+
   if (client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_ALREADYREGISTRED();
     client.sendMessage(msg);
     return;
   }
+
   if (client.getNickname().empty()) {
     std::string msg = irc ::numericReplies::ERR_NOTREGISTERED();
     client.sendMessage(msg);
@@ -29,30 +40,25 @@ void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   if (!client.isValidUsername(cmd.args[0])) {
-    // TODO
     std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(cmd.args[0]);
     client.sendMessage(msg);
     return;
   }
-  if (client.isValidRealname(cmd.args[3]) == false) {
-    // TODO
+
+  if (!client.isValidRealname(cmd.args[3])) {
     std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(cmd.args[3]);
     client.sendMessage(msg);
     return;
   }
+
   client.setUsername(cmd.args[0]);
-  std::string realName;
-  for (size_t i = 3; i < cmd.args.size(); ++i) {
-    if (i != 3) {
-      realName += " ";
-    }
-    realName += cmd.args[i];
-  }
-  std::string serverName = server.getServerName();
-  (void)serverName;
-  client.setRealname(realName);
+  client.setRealname(cmd.args[3]);
   client.setRegistered(true);
   std::string msg = irc::numericReplies::RPL_WELCOME(
       client.getNickname(), client.getUsername(), client.getHostname());
   client.sendMessage(msg);
+
+  // TODO unused args
+  std::string serverName = server.getServerName();
+  (void)serverName;
 }
