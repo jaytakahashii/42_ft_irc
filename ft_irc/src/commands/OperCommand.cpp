@@ -38,7 +38,13 @@ void OperCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  if (cmd.args[0] != server.getServerPassword()) {
+  if (cmd.args[0] != client.getUsername()) {
+    std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH();
+    client.sendMessage(msg);
+    return;
+  }
+
+  if (cmd.args[1] != server.getServerPassword()) {
     std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH();
     client.sendMessage(msg);
     return;

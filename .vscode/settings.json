@@ -83,6 +83,7 @@
     "PASSWDMISMATCH",
     "pollfds",
     "Privmsg",
+    "YOUREOPER",
     "YOURHOST"
   ]
 }

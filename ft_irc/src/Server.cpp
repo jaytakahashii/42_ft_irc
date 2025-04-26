@@ -15,6 +15,7 @@
 #include "Parser.hpp"
 #include "commands/JoinCommand.hpp"
 #include "commands/KickCommand.hpp"
+#include "commands/ModeCommand.hpp"
 #include "commands/NickCommand.hpp"
 #include "commands/OperCommand.hpp"
 #include "commands/PartCommand.hpp"
@@ -192,7 +193,8 @@ void Server::_addCommandHandlers() {
   _commandHandlers["QUIT"] = new QuitCommand();
   _commandHandlers["KICK"] = new KickCommand();
   _commandHandlers["TOPIC"] = new TopicCommand();
-  // _commandHandlers["OPER"] = new OperCommand();
+  _commandHandlers["MODE"] = new ModeCommand();
+  _commandHandlers["OPER"] = new OperCommand();
   // TODO : 他のコマンドもここに追加
 }
 

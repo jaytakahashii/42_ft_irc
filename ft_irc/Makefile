@@ -20,6 +20,8 @@ CMD_H				= PassCommand.hpp \
 							QuitCommand.hpp \
 							KickCommand.hpp \
 							TopicCommand.hpp \
+							ModeCommand.hpp \
+							OperCommand.hpp \
 
 UTIL_H			= utils.hpp \
 							color.hpp
@@ -55,7 +57,9 @@ CMD_SRC			= PassCommand.cpp \
 							PrivmsgCommand.cpp \
 							QuitCommand.cpp \
 							KickCommand.cpp \
-							TopicCommand.cpp
+							TopicCommand.cpp \
+							ModeCommand.cpp \
+							OperCommand.cpp \
 
 UTIL_SRC		= utils.cpp
 
