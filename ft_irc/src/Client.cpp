@@ -17,7 +17,8 @@ std::string Client::_getClientHostname() const {
   return std::string("unknown");
 }
 
-Client::Client(int fd) : _fd(fd), _authenticated(false), _registered(false) {
+Client::Client(int fd)
+    : _fd(fd), _authenticated(false), _registered(false), _isOperator(false) {
   _hostname = _getClientHostname();
 }
 

@@ -6,6 +6,7 @@ class Client {
   int _fd;
   bool _authenticated;  // PASS
   bool _registered;     // PASS -> NICK -> USER
+  bool _isOperator;     // Server operator
   std::string _hostname;
   std::string _readBuffer;
   std::string _nickname;
