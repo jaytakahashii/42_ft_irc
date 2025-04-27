@@ -17,7 +17,6 @@ static const std::vector<std::string> parsers(std::string params) {
   }
   result.push_back(params);
   return result;
-  return result;
 }
 
 /**
@@ -83,6 +82,16 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       Channel* channel = server.channels[channels[i]];  // チャンネルを取得
       if (channel->getClientCount() >= 50) {            // TODO
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(channels[i]);
+        client.sendMessage(msg);
+        return;
+      }
+      if (channel->isInviteOnly()) {
+        std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(channels[i]);
+        client.sendMessage(msg);
+        return;
+      }
+      if (channel->hasClient(&client)) {
+        std::string msg = irc::numericReplies::ERR_BANNEDFROMCHAN(channels[i]);
         client.sendMessage(msg);
         return;
       }
