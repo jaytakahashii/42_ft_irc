@@ -76,7 +76,11 @@
   },
   "cSpell.words": [
     "ALREADYREGISTRED",
+    "BADCHANMASK",
+    "BANNEDFROMCHAN",
+    "CHANNELISFULL",
     "ERRONEUSNICKNAME",
+    "INVITEONLYCHAN",
     "ircserv",
     "NICKNAMEINUSE",
     "NONICKNAMEGIVEN",
