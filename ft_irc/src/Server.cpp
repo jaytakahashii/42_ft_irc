@@ -24,6 +24,7 @@
 #include "commands/PingCommand.hpp"
 #include "commands/PrivmsgCommand.hpp"
 #include "commands/QuitCommand.hpp"
+#include "commands/SquitCommand.hpp"
 #include "commands/TopicCommand.hpp"
 #include "commands/UserCommand.hpp"
 #include "numericsReplies/400-499.hpp"
@@ -217,6 +218,7 @@ void Server::_addCommandHandlers() {
   _commandHandlers["TOPIC"] = new TopicCommand();
   _commandHandlers["MODE"] = new ModeCommand();
   _commandHandlers["OPER"] = new OperCommand();
+  _commandHandlers["SQUIT"] = new SquitCommand();
   // TODO : 他のコマンドもここに追加
 }
 
@@ -258,4 +260,28 @@ void Server::removeClientFromAllChannels(Client& client) {
       }
     }
   }
+}
+
+void Server::deleteAllChannels() {
+  for (std::map<std::string, Channel*>::iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    delete it->second;
+  }
+  channels.clear();
+}
+
+void Server::killServer() {
+  std::string msg = irc::numericReplies::ERR_RESTRICTED();
+  sendAllClients(msg);
+
+  sleep(5);  // 5秒待機
+
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    removeClient(*it->second);
+  }
+
+  deleteAllChannels();
+  close(_serverSocket);
+  exit(0);
 }

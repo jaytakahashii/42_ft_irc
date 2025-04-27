@@ -45,5 +45,9 @@ class Server {
   void removeClientFromAllChannels(Client& client);
   void removeClient(Client& client);
 
+  void deleteAllChannels();
+
+  void killServer();
+
   void run();  // Main loop for the server
 };
