@@ -6,11 +6,12 @@
 /*   By: shonakam <shonakam@student.42tokyo.jp>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 11:40:49 by shonakam          #+#    #+#             */
-/*   Updated: 2025/04/20 20:56:11 by shonakam         ###   ########.fr       */
+/*   Updated: 2025/04/27 01:39:22 by shonakam         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "Parser.hpp"
+#include "../include/Parser.hpp"
+#include <iostream>
 
 // == OCCF ====================================================================
 Parser::Parser(void) { return ; }
@@ -38,78 +39,61 @@ Parser& Parser::operator=(const Parser& other) {
  * 9. If the command requires further processing (e.g., `MODE`), handle it appropriately.
  * 10. Return the `ParsedResult` containing the parsed command and its arguments.
  */
+ commandS	Parser::parseCommand(const std::string& message) {
+	std::string			safeMessage = handleBytes(message);
 
- commandS					Parser::parseCommand(const std::string& message) {
-	std::istringstream	iss(message);
-	std::string			token;
+	if (safeMessage.empty()) return commandS();
+
+	safeMessage = safeMessage.substr(0, safeMessage.length() - 2);
+	toIrcCharacters(safeMessage);
+	std::istringstream	iss(safeMessage);
 	commandS			result;
 
+	this->_hasPrefix = false;
 	setPrefix(iss, result);
 	setCommand(iss, result);
-	// if (result.cmd == INVALID) throw InvalidCommandException("Invalid command");
-	setArguments(message, result);
-	// if (!isValidArgLength(result.args, result.cmd)) {
-	// 	throw InvalidCommandException("Invalid argument length for command: " + message);
-	// }
+	setArguments(safeMessage, result);
+	this->_hasPrefix = false;
 	return result;
 }
 
 // == PRIVATE =================================================================
 
-bool	Parser::isValidCommand(const std::string& cmd) {
-	static std::set<std::string> commands;
-	if (commands.empty()) {
-		commands.insert("JOIN");
-		commands.insert("PART");
-		commands.insert("PRIVMSG");
-		commands.insert("NICK");
-		commands.insert("USER");
-		commands.insert("PING");
-		commands.insert("PONG");
-		commands.insert("QUIT");
-		commands.insert("KICK");
-		commands.insert("INVITE");
-		commands.insert("TOPIC");
-		commands.insert("MODE");
+std::string Parser::handleBytes(const std::string& message) {
+	if (message.empty() || message == "\r\n") return "";
+	if (message.length() > MAX_BYTE) return "";
+	if (message.length() < 2 || message.substr(message.length() - 2) != "\r\n") return "";
+
+	// trim [\r\n] from the end of the message
+	std::string body = message.substr(0, message.length() - 2);
+	for (size_t i = 0; i < body.size(); ++i) {
+		if (!std::isspace(body[i]))
+			return message;
 	}
-	return commands.find(cmd) != commands.end();
+	return "";
 }
 
-// bool	Parser::isValidArgLength(const std::vector<std::string>& args, const Command cmd) {
-// 	switch (cmd) {
-// 		case JOIN:
-// 			return args.size() == 1;
-// 		case PART:
-// 			return args.size() == 1;
-// 		case PRIVMSG:
-// 			return args.size() >= 2;
-// 		case NICK:
-// 			return args.size() == 1;
-// 		case USER:
-// 			return args.size() == 4;
-// 		case PING:
-// 			return args.size() == 0;
-// 		case PONG:
-// 			return args.size() == 1;
-// 		case QUIT:
-// 			return args.size() <= 1;
-// 		case KICK:
-// 			return args.size() == 2 || args.size() == 3;
-// 		case INVITE:
-// 			return args.size() == 2;
-// 		case TOPIC:
-// 			return args.size() == 1 || args.size() == 2;
-// 		default:
-// 			return false;
-// 	}
-// }
+void	Parser::toIrcCharacters(std::string& message) {
+	for (size_t i = 0; i < message.size(); ++i) {
+		if (message[i] == '{') {
+			message[i] = '[';
+		} else if (message[i] == '}') {
+			message[i] = ']';
+		} else if (message[i] == '|') {
+			message[i] = '\\';
+		} else if (message[i] == '^') {
+			message[i] = '~';
+		}
+	}
+}
 
 void Parser::setPrefix(std::istringstream& iss, commandS& result) {
 	std::string token;
-	if (!(iss >> token)) throw InvalidCommandException("Missing prefix or command");
 
+	iss >> token;
 	if (token[0] == ':') {
 		result.prefix = token.substr(1);
+		this->_hasPrefix = true;
 	} else {
 		iss.clear();
 		iss.seekg(0);
@@ -117,92 +101,29 @@ void Parser::setPrefix(std::istringstream& iss, commandS& result) {
 	}
 }
 
-
 void	Parser::setCommand(std::istringstream& iss, commandS& result) {
-	std::string			token;
+	std::string		token;
 
-	if (!(iss >> token)) throw InvalidCommandException();
-
+	iss >> token;
 	for (size_t i = 0; i < token.length(); ++i) {
 		if (token[i] >= 'a' && token[i] <= 'z')
 			token[i] = token[i] - 'a' + 'A';
 	}
-
-	if (!isValidCommand(token)) throw InvalidCommandException();
-
-	if (token == "JOIN")		{ result.cmd = JOIN; return ;}
-	if (token == "PART")		{ result.cmd = PART; return ;}
-	if (token == "PRIVMSG")		{ result.cmd = PRIVMSG; return ;}
-	if (token == "NICK")		{ result.cmd = NICK; return ;}
-	if (token == "USER")		{ result.cmd = USER; return ;}
-	if (token == "PING")		{ result.cmd = PING; return ;}
-	if (token == "PONG")		{ result.cmd = PONG; return ;}
-	if (token == "QUIT")		{ result.cmd = QUIT; return ;}
-	if (token == "KICK")		{ result.cmd = KICK; return ;}
-	if (token == "INVITE")		{ result.cmd = INVITE; return ;}
-	if (token == "TOPIC")		{ result.cmd = TOPIC; return ;}
-	if (token == "MODE") 		{ result.cmd = MODE; return ;}
-	result.cmd = INVALID;
+	result.name = token;
 }
 
-/*
- * @brief Set the mode for the channel.
- * MODE #channel +I
- * MODE #channel +T
- * MODE #channel +K password
- * MODE #channel +O user
- * MODE #channel +L user
- */
-// void	Parser::setMode(std::istringstream& iss, commandS& result) {
-// 	std::string channel, mode, extra;
-// 	if (!(iss >> channel)) throw InvalidCommandException("Missing channel");
-// 	if (!(iss >> mode)) throw InvalidCommandException("Missing mode argument");
-
-// 	result.modeInfo.channel = channel;
-
-// 	if (mode == "+I") {
-// 		if (iss >> extra) throw InvalidCommandException("Too many arguments for +I mode");
-// 		result.cmd = MODE_I;
-// 		return ;
-// 	}
-// 	if (mode == "+T") { 
-// 		if (iss >> extra) throw InvalidCommandException("Too many arguments for +T mode");
-// 		result.cmd = MODE_T; 
-// 		return ; 
-// 	}
-// 	if (mode == "+K") {
-// 		if (!(iss >> result.modeInfo.password)) throw InvalidCommandException("Missing password");
-// 		if (iss >> extra) throw InvalidCommandException("Too many arguments for +K mode");
-// 		result.cmd = MODE_K;
-// 		return ;
-// 	}
-// 	if (mode == "+O") {
-// 		if (!(iss >> result.modeInfo.user)) throw InvalidCommandException("Missing user");
-// 		if (iss >> extra) throw InvalidCommandException("Too many arguments for +O mode");
-// 		result.cmd = MODE_O;
-// 		return ;
-// 	}
-// 	if (mode == "+L") {
-// 		if (!(iss >> result.modeInfo.user)) throw InvalidCommandException("Missing user");
-// 		if (iss >> extra) throw InvalidCommandException("Too many arguments for +L mode");
-// 		result.cmd = MODE_L;
-// 		return ;
-// 	}
-// 	throw InvalidCommandException("Unknown mode: " + mode);
-// }
-
-#include <iostream>
 void	Parser::setArguments(std::string message, commandS& result) {
 	std::string	token;
 	size_t		position = 0;
 
+	if (this->_hasPrefix) position = result.prefix.length() + 2; // / Skip the prefix + [:, ' ']
 	while (position < message.length() && message[position] != ' ') position++; // Skip the command
 	while (position < message.length() && message[position] == ' ') position++; // Skip spaces
 
 	while (position < message.length()) {
 		if (message[position] == ':') {
 			position++;
-			while (message[position])
+			while (position < message.length())
 				token += message[position++];
 			result.args.push_back(token);
 			token.clear();
@@ -225,10 +146,40 @@ void	Parser::setArguments(std::string message, commandS& result) {
 	}
 }
 
+/*
+ * Prefix: server
+ * Command: 001
+ * Arguments: ["user", "Welcome to the IRC Network!"]
+ */
 
-// == EXCEPTION ===============================================================
-Parser::InvalidCommandException::InvalidCommandException(const std::string& msg): _msg(msg) {}
-Parser::InvalidCommandException::~InvalidCommandException() throw() {}
-const char*	Parser::InvalidCommandException::what() const throw() {
-	return _msg.c_str();
+void run(const std::string& message) {
+	commandS	result 	= Parser().parseCommand(message);
+
+	std::cout << "=======================================" << std::endl;
+	std::cout << "Message			: " << message << std::endl;
+	std::cout << "Prefix			: " << result.prefix << std::endl;
+	std::cout << "Parsed command		: " << result.name << std::endl;
+	std::cout << "Parsed arguments	: ";
+	for (size_t i = 0; i < result.args.size(); ++i) {
+		std::cout << "[" << result.args[i] << "] ";
+	}
+	std::cout << std::endl;
+}
+
+int main() {
+	run("NICK user123\r\n");
+	run("USER user123 0 * :Real Name\r\n");
+	run("JOIN #general\r\n");
+	run("PART #general :Goodbye!\r\n");
+	run("PRIVMSG #general :Hello, everyone!\r\n");
+	run("PRIVMSG #general :'{}^|'\r\n");
+	run("MODE #general +i\r\n");
+	run("PING server\r\n");
+	run("PONG server\r\n");
+	run("QUIT :Goodbye IRC!\r\n");
+	run("WHOIS user123\r\n");
+	run("KICK #general user123 :Reason for kick\r\n");
+	run("TOPIC #general :New Topic\r\n");
+	run("\r\n");
+	run("USER user123 0 * :Real Name");
 }
