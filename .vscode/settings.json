@@ -72,7 +72,8 @@
     "queue": "cpp",
     "ratio": "cpp",
     "stack": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "__assertion_handler": "cpp"
   },
   "cSpell.words": [
     "ALREADYREGISTRED",
@@ -80,6 +81,7 @@
     "ircserv",
     "NICKNAMEINUSE",
     "NONICKNAMEGIVEN",
+    "NOPRIVILEGES",
     "PASSWDMISMATCH",
     "pollfds",
     "Privmsg",
