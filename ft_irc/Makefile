@@ -1,15 +1,44 @@
 MAKEFILE 		= Makefile
 
-NAME				= ft_irc
+NAME				= ircserv
 
 SRC_DIR			= src/
+REP_DIR			= numericsReplies/
+CMD_DIR			= commands/
+UTIL_DIR		= utils/
 OBJ_DIR			= .obj/
 
-INCLUDE_DIR	= include/
-INCLUDE			= -I $(INCLUDE_DIR)
-HEADERS			= color.hpp
-HEADER			= $(addprefix $(INCLUDE_DIR), $(HEADERS))
+INC_DIR			= include/
+INC					= -I $(INC_DIR)
+CMD_H				= PassCommand.hpp \
+							NickCommand.hpp \
+							UserCommand.hpp \
+							JoinCommand.hpp \
+							PartCommand.hpp \
+							PingCommand.hpp \
+							PrivmsgCommand.hpp \
+							QuitCommand.hpp \
+							KickCommand.hpp \
+							TopicCommand.hpp \
+							ModeCommand.hpp \
+							OperCommand.hpp \
+							SquitCommand.hpp \
 
+UTIL_H			= utils.hpp \
+							color.hpp
+
+REP_H				= 001-099.hpp \
+							400-499.hpp
+
+HEADERS			= Server.hpp \
+							Client.hpp \
+							Channel.hpp \
+							Parser.hpp
+
+HEADERS			+= $(addprefix $(CMD_DIR), $(CMD_H))
+HEADERS			+= $(addprefix $(UTIL_DIR), $(UTIL_H))
+HEADERS			+= $(addprefix $(REP_DIR), $(REP_H))
+HEADER			+= $(addprefix $(INC_DIR), $(HEADERS))
 DEPS				= $(HEADER) $(MAKEFILE)
 
 CXX					= c++
@@ -20,8 +49,30 @@ SANITIZE		= -fsanitize=address -g3
 RM					= rm -rf
 
 SRC_DIR			= src/
-SRC_FILES		=	main.cpp
+CMD_SRC			= PassCommand.cpp \
+							NickCommand.cpp \
+							UserCommand.cpp \
+							JoinCommand.cpp \
+							PartCommand.cpp \
+							PingCommand.cpp \
+							PrivmsgCommand.cpp \
+							QuitCommand.cpp \
+							KickCommand.cpp \
+							TopicCommand.cpp \
+							ModeCommand.cpp \
+							OperCommand.cpp \
+							SquitCommand.cpp \
 
+UTIL_SRC		= utils.cpp
+
+SRC_FILES		=	main.cpp \
+							Server.cpp \
+							Client.cpp \
+							Channel.cpp \
+							Parser.cpp
+
+SRC_FILES		+= $(addprefix $(CMD_DIR), $(CMD_SRC))
+SRC_FILES		+= $(addprefix $(UTIL_DIR), $(UTIL_SRC))
 SRCS				= $(addprefix $(SRC_DIR), $(SRC_FILES))
 OBJS				= $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 
@@ -44,9 +95,11 @@ $(NAME): $(OBJ_DIR) $(OBJS) $(DEPS)
 
 $(OBJ_DIR):
 	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)$(CMD_DIR)
+	@mkdir -p $(OBJ_DIR)$(UTIL_DIR)
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INC) -c $< -o $@
 
 clean:
 	$(RM) $(OBJ_DIR)
