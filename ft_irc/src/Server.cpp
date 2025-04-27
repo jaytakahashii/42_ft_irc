@@ -285,3 +285,74 @@ void Server::killServer() {
   close(_serverSocket);
   exit(0);
 }
+
+bool Server::hasChannel(const std::string& channelName) const {
+  for (std::map<std::string, Channel*>::const_iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    if (ircEqual(it->first, channelName, true)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool isInvalidChannelChar(char c) {
+  // forbidden: space, ^G, comma, NULL, BELL, CR, LF
+  return (c == ' ' || c == 0x07 || c == ',' || c == 0x00 || c == 0x0D ||
+          c == 0x0A);
+}
+
+bool Server::isValidChannelName(const std::string& name) const {
+  /**
+   * Should be started with a '&', '#', '!', or '+'
+   * Should be between 1 and 50 characters long
+   * should not contain spaces, ^G(ASCII7), comma (,), NULL, BELL, CR, LF
+   * Names are case insensitive (e.g. #channel and #Channel are the same)
+   */
+  if (name.length() < 1 || name.length() > 50) {
+    return false;
+  }
+
+  if (name[0] == '!' && name.length() >= 6) {
+    for (int i = 1; i <= 5; ++i) {
+      if (!std::isupper(name[i]) && !std::isdigit(name[i])) {
+        return false;
+      }
+    }
+    for (std::size_t i = 6; i < name.length(); ++i) {
+      if (isInvalidChannelChar(name[i])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (name[0] != '&' && name[0] != '#' && name[0] != '+') {
+    return false;
+  }
+
+  for (std::size_t i = 1; i < name.length(); ++i) {
+    if (isInvalidChannelChar(name[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Server::isValidChannelKey(const std::string& channelKey) const {
+  /**
+   * * Should be 1-15 characters long
+   * * Should not contain NUL, CR, LR, " ", "@"
+   */
+  if (channelKey.empty() || channelKey.size() > 15) {
+    return false;
+  }
+
+  for (std::size_t i = 0; i < channelKey.size(); ++i) {
+    char c = channelKey[i];
+    if (c == '\0' || c == '\r' || c == '\n' || c == ' ' || c == '@') {
+      return false;
+    }
+  }
+  return true;
+}

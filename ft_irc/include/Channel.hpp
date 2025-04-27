@@ -11,6 +11,7 @@ class Channel {
   std::set<Client*> _clients;
   std::vector<std::string> _operators;
   std::string _topic;
+  std::string _key;
 
  public:
   Channel(const std::string& name);
@@ -31,5 +32,7 @@ class Channel {
   const std::string& getTopic() const;
   void sendToAll(const std::string& message) const;
 
-  bool isValidName(const std::string& name) const;
+  void setKey(const std::string& key);
+  const std::string& getKey() const;
+  bool hasKey() const;
 };

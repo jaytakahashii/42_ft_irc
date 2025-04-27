@@ -45,7 +45,12 @@ class Server {
   void removeClientFromAllChannels(Client& client);
   void removeClient(Client& client);
 
+  bool isValidChannelName(const std::string& channelName) const;
+  bool isValidChannelKey(const std::string& channelKey) const;
+
   void deleteAllChannels();
+
+  bool hasChannel(const std::string& channelName) const;
 
   void killServer();
 

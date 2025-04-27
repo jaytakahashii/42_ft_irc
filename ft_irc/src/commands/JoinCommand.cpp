@@ -2,8 +2,39 @@
 
 #include "Channel.hpp"
 #include "Server.hpp"
+#include "numericsReplies/300-399.hpp"
 #include "numericsReplies/400-499.hpp"
 
+static const std::vector<std::string> parsers(std::string params) {
+  // ','で分割
+  std::vector<std::string> result;
+  std::string token;
+  size_t pos = 0;
+  while ((pos = params.find(',')) != std::string::npos) {
+    token = params.substr(0, pos);
+    result.push_back(token);
+    params.erase(0, pos + 1);
+  }
+  result.push_back(params);
+  return result;
+  return result;
+}
+
+/**
+ * * @brief JoinCommandクラスの実装
+ * * @numericsReplies
+ * * * ERR_NEEDMOREPARAMS
+ * * * ERR_BANNEDFROMCHAN
+ * * * ERR_INVITEONLYCHAN
+ * * * ERR_BADCHANNELKEY
+ * * * ERR_CHANNELISFULL
+ * * * ERR_BADCHANMASK
+ * * * ERR_NOSUCHCHANNEL
+ * * * ERR_TOOMANYCHANNELS
+ * * * ERR_TOOMANYTARGETS
+ * * * ERR_UNAVAILRESOURCE
+ * * * RPL_TOPIC
+ */
 void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
@@ -11,55 +42,71 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  if (cmd.args.empty()) {
-    client.sendMessage("461 JOIN :Not enough parameters\r\n");
-    return;
-  }
-
-  std::string channelName = cmd.args[0];
-  // チャンネル名の先頭が '#' でない場合はエラー
-  if (channelName.empty() || channelName[0] != '#') {
-    std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(channelName);
+  if (cmd.args.size() < 1) {
+    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
     client.sendMessage(msg);
     return;
   }
 
-  // チャンネルが存在しない場合は新規作成
-  if (server.channels.find(channelName) == server.channels.end()) {
-    server.channels[channelName] = new Channel(channelName);
-    server.channels[channelName]->addOperator(client.getNickname());
+  // チャンネル名のバリデーション
+  std::vector<std::string> channels = parsers(cmd.args[0]);
+  for (size_t i = 0; i < channels.size(); ++i) {
+    if (!server.isValidChannelName(channels[i])) {
+      std::string msg = irc::numericReplies::ERR_BADCHANMASK(channels[i]);
+      client.sendMessage(msg);
+      return;
+    }
+  }
+  // key validation
+  std::vector<std::string> keys = std::vector<std::string>();
+  if (cmd.args.size() == 2) {
+    keys = parsers(cmd.args[1]);
+    for (size_t i = 0; i < keys.size(); ++i) {
+      if (!server.isValidChannelKey(keys[i])) {
+        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(channels[i]);
+        client.sendMessage(msg);
+        return;
+      }
+    }
   }
 
-  // チャンネルに参加する
-  Channel* channel = server.channels[channelName];  // チャンネルを取得
+  for (size_t i = 0; i < channels.size(); ++i) {
+    // チャンネルが存在しない場合は新規作成
+    if (!server.hasChannel(channels[i])) {
+      server.channels[channels[i]] = new Channel(channels[i]);
+      std::string joinMsg = ":" + client.getNickname() + "!" +
+                            client.getUsername() + "@" + client.getHostname() +
+                            " JOIN " + channels[i] + "\r\n";
+      client.sendMessage(joinMsg);
+    } else {
+      // チャンネルに参加する
+      Channel* channel = server.channels[channels[i]];  // チャンネルを取得
+      if (channel->getClientCount() >= 50) {            // TODO
+        std::string msg = irc::numericReplies::ERR_CHANNELISFULL(channels[i]);
+        client.sendMessage(msg);
+        return;
+      }
+      // チャンネルに参加する
+      if (keys.size() > i) {
+        if (keys[i] != channel->getKey()) {
+          std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(channels[i]);
+          client.sendMessage(msg);
+          return;
+        }
+      } else if (channel->getKey() != "") {
+        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(channels[i]);
+        client.sendMessage(msg);
+        return;
+      }
 
-  // すでに参加している場合はエラー
-  if (!channel->hasClient(&client)) {
-    channel->addClient(&client);
-
-    // JOIN通知をそのチャンネルの全員に送信
-    std::string joinMsg = ":" + client.getNickname() + "!" +
-                          client.getUsername() + "@localhost JOIN " +
-                          channelName + "\r\n";
-    for (std::set<Client*>::iterator it = channel->getClients().begin();
-         it != channel->getClients().end(); ++it) {
-      (*it)->sendMessage(joinMsg);
+      channel->addClient(&client);
+      std::string joinMsg = ":" + client.getNickname() + "!" +
+                            client.getUsername() + "@" + client.getHostname() +
+                            " JOIN " + channels[i] + "\r\n";
+      channel->sendToAll(joinMsg);
+      std::string topicMsg =
+          irc::numericReplies::RPL_TOPIC(channels[i], channel->getTopic());
+      client.sendMessage(topicMsg);
     }
-
-    // 参加者一覧（353）、終了（366）
-    std::string names;
-    for (std::set<Client*>::iterator it = channel->getClients().begin();
-         it != channel->getClients().end(); ++it) {
-      names += (*it)->getNickname() + " ";
-    }
-    client.sendMessage(":server 353 " + client.getNickname() + " = " +
-                       channelName + " :" + names + "\r\n");
-    client.sendMessage(":server 366 " + client.getNickname() + " " +
-                       channelName + " :End of /NAMES list\r\n");
-  }
-  // すでに参加している場合は何もしない
-  else {
-    client.sendMessage(":server 443 " + client.getNickname() + " " +
-                       channelName + " :You are already on that channel\r\n");
   }
 }
