@@ -5,6 +5,13 @@
 namespace irc {
 namespace numericReplies {
 
+// 324
+inline std::string RPL_CHANNELMODEIS(const std::string& channel,
+                                     const std::string& mode,
+                                     const std::string& params) {
+  return "irc.42tokyo.jp 324 :" + channel + " " + mode + " " + params + "\r\n";
+}
+
 // 332
 inline std::string RPL_TOPIC(const std::string& channel,
                              const std::string& topic) {

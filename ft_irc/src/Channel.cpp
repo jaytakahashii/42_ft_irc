@@ -5,7 +5,13 @@
 #include "Client.hpp"
 
 Channel::Channel(const std::string& name)
-    : _name(name), _topic("no topic"), _key("") {
+    : _name(name),
+      _topic("no topic"),
+      _key(""),
+      _inviteOnly(false),
+      _topicRestricted(false),
+      _isUserLimit(false),
+      _userLimit(0) {
   // チャンネルの初期化
   _clients.clear();
   _operators.clear();
@@ -47,6 +53,9 @@ void Channel::removeClient(Client* client) {
       _operators.push_back((*it)->getNickname());
     }
   }
+
+  std::string msg = ":" + client->getNickname() + "!" + client->getUsername() +
+                    "@" + client->getHostname() + " PART " + _name + "\r\n";
 }
 
 const std::set<Client*>& Channel::getClients() const {
@@ -105,4 +114,36 @@ void Channel::setKey(const std::string& key) {
 
 const std::string& Channel::getKey() const {
   return _key;
+}
+
+void Channel::setInviteOnly(bool inviteOnly) {
+  _inviteOnly = inviteOnly;
+}
+
+bool Channel::isInviteOnly() const {
+  return _inviteOnly;
+}
+
+void Channel::setTopicRestricted(bool topicRestricted) {
+  _topicRestricted = topicRestricted;
+}
+
+bool Channel::isTopicRestricted() const {
+  return _topicRestricted;
+}
+
+void Channel::setUserLimit(int userLimit, bool isUserLimit) {
+  _isUserLimit = isUserLimit;
+  if (isUserLimit) {
+    _userLimit = userLimit;
+  } else {
+    _userLimit = -1;
+  }
+}
+
+std::size_t Channel::getUserLimit() const {
+  if (_isUserLimit) {
+    return _userLimit;
+  }
+  return -1;
 }

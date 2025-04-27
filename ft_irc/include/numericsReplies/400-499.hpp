@@ -89,6 +89,12 @@ inline std::string ERR_CHANNELISFULL(const std::string& channel) {
   return "irc.42tokyo.jp 471 " + channel + " :Cannot join channel (+l)\r\n";
 }
 
+// 472
+inline std::string ERR_UNKNOWNMODE(char mode, const std::string& channel) {
+  return "irc.42tokyo.jp 472 :" + std::string(1, mode) +
+         " :is unknown mode char to me for " + channel + "\r\n";
+}
+
 // 473
 inline std::string ERR_INVITEONLYCHAN(const std::string& channel) {
   return "irc.42tokyo.jp 473 " + channel + " :Cannot join channel (+i)\r\n";
@@ -113,6 +119,11 @@ inline std::string ERR_BADCHANMASK(const std::string& channel) {
 inline std::string ERR_NOPRIVILEGES() {
   return "irc.42tokyo.jp 481 :Permission Denied - You're not an IRC "
          "operator\r\n";
+}
+
+// 482
+inline std::string ERR_CHANOPRIVSNEEDED(const std::string& channel) {
+  return "irc.42tokyo.jp 482 :" + channel + " :You're not channel operator\r\n";
 }
 
 // 484
