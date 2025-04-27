@@ -171,7 +171,6 @@ void Server::removeClient(Client& client) {
       break;
     }
   }
-
   if (targetFd == -1) {
     printError("Client not found in clients map");
     return;
@@ -188,7 +187,7 @@ void Server::removeClient(Client& client) {
   clients.erase(targetFd);
 
   // Clientインスタンスを削除
-  delete &client;
+  delete clients[targetFd];
 }
 
 void Server::_commandDispatch(const commandS& cmd, Client& client) {
