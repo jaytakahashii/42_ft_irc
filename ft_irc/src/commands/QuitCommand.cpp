@@ -20,7 +20,8 @@ void QuitCommand::execute(const commandS& cmd, Client& client, Server& server) {
     (*it).second->sendMessage(quitMsg);
   }
   close(client.getFd());
-  server.clients.erase(client.getFd());
+  // ↓SEGV原因 pollでeraseしてるfdみてる↓
+  // server.clients.erase(client.getFd());
 
   // チャンネルからクライアントを削除
   for (std::map<std::string, Channel*>::iterator it = server.channels.begin();

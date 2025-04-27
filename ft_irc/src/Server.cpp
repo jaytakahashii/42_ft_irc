@@ -83,7 +83,8 @@ void Server::_setupServerSocket() {
 
 void Server::run() {
   while (true) {
-    if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
+    // ↓SEGV原因 quitでeraseしてるため↓
+    if ((poll(&_pollfds[0], _pollfds.size(), -1) == -1))
       continue;
 
     for (size_t i = 0; i < _pollfds.size(); ++i) {
