@@ -152,7 +152,7 @@ void Server::_processClientBuffer(Client* client) {
     std::string line = client->getReadBuffer().substr(0, pos);
     client->getReadBuffer().erase(0, pos + 1);
     // コマンドをパースして実行
-    commandS cmd = _parser.parse(line);
+    commandS cmd = _parser.parseCommand(line);
     if (cmd.name == "")
       continue;                      // 無効なコマンドは無視
     _commandDispatch(cmd, *client);  // コマンドをディスパッチ
