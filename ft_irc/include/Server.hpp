@@ -23,12 +23,12 @@ class Server {
   Parser _parser;
   std::map<std::string, ICommand*> _commandHandlers;
 
+  void _addCommandHandlers();
   void _setupServerSocket();
   void _handleNewConnection();
   void _handleClientActivity(std::size_t index);
   void _processClientBuffer(Client* client);
   void _commandDispatch(const commandS& cmd, Client& client);
-  void _addCommandHandlers();
   void _removeClient(size_t index);
 
  public:

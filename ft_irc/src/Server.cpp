@@ -48,8 +48,15 @@ Server::~Server() {
 
   // クライアントとチャンネルのクリーンアップ
   for (std::map<int, Client*>::const_iterator it = clients.begin();
-       it != clients.end(); ++it)
+       it != clients.end(); ++it) {
+    close(it->second->getFd());
     delete it->second;
+  }
+
+  for (std::map<std::string, Channel*>::const_iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    delete it->second;
+  }
 
   // ソケットのクリーンアップ
   close(_serverSocket);
