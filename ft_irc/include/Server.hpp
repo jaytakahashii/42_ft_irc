@@ -26,7 +26,6 @@ class Server {
   void _setupServerSocket();
   void _handleNewConnection();
   void _handleClientActivity(std::size_t index);
-  void _removeClient(std::size_t index);
   void _processClientBuffer(Client* client);
   void _commandDispatch(const commandS& cmd, Client& client);
   void _addCommandHandlers();
@@ -42,7 +41,9 @@ class Server {
   std::string getServerPassword() const;
 
   bool isAlreadyUsedNickname(const std::string& nickname) const;
-  void Server::sendAllClients(const std::string& message);
+  void sendAllClients(const std::string& message) const;
+  void removeClientFromAllChannels(Client& client);
+  void removeClient(Client& client);
 
   void run();  // Main loop for the server
 };

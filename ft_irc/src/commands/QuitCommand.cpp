@@ -16,24 +16,13 @@ void QuitCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   std::string quitMessage = "";
   if (cmd.args.size() > 0) {
-    std::string quitMessage = cmd.args[0];
+    quitMessage = " :" + cmd.args[0];
   }
   std::string quitMsg = ":" + client.getNickname() + "!" +
                         client.getUsername() + "@" + client.getHostname() +
-                        " QUIT :" + quitMessage;
+                        " QUIT" + quitMessage + "\r\n";
   // 全てのクライアントにQUITメッセージを送信
   server.sendAllClients(quitMsg);
 
-  // チャンネルからクライアントを削除
-  for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
-       it != server.channels.end(); ++it) {
-    Channel* channel = it->second;
-    if (channel->hasClient(&client)) {
-      channel->removeClient(&client);
-      if (channel->getClientCount() == 0) {
-        delete channel;
-        server.channels.erase(it->first);
-      }
-    }
-  }
+  server.removeClient(client);
 }

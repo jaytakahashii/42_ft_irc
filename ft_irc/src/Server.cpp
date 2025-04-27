@@ -46,7 +46,7 @@ Server::~Server() {
     close(_pollfds[i].fd);
 
   // クライアントとチャンネルのクリーンアップ
-  for (std::map<int, Client*>::iterator it = clients.begin();
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
        it != clients.end(); ++it)
     delete it->second;
 
@@ -126,20 +126,19 @@ void Server::_handleClientActivity(size_t index) {
 
   // clientFd : pollfdsのfd (クライアントのソケット)
   int clientFd = _pollfds[index].fd;
+  Client* client = clients[clientFd];  // 一旦ポインタを取得 (別名)
 
   // recv : ソケットからデータを受信
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    _removeClient(index);  // クライアントが切断された場合
+    removeClient(*client);
     return;
   }
 
   // 受信したデータを文字列として扱う
   buffer[bytesRead] = '\0';
 
-  // クライアントのソケットに対応するClientオブジェクトを取得
-  Client* client = clients[clientFd];  // 一旦ポインタを取得 (別名)
-  client->getReadBuffer() += buffer;   // char* -> std::string
+  client->getReadBuffer() += buffer;  // char* -> std::string
 
   _processClientBuffer(client);  // クライアントのバッファを処理
 }
@@ -160,13 +159,35 @@ void Server::_processClientBuffer(Client* client) {
 }
 
 // クライアントを削除する (leaks防止)
-void Server::_removeClient(size_t index) {
-  int clientFd = _pollfds[index].fd;
-  std::cout << "Client disconnected: " << clientFd << std::endl;
-  close(clientFd);                           // Close the socket
-  delete clients[clientFd];                  // Delete the Client object
-  clients.erase(clientFd);                   // Remove from map
-  _pollfds.erase(_pollfds.begin() + index);  // Remove from pollfds
+void Server::removeClient(Client& client) {
+  int targetFd = -1;
+
+  // fdを探す
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    if (it->second == &client) {
+      targetFd = it->first;
+      break;
+    }
+  }
+
+  if (targetFd == -1) {
+    printError("Client not found in clients map");
+    return;
+  }
+
+  std::cout << "Client disconnected: " << targetFd << std::endl;
+  // チャンネルからも削除
+  removeClientFromAllChannels(client);
+
+  // ソケットを閉じる
+  close(targetFd);
+
+  // clientsリストから削除
+  clients.erase(targetFd);
+
+  // Clientインスタンスを削除
+  delete &client;
 }
 
 void Server::_commandDispatch(const commandS& cmd, Client& client) {
@@ -217,9 +238,24 @@ bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
   return false;
 }
 
-void Server::sendAllClients(const std::string& message) {
-  for (std::map<int, Client*>::iterator it = clients.begin();
+void Server::sendAllClients(const std::string& message) const {
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
        it != clients.end(); ++it) {
-    it->second->sendMessage(message);
+    if (it->second->isRegistered())
+      it->second->sendMessage(message);
+  }
+}
+
+void Server::removeClientFromAllChannels(Client& client) {
+  for (std::map<std::string, Channel*>::iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (channel->hasClient(&client)) {
+      channel->removeClient(&client);
+      if (channel->getClientCount() == 0) {
+        delete channel;
+        channels.erase(it->first);
+      }
+    }
   }
 }

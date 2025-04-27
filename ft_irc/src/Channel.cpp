@@ -29,7 +29,20 @@ Client* Channel::getClient(const std::string& nickname) const {
 }
 
 void Channel::removeClient(Client* client) {
+  if (isOperator(client->getNickname())) {
+    _operators.erase(std::remove(_operators.begin(), _operators.end(),
+                                 client->getNickname()),
+                     _operators.end());
+  }
   _clients.erase(client);
+
+  if (_operators.empty()) {
+    // 一番前に登録されたクライアントをオペレーターにする
+    std::set<Client*>::iterator it = _clients.begin();
+    if (it != _clients.end()) {
+      _operators.push_back((*it)->getNickname());
+    }
+  }
 }
 
 const std::set<Client*>& Channel::getClients() const {
