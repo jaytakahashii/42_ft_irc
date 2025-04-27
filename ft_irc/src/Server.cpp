@@ -132,7 +132,7 @@ void Server::_handleClientActivity(size_t index) {
   // recv : ソケットからデータを受信
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    removeClient(*client);
+    _removeClient(index);
     return;
   }
 
@@ -158,37 +158,55 @@ void Server::_processClientBuffer(Client* client) {
     _commandDispatch(cmd, *client);  // コマンドをディスパッチ
   }
 }
-
 // クライアントを削除する (leaks防止)
-void Server::removeClient(Client& client) {
-  int targetFd = -1;
-
-  // fdを探す
-  for (std::map<int, Client*>::iterator it = clients.begin();
-       it != clients.end(); ++it) {
-    if (it->second == &client) {
-      targetFd = it->first;
-      break;
-    }
-  }
-  if (targetFd == -1) {
-    printError("Client not found in clients map");
-    return;
-  }
-
-  std::cout << "Client disconnected: " << targetFd << std::endl;
-  // チャンネルからも削除
-  removeClientFromAllChannels(client);
-
-  // ソケットを閉じる
-  close(targetFd);
-
-  // clientsリストから削除
-  clients.erase(targetFd);
-
-  // Clientインスタンスを削除
-  delete clients[targetFd];
+void Server::_removeClient(size_t index) {
+  int clientFd = _pollfds[index].fd;
+  std::cout << "Client disconnected: " << clientFd << std::endl;
+  close(clientFd);                           // Close the socket
+  delete clients[clientFd];                  // Delete the Client object
+  clients.erase(clientFd);                   // Remove from map
+  _pollfds.erase(_pollfds.begin() + index);  // Remove from pollfds
 }
+// クライアントを削除する (leaks防止)
+// void Server::removeClient(Client& client) {
+//   int targetFd = -1;
+
+//   // fdを探す
+//   for (std::map<int, Client*>::iterator it = clients.begin();
+//        it != clients.end(); ++it) {
+//     std::cout << "ldskjflsdkjf" << std::endl;
+//     if (it->second == &client) {
+//       targetFd = it->first;
+//       break;
+//     }
+//   }
+//   if (targetFd == -1) {
+//     printError("Client not found in clients map");
+//     return;
+//   }
+
+//   std::map<int, Client*>::iterator it = clients.find(targetFd);
+//   clients.erase(it);  // クライアントを削除
+
+//   std::cout << "Client disconnected: " << targetFd << std::endl;
+//   // チャンネルからも削除
+//   removeClientFromAllChannels(client);
+
+//   // pollfd  // pollfdから削除
+//   for (std::vector<struct pollfd>::iterator it = _pollfds.begin();
+//        it != _pollfds.end(); ++it) {
+//     if (it->fd == targetFd) {
+//       _pollfds.erase(it);
+//       break;
+//     }
+//   }
+
+//   // ソケットを閉じる
+//   close(targetFd);
+
+//   // Clientインスタンスを削除
+//   delete clients[targetFd];
+// }
 
 void Server::_commandDispatch(const commandS& cmd, Client& client) {
   // debug用の出力
@@ -232,7 +250,7 @@ std::string Server::getServerPassword() const {
 bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
   for (std::map<int, Client*>::const_iterator it = clients.begin();
        it != clients.end(); ++it) {
-    if (it->second->getNickname() == nickname) {
+    if (it->second && it->second->getNickname() == nickname) {
       return true;
     }
   }
@@ -277,7 +295,7 @@ void Server::killServer() {
 
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
-    removeClient(*it->second);
+    _removeClient(it->second->getFd());
   }
 
   deleteAllChannels();

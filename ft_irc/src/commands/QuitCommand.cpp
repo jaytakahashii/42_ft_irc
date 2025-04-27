@@ -23,6 +23,5 @@ void QuitCommand::execute(const commandS& cmd, Client& client, Server& server) {
                         " QUIT" + quitMessage + "\r\n";
   // 全てのクライアントにQUITメッセージを送信
   server.sendAllClients(quitMsg);
-
-  server.removeClient(client);
+  close(client.getFd());
 }

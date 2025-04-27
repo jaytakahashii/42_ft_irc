@@ -29,6 +29,7 @@ class Server {
   void _processClientBuffer(Client* client);
   void _commandDispatch(const commandS& cmd, Client& client);
   void _addCommandHandlers();
+  void _removeClient(size_t index);
 
  public:
   std::map<std::string, Channel*> channels;  // チャンネルのリスト
@@ -43,7 +44,6 @@ class Server {
   bool isAlreadyUsedNickname(const std::string& nickname) const;
   void sendAllClients(const std::string& message) const;
   void removeClientFromAllChannels(Client& client);
-  void removeClient(Client& client);
 
   bool isValidChannelName(const std::string& channelName) const;
   bool isValidChannelKey(const std::string& channelKey) const;
