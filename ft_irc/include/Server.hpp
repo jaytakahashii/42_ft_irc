@@ -1,0 +1,58 @@
+#pragma once
+
+#include <map>
+#include <string>
+#include <vector>
+
+#include "Parser.hpp"
+
+class Client;
+class CommandDispatcher;
+class Channel;
+class ICommand;
+
+#define AUTHORIZED_HOSTS "127.0.0.1"
+
+class Server {
+ private:
+  int _serverSocket;
+  std::string _serverName;
+  int _port;
+  std::string _password;
+  std::vector<struct pollfd> _pollfds;
+  Parser _parser;
+  std::map<std::string, ICommand*> _commandHandlers;
+
+  void _addCommandHandlers();
+  void _setupServerSocket();
+  void _handleNewConnection();
+  void _handleClientActivity(std::size_t index);
+  void _processClientBuffer(Client* client);
+  void _commandDispatch(const commandS& cmd, Client& client);
+  void _removeClient(size_t index);
+
+ public:
+  std::map<std::string, Channel*> channels;  // チャンネルのリスト
+  std::map<int, Client*> clients;            // クライアントのリスト
+
+  Server(int port, std::string password);
+  ~Server();
+
+  std::string getServerName() const;
+  std::string getServerPassword() const;
+
+  bool isAlreadyUsedNickname(const std::string& nickname) const;
+  void sendAllClients(const std::string& message) const;
+  void removeClientFromAllChannels(Client& client);
+
+  bool isValidChannelName(const std::string& channelName) const;
+  bool isValidChannelKey(const std::string& channelKey) const;
+
+  void deleteAllChannels();
+
+  bool hasChannel(const std::string& channelName) const;
+
+  void killServer();
+
+  void run();  // Main loop for the server
+};
