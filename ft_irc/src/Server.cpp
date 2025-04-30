@@ -152,7 +152,7 @@ void Server::_handleClientActivity(size_t index) {
 }
 
 // 制御文字の除去（現在は \r のみ）
-std::string sanitizeLine(const std::string& input) {
+static std::string sanitizeLine(const std::string& input) {
   std::string line = input;
   if (!line.empty() && line[line.size() - 1] == '\r')
     line.erase(line.size() - 1);
