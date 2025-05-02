@@ -7,8 +7,9 @@ namespace numericReplies {
 
 inline std::string RPL_WELCOME(const std::string& nick, const std::string& user,
                                const std::string& host) {
-  return ":irc.42tokyo.jp Welcome to the Internet Relay Network " + nick + "!" +
-         user + "@" + host + "\r\n";
+  return ":irc.42tokyo.jp 001 " + nick +
+         " Welcome to the Internet Relay Network " + nick + "!" + user + "@" +
+         host + "\r\n";
 }
 
 inline std::string RPL_YOURHOST(const std::string& servername) {
