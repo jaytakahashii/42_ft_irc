@@ -91,6 +91,8 @@
     "PASSWDMISMATCH",
     "pollfds",
     "Privmsg",
+    "UMODEIS",
+    "USERSDONTMATCH",
     "YOUREOPER",
     "YOURHOST"
   ]
