@@ -21,7 +21,7 @@ void OperCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   if (client.isOperator()) {
-    std::string msg = irc::numericReplies::RPL_YOUREOPER();
+    std::string msg = irc::numericReplies::RPL_YOUREOPER(client.getNickname());
     client.sendMessage(msg);
     return;
   }
@@ -51,6 +51,6 @@ void OperCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   client.setOperator(true);
-  std::string msg = irc::numericReplies::RPL_YOUREOPER();
+  std::string msg = irc::numericReplies::RPL_YOUREOPER(client.getNickname());
   client.sendMessage(msg);
 }

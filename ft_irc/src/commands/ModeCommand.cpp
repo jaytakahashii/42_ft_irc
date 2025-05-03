@@ -108,7 +108,7 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
       }
     }
     std::string msg = irc::numericReplies::RPL_CHANNELMODEIS(
-        channel.getName(), cmd.args[1], channel.getKey());
+        client.getNickname(), channel.getName(), cmd.args[1], cmd.args[2]);
   }
 
   std::string serverName = server.getServerName();
