@@ -31,7 +31,10 @@
 #include "utils/color.hpp"
 #include "utils/utils.hpp"
 
-// Serverのコンストラクタ
+// ------------------------------
+// Constructor / Destructor
+// ------------------------------
+
 Server::Server(const int port, const std::string password)
     : _serverName(SERVER_NAME),
       _port(port),
@@ -68,6 +71,10 @@ Server::~Server() {
   // ソケットのクリーンアップ
   close(_serverSocket);
 }
+
+// ------------------------------
+// Initialization Methods
+// ------------------------------
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
 void Server::_setupServerSocket() {
@@ -121,6 +128,9 @@ void Server::_addCommandHandlers() {
   // TODO : 他のコマンドもここに追加
 }
 
+// ------------------------------
+// Main Loop
+// ------------------------------
 void Server::run() {
   while (true) {
     if (poll(&_pollfds[0], _pollfds.size(), NO_LIMIT) == ERROR) {
@@ -138,6 +148,10 @@ void Server::run() {
     }
   }
 }
+
+// ------------------------------
+// Connection / Activity Handlers
+// ------------------------------
 
 void Server::_handleNewConnection() {
   int clientFd = accept(_serverSocket, NULL, NULL);
@@ -192,6 +206,24 @@ void Server::_processClientBuffer(Client* client) {
   }
 }
 
+void Server::_commandDispatch(const commandS& cmd, Client& client) {
+  std::cout << BOLDCYAN << cmd.name << " from client " << client.getFd()
+            << RESET << std::endl;
+
+  if (_commandHandlers.find(cmd.name) != _commandHandlers.end()) {
+    _commandHandlers[cmd.name]->execute(cmd, client, *this);
+    return;
+  }
+
+  std::string msg =
+      irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
+  ft_send(client.getFd(), msg);
+}
+
+// ------------------------------
+// Client Management
+// ------------------------------
+
 void Server::_removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
   close(clientFd);
@@ -220,38 +252,6 @@ void Server::removeClientFromAllChannels(Client& client) {
   }
 }
 
-void Server::_commandDispatch(const commandS& cmd, Client& client) {
-  std::cout << BOLDCYAN << cmd.name << " from client " << client.getFd()
-            << RESET << std::endl;
-
-  if (_commandHandlers.find(cmd.name) != _commandHandlers.end()) {
-    _commandHandlers[cmd.name]->execute(cmd, client, *this);
-    return;
-  }
-
-  std::string msg =
-      irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
-  ft_send(client.getFd(), msg);
-}
-
-std::string Server::getServerName() const {
-  return _serverName;
-}
-
-std::string Server::getServerPassword() const {
-  return _password;
-}
-
-bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
-  for (std::map<int, Client*>::const_iterator it = clients.begin();
-       it != clients.end(); ++it) {
-    if (it->second && it->second->getNickname() == nickname) {
-      return true;
-    }
-  }
-  return false;
-}
-
 void Server::sendAllClients(const std::string& message) const {
   for (std::map<int, Client*>::const_iterator it = clients.begin();
        it != clients.end(); ++it) {
@@ -268,6 +268,9 @@ void Server::deleteAllChannels() {
   channels.clear();
 }
 
+// ------------------------------
+// Kill Server
+// ------------------------------
 void Server::killServer() {
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
@@ -286,6 +289,28 @@ void Server::killServer() {
   deleteAllChannels();
   close(_serverSocket);
   exit(0);
+}
+
+// ------------------------------
+// Getters / Utilities
+// ------------------------------
+
+std::string Server::getServerName() const {
+  return _serverName;
+}
+
+std::string Server::getServerPassword() const {
+  return _password;
+}
+
+bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    if (it->second && it->second->getNickname() == nickname) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool Server::hasChannel(const std::string& channelName) const {
