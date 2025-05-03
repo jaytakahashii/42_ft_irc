@@ -261,10 +261,14 @@ void Server::deleteAllChannels() {
 }
 
 void Server::killServer() {
-  std::string msg = irc::numericReplies::ERR_RESTRICTED();
-  sendAllClients(msg);
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    std::string msg =
+        irc::numericReplies::ERR_RESTRICTED(it->second->getNickname());
+    it->second->sendMessage(msg);
+  }
 
-  sleep(5);  // 5秒待機
+  sleep(3);  // 3秒待機
 
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {

@@ -15,38 +15,43 @@
  * * USER <user> <mode> <unused> <realname>
  */
 void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
+  const std::string& nick =
+      client.getNickname().empty() ? "*" : client.getNickname();
   if (!client.isAuthenticated()) {
-    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
     client.sendMessage(msg);
     return;
   }
 
   if (client.isRegistered()) {
-    std::string msg = irc::numericReplies::ERR_ALREADYREGISTRED();
+    std::string msg = irc::numericReplies::ERR_ALREADYREGISTRED(nick);
     client.sendMessage(msg);
     return;
   }
 
   if (client.getNickname().empty()) {
-    std::string msg = irc ::numericReplies::ERR_NOTREGISTERED();
+    std::string msg = irc ::numericReplies::ERR_NOTREGISTERED(nick);
     client.sendMessage(msg);
     return;
   }
 
   if (cmd.args.size() < 4) {
-    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
     return;
   }
 
   if (!client.isValidUsername(cmd.args[0])) {
-    std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(cmd.args[0]);
+    std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(
+        client.getNickname(), cmd.args[0]);
     client.sendMessage(msg);
     return;
   }
 
   if (!client.isValidRealname(cmd.args[3])) {
-    std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(cmd.args[3]);
+    std::string msg = irc::numericReplies::ERR_ERRONEUSNICKNAME(
+        client.getNickname(), cmd.args[3]);
     client.sendMessage(msg);
     return;
   }

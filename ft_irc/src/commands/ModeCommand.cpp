@@ -42,15 +42,15 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
   // TODO
 
   if (!channel.isOperator(client.getNickname())) {
-    std::string msg =
-        irc::numericReplies::ERR_CHANOPRIVSNEEDED(channel.getName());
+    std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
+        client.getNickname(), channel.getName());
     client.sendMessage(msg);
     return;
   }
 
   if (!isValidSign(cmd.args[1][0])) {
-    std::string msg =
-        irc::numericReplies::ERR_UNKNOWNMODE(cmd.args[1][0], channel.getName());
+    std::string msg = irc::numericReplies::ERR_UNKNOWNMODE(
+        client.getNickname(), cmd.args[1][0], channel.getName());
     client.sendMessage(msg);
     return;
   }
@@ -59,8 +59,8 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
   for (std::string::const_iterator it = cmd.args[1].begin() + 1;
        it != cmd.args[1].end(); ++it) {
     if (!isValidMode(*it)) {
-      std::string msg =
-          irc::numericReplies::ERR_UNKNOWNMODE(*it, channel.getName());
+      std::string msg = irc::numericReplies::ERR_UNKNOWNMODE(
+          client.getNickname(), *it, channel.getName());
       client.sendMessage(msg);
       return;
     }
@@ -74,7 +74,8 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
       channel.setTopicRestricted(sign);
     } else if (*it == 'k') {
       if (cmd.args.size() < 3) {
-        std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
+        std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
+            client.getNickname(), cmd.name);
         client.sendMessage(msg);
         return;
       }
@@ -82,8 +83,8 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
         channel.setKey(cmd.args[2]);
       } else {
         if (channel.getKey() != cmd.args[2]) {
-          std::string msg =
-              irc::numericReplies::ERR_BADCHANNELKEY(channel.getName());
+          std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
+              client.getNickname(), channel.getName());
           client.sendMessage(msg);
           return;
         }
@@ -98,7 +99,8 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
     } else if (*it == 'l') {
       if (sign) {
         if (cmd.args.size() < 3) {
-          std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
+          std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
+              client.getNickname(), cmd.name);
           client.sendMessage(msg);
           return;
         }
@@ -108,7 +110,7 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
       }
     }
     std::string msg = irc::numericReplies::RPL_CHANNELMODEIS(
-        channel.getName(), cmd.args[1], channel.getKey());
+        client.getNickname(), channel.getName(), cmd.args[1], cmd.args[2]);
   }
 
   std::string serverName = server.getServerName();
@@ -116,14 +118,16 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
 }
 
 void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
+  std::string nick = client.getNickname().empty() ? "*" : client.getNickname();
   if (!client.isRegistered()) {
-    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
     client.sendMessage(msg);
     return;
   }
 
   if (cmd.args.size() < 2) {
-    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
     return;
   }
@@ -135,7 +139,8 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
     Channel* channel = server.channels[channelName];
 
     if (!channel) {
-      std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(channelName);
+      std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
+          client.getNickname(), channelName);
       client.sendMessage(msg);
       return;
     }
