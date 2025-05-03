@@ -76,6 +76,23 @@ Server::~Server() {
 // Initialization Methods
 // ------------------------------
 
+void Server::_addCommandHandlers() {
+  _commandHandlers["PASS"] = new PassCommand();
+  _commandHandlers["NICK"] = new NickCommand();
+  _commandHandlers["USER"] = new UserCommand();
+  _commandHandlers["JOIN"] = new JoinCommand();
+  _commandHandlers["PART"] = new PartCommand();
+  _commandHandlers["PRIVMSG"] = new PrivmsgCommand();
+  _commandHandlers["PING"] = new PingCommand();
+  _commandHandlers["QUIT"] = new QuitCommand();
+  _commandHandlers["KICK"] = new KickCommand();
+  _commandHandlers["TOPIC"] = new TopicCommand();
+  _commandHandlers["MODE"] = new ModeCommand();
+  _commandHandlers["OPER"] = new OperCommand();
+  _commandHandlers["SQUIT"] = new SquitCommand();
+  // TODO : 他のコマンドもここに追加
+}
+
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
 void Server::_setupServerSocket() {
   _serverSocket = socket(AF_INET, SOCK_STREAM, ENY_PROTOCOL);
@@ -109,44 +126,6 @@ void Server::_setupServerSocket() {
 
   std::cout << BOLDWHITE "Server listening on port " RESET << _port
             << std::endl;
-}
-
-void Server::_addCommandHandlers() {
-  _commandHandlers["PASS"] = new PassCommand();
-  _commandHandlers["NICK"] = new NickCommand();
-  _commandHandlers["USER"] = new UserCommand();
-  _commandHandlers["JOIN"] = new JoinCommand();
-  _commandHandlers["PART"] = new PartCommand();
-  _commandHandlers["PRIVMSG"] = new PrivmsgCommand();
-  _commandHandlers["PING"] = new PingCommand();
-  _commandHandlers["QUIT"] = new QuitCommand();
-  _commandHandlers["KICK"] = new KickCommand();
-  _commandHandlers["TOPIC"] = new TopicCommand();
-  _commandHandlers["MODE"] = new ModeCommand();
-  _commandHandlers["OPER"] = new OperCommand();
-  _commandHandlers["SQUIT"] = new SquitCommand();
-  // TODO : 他のコマンドもここに追加
-}
-
-// ------------------------------
-// Main Loop
-// ------------------------------
-void Server::run() {
-  while (true) {
-    if (poll(&_pollfds[0], _pollfds.size(), NO_LIMIT) == ERROR) {
-      continue;  // エラーが発生した場合はスキップ
-    }
-
-    for (size_t i = 0; i < _pollfds.size(); ++i) {
-      if (_pollfds[i].revents & POLLIN) {
-        if (_pollfds[i].fd == _serverSocket) {
-          _handleNewConnection();
-        } else {
-          _handleClientActivity(_pollfds[i].fd);
-        }
-      }
-    }
-  }
 }
 
 // ------------------------------
@@ -221,7 +200,7 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 }
 
 // ------------------------------
-// Client Management
+// Client Utilities / Channel Utilities
 // ------------------------------
 
 void Server::_removeClient(int clientFd) {
@@ -252,6 +231,16 @@ void Server::removeClientFromAllChannels(Client& client) {
   }
 }
 
+bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    if (it->second && it->second->getNickname() == nickname) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void Server::sendAllClients(const std::string& message) const {
   for (std::map<int, Client*>::const_iterator it = clients.begin();
        it != clients.end(); ++it) {
@@ -266,51 +255,6 @@ void Server::deleteAllChannels() {
     delete it->second;
   }
   channels.clear();
-}
-
-// ------------------------------
-// Kill Server
-// ------------------------------
-void Server::killServer() {
-  for (std::map<int, Client*>::iterator it = clients.begin();
-       it != clients.end(); ++it) {
-    std::string msg =
-        irc::numericReplies::ERR_RESTRICTED(it->second->getNickname());
-    it->second->sendMessage(msg);
-  }
-
-  sleep(3);  // 3秒待機
-
-  for (std::map<int, Client*>::iterator it = clients.begin();
-       it != clients.end(); ++it) {
-    _removeClient(it->second->getFd());
-  }
-
-  deleteAllChannels();
-  close(_serverSocket);
-  exit(0);
-}
-
-// ------------------------------
-// Getters / Utilities
-// ------------------------------
-
-std::string Server::getServerName() const {
-  return _serverName;
-}
-
-std::string Server::getServerPassword() const {
-  return _password;
-}
-
-bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
-  for (std::map<int, Client*>::const_iterator it = clients.begin();
-       it != clients.end(); ++it) {
-    if (it->second && it->second->getNickname() == nickname) {
-      return true;
-    }
-  }
-  return false;
 }
 
 bool Server::hasChannel(const std::string& channelName) const {
@@ -382,4 +326,57 @@ bool Server::isValidChannelKey(const std::string& channelKey) const {
     }
   }
   return true;
+}
+
+// ------------------------------
+// Server Info
+// ------------------------------
+
+std::string Server::getServerName() const {
+  return _serverName;
+}
+
+std::string Server::getServerPassword() const {
+  return _password;
+}
+
+// ------------------------------
+// Lifecycle
+// ------------------------------
+void Server::run() {
+  while (true) {
+    if (poll(&_pollfds[0], _pollfds.size(), NO_LIMIT) == ERROR) {
+      continue;  // エラーが発生した場合はスキップ
+    }
+
+    for (size_t i = 0; i < _pollfds.size(); ++i) {
+      if (_pollfds[i].revents & POLLIN) {
+        if (_pollfds[i].fd == _serverSocket) {
+          _handleNewConnection();
+        } else {
+          _handleClientActivity(_pollfds[i].fd);
+        }
+      }
+    }
+  }
+}
+
+void Server::killServer() {
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    std::string msg =
+        irc::numericReplies::ERR_RESTRICTED(it->second->getNickname());
+    it->second->sendMessage(msg);
+  }
+
+  sleep(3);  // 3秒待機
+
+  for (std::map<int, Client*>::iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    _removeClient(it->second->getFd());
+  }
+
+  deleteAllChannels();
+  close(_serverSocket);
+  exit(0);
 }
