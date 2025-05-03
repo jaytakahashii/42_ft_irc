@@ -151,26 +151,18 @@ void Server::_handleClientActivity(size_t index) {
   _processClientBuffer(client);  // クライアントのバッファを処理
 }
 
-// 制御文字の除去（現在は \r のみ）
-static std::string sanitizeLine(const std::string& input) {
-  std::string line = input;
-  if (!line.empty() && line[line.size() - 1] == '\r')
-    line.erase(line.size() - 1);
-  return line;
-}
-
 void Server::_processClientBuffer(Client* client) {
+  std::string& buf = client->getReadBuffer();
   size_t pos;
-  while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
-    std::string rawLine = client->getReadBuffer().substr(0, pos);
-    client->getReadBuffer().erase(0, pos + 1);
 
-    std::string line = sanitizeLine(rawLine);
+  while ((pos = buf.find("\r\n")) != std::string::npos) {
+    std::string line = buf.substr(0, pos);
+    buf.erase(0, pos + 2);
+
     if (line.empty())
       continue;
 
     commandS cmd = _parser.parseCommand(line);
-
     if (cmd.name.empty())
       continue;  // 無効なコマンドはスキップ
 
