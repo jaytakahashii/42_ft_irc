@@ -12,13 +12,18 @@ class Channel;
 class ICommand;
 
 #define AUTHORIZED_HOSTS "127.0.0.1"
+#define SERVER_NAME "irc.42tokyo.jp"
+#define NO_LIMIT -1
+#define ERROR -1
+#define ENY_PROTOCOL 0
+#define BUFFER_SIZE 512
 
 class Server {
  private:
   int _serverSocket;
-  std::string _serverName;
-  int _port;
-  std::string _password;
+  const std::string _serverName;
+  const int _port;
+  const std::string _password;
   std::vector<struct pollfd> _pollfds;
   Parser _parser;
   std::map<std::string, ICommand*> _commandHandlers;
@@ -26,16 +31,16 @@ class Server {
   void _addCommandHandlers();
   void _setupServerSocket();
   void _handleNewConnection();
-  void _handleClientActivity(std::size_t index);
+  void _handleClientActivity(int clientFd);
   void _processClientBuffer(Client* client);
   void _commandDispatch(const commandS& cmd, Client& client);
-  void _removeClient(size_t index);
+  void _removeClient(int clientFd);
 
  public:
   std::map<std::string, Channel*> channels;  // チャンネルのリスト
   std::map<int, Client*> clients;            // クライアントのリスト
 
-  Server(int port, std::string password);
+  Server(const int port, const std::string password);
   ~Server();
 
   std::string getServerName() const;

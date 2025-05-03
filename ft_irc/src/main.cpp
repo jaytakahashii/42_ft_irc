@@ -45,6 +45,8 @@ static bool isValidPassword(const std::string& password) {
 }
 
 int main(int argc, char** argv) {
+  errno = 0;
+
   if (argc != 3) {
     printError("Usage: ./ircserv <port> <password>");
     return EXIT_FAILURE;

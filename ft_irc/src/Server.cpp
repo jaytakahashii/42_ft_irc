@@ -28,16 +28,23 @@
 #include "commands/TopicCommand.hpp"
 #include "commands/UserCommand.hpp"
 #include "numericsReplies/400-499.hpp"
+#include "utils/color.hpp"
 #include "utils/utils.hpp"
 
 // Serverのコンストラクタ
-Server::Server(int port, std::string password)
-    : _serverName("irc.42tokyo.jp"),
+Server::Server(const int port, const std::string password)
+    : _serverName(SERVER_NAME),
       _port(port),
       _password(password),
       channels(std::map<std::string, Channel*>()),
       clients(std::map<int, Client*>()) {
   _setupServerSocket();
+
+  pollfd serverPollFd;
+  serverPollFd.fd = _serverSocket;
+  serverPollFd.events = POLLIN;
+  _pollfds.push_back(serverPollFd);
+
   _addCommandHandlers();
 }
 
@@ -64,135 +71,37 @@ Server::~Server() {
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
 void Server::_setupServerSocket() {
-  // AF_INET : IPv4 (IPv6 : AF_INET6)
-  // SOCK_STREAM : TCP
-  // 0 : Any protocol (usually TCP)
-  _serverSocket = socket(AF_INET, SOCK_STREAM, 0);  // Create socket
+  _serverSocket = socket(AF_INET, SOCK_STREAM, ENY_PROTOCOL);
+  if (_serverSocket == ERROR) {
+    printError("socket() failed");
+    exit(EXIT_FAILURE);
+  }
 
-  // Set the socket to non-blocking mode
-  // F_SETFL : Set file descriptor flags
-  // O_NONBLOCK : Non-blocking mode
-  fcntl(_serverSocket, F_SETFL, O_NONBLOCK);
+  if (fcntl(_serverSocket, F_SETFL, O_NONBLOCK) == ERROR) {
+    printError("fcntl() failed");
+    exit(EXIT_FAILURE);
+  }
 
   sockaddr_in addr;
   std::memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;          // IPv4
-  addr.sin_addr.s_addr = INADDR_ANY;  // Any address
-  addr.sin_port = htons(_port);       // Port number
+  addr.sin_family = AF_INET;
+  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_port = htons(_port);
 
-  // Bind the socket to the address and port
-  bind(_serverSocket, (sockaddr*)&addr, sizeof(addr));  // register socket
-
-  listen(_serverSocket, SOMAXCONN);  // Listen for incoming connections
-
-  std::cout << "Server listening on port " << _port << std::endl;
-
-  pollfd serverPollFd;
-  serverPollFd.fd = _serverSocket;
-  serverPollFd.events = POLLIN;  // POLLIN : Readable
-  _pollfds.push_back(serverPollFd);
-}
-
-void Server::run() {
-  while (true) {
-    if (poll(&_pollfds[0], _pollfds.size(), -1) == -1)
-      continue;
-
-    for (size_t i = 0; i < _pollfds.size(); ++i) {
-      if (_pollfds[i].revents & POLLIN) {
-        if (_pollfds[i].fd == _serverSocket)
-          _handleNewConnection();
-        else
-          _handleClientActivity(i);
-      }
-    }
-  }
-}
-
-void Server::_handleNewConnection() {
-  // 新しいクライアントの接続を受け入れる
-  int clientFd = accept(_serverSocket, NULL, NULL);
-
-  // クライアントのソケットを非ブロッキングモードに設定
-  fcntl(clientFd, F_SETFL, O_NONBLOCK);
-
-  struct pollfd clientPollFd;
-  clientPollFd.fd = clientFd;
-  clientPollFd.events = POLLIN;  // POLLIN : Readable
-  clientPollFd.revents = 0;
-  _pollfds.push_back(clientPollFd);  // pollfdに追加
-
-  // クライアントのソケットを管理するためのClientオブジェクトを作成
-  clients[clientFd] = new Client(clientFd);
-  std::cout << "New client connected: " << clientFd << std::endl;
-}
-
-// クライアントからのデータを受信し、処理する
-// index : pollfdsのインデックス (クライアントのソケット)
-void Server::_handleClientActivity(size_t index) {
-  char buffer[512];
-
-  // clientFd : pollfdsのfd (クライアントのソケット)
-  int clientFd = _pollfds[index].fd;
-  Client* client = clients[clientFd];  // 一旦ポインタを取得 (別名)
-
-  // recv : ソケットからデータを受信
-  int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
-  if (bytesRead <= 0) {
-    _removeClient(index);
-    return;
+  if (bind(_serverSocket, (sockaddr*)&addr, sizeof(addr)) == ERROR) {
+    printError("bind() failed");
+    close(_serverSocket);
+    exit(EXIT_FAILURE);
   }
 
-  // 受信したデータを文字列として扱う
-  buffer[bytesRead] = '\0';
-
-  client->getReadBuffer() += buffer;  // char* -> std::string
-
-  _processClientBuffer(client);  // クライアントのバッファを処理
-}
-
-void Server::_processClientBuffer(Client* client) {
-  std::string& buf = client->getReadBuffer();
-  size_t pos;
-
-  while ((pos = buf.find("\r\n")) != std::string::npos) {
-    std::string line = buf.substr(0, pos);
-    buf.erase(0, pos + 2);
-
-    if (line.empty())
-      continue;
-
-    commandS cmd = _parser.parseCommand(line);
-    if (cmd.name.empty())
-      continue;  // 無効なコマンドはスキップ
-
-    _commandDispatch(cmd, *client);
-  }
-}
-
-// クライアントを削除する (leaks防止)
-void Server::_removeClient(size_t index) {
-  int clientFd = _pollfds[index].fd;
-  std::cout << "Client disconnected: " << clientFd << std::endl;
-  close(clientFd);                           // Close the socket
-  delete clients[clientFd];                  // Delete the Client object
-  clients.erase(clientFd);                   // Remove from map
-  _pollfds.erase(_pollfds.begin() + index);  // Remove from pollfds
-}
-
-void Server::_commandDispatch(const commandS& cmd, Client& client) {
-  // debug用の出力
-  std::cout << "Dispatching command: " << cmd.name << " from client "
-            << client.getFd() << std::endl;
-
-  if (_commandHandlers.find(cmd.name) != _commandHandlers.end()) {
-    _commandHandlers[cmd.name]->execute(cmd, client, *this);
-    return;
+  if (listen(_serverSocket, SOMAXCONN)) {
+    printError("listen() failed");
+    close(_serverSocket);
+    exit(EXIT_FAILURE);
   }
 
-  std::string msg =
-      irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
-  send(client.getFd(), msg.c_str(), msg.size(), 0);
+  std::cout << BOLDWHITE "Server listening on port " RESET << _port
+            << std::endl;
 }
 
 void Server::_addCommandHandlers() {
@@ -210,6 +119,119 @@ void Server::_addCommandHandlers() {
   _commandHandlers["OPER"] = new OperCommand();
   _commandHandlers["SQUIT"] = new SquitCommand();
   // TODO : 他のコマンドもここに追加
+}
+
+void Server::run() {
+  while (true) {
+    if (poll(&_pollfds[0], _pollfds.size(), NO_LIMIT) == ERROR) {
+      continue;  // エラーが発生した場合はスキップ
+    }
+
+    for (size_t i = 0; i < _pollfds.size(); ++i) {
+      if (_pollfds[i].revents & POLLIN) {
+        if (_pollfds[i].fd == _serverSocket) {
+          _handleNewConnection();
+        } else {
+          _handleClientActivity(_pollfds[i].fd);
+        }
+      }
+    }
+  }
+}
+
+void Server::_handleNewConnection() {
+  int clientFd = accept(_serverSocket, NULL, NULL);
+  if (clientFd == ERROR) {
+    printError("accept() failed");
+    return;
+  }
+
+  if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == ERROR) {
+    printError("fcntl() failed");
+    close(clientFd);
+    return;
+  }
+
+  struct pollfd clientPollFd;
+  clientPollFd.fd = clientFd;
+  clientPollFd.events = POLLIN;
+  clientPollFd.revents = 0;
+  _pollfds.push_back(clientPollFd);
+
+  clients[clientFd] = new Client(clientFd);
+  std::cout << GREEN "New client connected: " << clientFd << RESET << std::endl;
+}
+
+void Server::_handleClientActivity(int clientFd) {
+  char buffer[BUFFER_SIZE];
+  Client* client = clients[clientFd];
+
+  int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
+  if (bytesRead <= 0) {
+    _removeClient(clientFd);
+    return;
+  }
+  buffer[bytesRead] = '\0';
+  client->getReadBuffer() += buffer;
+  _processClientBuffer(client);  // クライアントのバッファを処理
+}
+
+void Server::_processClientBuffer(Client* client) {
+  std::string& buf = client->getReadBuffer();
+  size_t pos;
+
+  while ((pos = buf.find("\r\n")) != std::string::npos) {
+    std::string line = buf.substr(0, pos);
+    buf.erase(0, pos + 2);  // "\r\n"を削除
+    if (line.empty())
+      continue;
+    commandS cmd = _parser.parseCommand(line);
+    if (cmd.name.empty())
+      continue;
+    _commandDispatch(cmd, *client);
+  }
+}
+
+void Server::_removeClient(int clientFd) {
+  std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
+  close(clientFd);
+  removeClientFromAllChannels(*clients[clientFd]);
+  delete clients[clientFd];
+  clients.erase(clientFd);
+  for (size_t i = 0; i < _pollfds.size(); ++i) {
+    if (_pollfds[i].fd == clientFd) {
+      _pollfds.erase(_pollfds.begin() + i);
+      break;
+    }
+  }
+}
+
+void Server::removeClientFromAllChannels(Client& client) {
+  for (std::map<std::string, Channel*>::iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (channel->hasClient(&client)) {
+      channel->removeClient(&client);
+      if (channel->getClientCount() == 0) {
+        delete channel;
+        it = channels.erase(it);
+      }
+    }
+  }
+}
+
+void Server::_commandDispatch(const commandS& cmd, Client& client) {
+  std::cout << BOLDCYAN << cmd.name << " from client " << client.getFd()
+            << RESET << std::endl;
+
+  if (_commandHandlers.find(cmd.name) != _commandHandlers.end()) {
+    _commandHandlers[cmd.name]->execute(cmd, client, *this);
+    return;
+  }
+
+  std::string msg =
+      irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
 std::string Server::getServerName() const {
@@ -235,20 +257,6 @@ void Server::sendAllClients(const std::string& message) const {
        it != clients.end(); ++it) {
     if (it->second->isRegistered())
       it->second->sendMessage(message);
-  }
-}
-
-void Server::removeClientFromAllChannels(Client& client) {
-  for (std::map<std::string, Channel*>::iterator it = channels.begin();
-       it != channels.end(); ++it) {
-    Channel* channel = it->second;
-    if (channel->hasClient(&client)) {
-      channel->removeClient(&client);
-      if (channel->getClientCount() == 0) {
-        delete channel;
-        channels.erase(it->first);
-      }
-    }
   }
 }
 

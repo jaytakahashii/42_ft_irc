@@ -1,12 +1,23 @@
 #include "utils/utils.hpp"
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 
 #include "utils/color.hpp"
 
 void printError(const std::string& message) {
-  std::cerr << RED "Error: " << message << RESET << std::endl;
+  if (errno == 0) {
+    std::cerr << RED "Error: " << message << RESET << std::endl;
+    return;
+  }
+  if (message.empty()) {
+    std::cerr << RED "Error: " << strerror(errno) << RESET << std::endl;
+  } else {
+    std::cerr << RED "Error: " << message << ": (" << strerror(errno) << ")"
+              << RESET << std::endl;
+  }
 }
 
 std::string toIrcCharacters(const std::string& str) {
