@@ -118,7 +118,7 @@ void Server::_setupServerSocket() {
     exit(EXIT_FAILURE);
   }
 
-  if (listen(_serverSocket, SOMAXCONN)) {
+  if (listen(_serverSocket, SOMAXCONN) == ERROR) {
     printError("listen() failed");
     close(_serverSocket);
     exit(EXIT_FAILURE);
