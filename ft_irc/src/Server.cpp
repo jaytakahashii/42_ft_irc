@@ -151,20 +151,25 @@ void Server::_handleClientActivity(size_t index) {
   _processClientBuffer(client);  // クライアントのバッファを処理
 }
 
-// クライアントのバッファを処理する
 void Server::_processClientBuffer(Client* client) {
-  // TODO : 現時点では簡易的な実装
+  std::string& buf = client->getReadBuffer();
   size_t pos;
-  while ((pos = client->getReadBuffer().find("\n")) != std::string::npos) {
-    std::string line = client->getReadBuffer().substr(0, pos);
-    client->getReadBuffer().erase(0, pos + 1);
-    // コマンドをパースして実行
+
+  while ((pos = buf.find("\r\n")) != std::string::npos) {
+    std::string line = buf.substr(0, pos);
+    buf.erase(0, pos + 2);
+
+    if (line.empty())
+      continue;
+
     commandS cmd = _parser.parseCommand(line);
-    if (cmd.name == "")
-      continue;                      // 無効なコマンドは無視
-    _commandDispatch(cmd, *client);  // コマンドをディスパッチ
+    if (cmd.name.empty())
+      continue;  // 無効なコマンドはスキップ
+
+    _commandDispatch(cmd, *client);
   }
 }
+
 // クライアントを削除する (leaks防止)
 void Server::_removeClient(size_t index) {
   int clientFd = _pollfds[index].fd;
@@ -185,7 +190,8 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
     return;
   }
 
-  std::string msg = irc::numericReplies::ERR_UNKNOWNCOMMAND(cmd.name);
+  std::string msg =
+      irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
