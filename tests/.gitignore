@@ -1,0 +1,10 @@
+# Pythonキャッシュ
+__pycache__/
+*.pyc
+
+# 仮想環境
+venv/
+.env/
+
+# pytestキャッシュ
+.pytest_cache/
