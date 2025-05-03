@@ -11,7 +11,7 @@
 #include <iostream>
 #include <string>
 
-#include "Channel.hpp"  // Ensure the Channel class is fully defined
+#include "Channel.hpp"
 #include "Client.hpp"
 #include "Parser.hpp"
 #include "commands/JoinCommand.hpp"
@@ -173,7 +173,7 @@ void Server::_handleClientActivity(int clientFd) {
   }
   buffer[bytesRead] = '\0';
   client->getReadBuffer() += buffer;
-  _processClientBuffer(client);  // クライアントのバッファを処理
+  _processClientBuffer(client);
 }
 
 void Server::_processClientBuffer(Client* client) {
@@ -231,7 +231,7 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 
   std::string msg =
       irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
-  send(client.getFd(), msg.c_str(), msg.size(), 0);
+  ft_send(client.getFd(), msg);
 }
 
 std::string Server::getServerName() const {

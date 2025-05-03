@@ -17,6 +17,7 @@ class ICommand;
 #define ERROR -1
 #define ENY_PROTOCOL 0
 #define BUFFER_SIZE 512
+#define NON_OPTIONAL 0
 
 class Server {
  private:

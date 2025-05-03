@@ -1,5 +1,7 @@
 #include "utils/utils.hpp"
 
+#include <sys/socket.h>
+
 #include <algorithm>
 #include <cerrno>
 #include <cstring>
@@ -105,4 +107,10 @@ bool ircEqual(const std::string& text, const std::string& pattern,
                    ::tolower);
   }
   return matchHelper(textStr, 0, patternStr, 0);
+}
+
+void ft_send(int fd, const std::string& message) {
+  if (send(fd, message.c_str(), message.size(), 0) == -1) {
+    printError("send() failed");
+  }
 }
