@@ -225,7 +225,7 @@ void Server::removeClientFromAllChannels(Client& client) {
       channel->removeClient(&client);
       if (channel->getClientCount() == 0) {
         delete channel;
-        it = channels.erase(it);
+        channels.erase(it->first);
         continue;
       }
     }
