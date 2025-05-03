@@ -30,8 +30,10 @@ inline std::string ERR_TOOMANYTARGETS(const std::string& target,
 }
 
 // 421
-inline std::string ERR_UNKNOWNCOMMAND(const std::string& command) {
-  return ":irc.42tokyo.jp 421 " + command + " :Unknown command\r\n";
+inline std::string ERR_UNKNOWNCOMMAND(const std::string nick,
+                                      const std::string& command) {
+  return ":irc.42tokyo.jp 421 " + nick + " " + command +
+         " :Unknown command\r\n";
 }
 
 // 431

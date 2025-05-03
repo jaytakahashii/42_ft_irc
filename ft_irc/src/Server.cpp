@@ -190,10 +190,8 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
     return;
   }
 
-  // std::string msg = irc::numericReplies::ERR_UNKNOWNCOMMAND(cmd.name);
-
-  std::string msg = ":server 421 " + client.getNickname() + " " + cmd.name +
-                    " :Unknown command\r\n";
+  std::string msg =
+      irc::numericReplies::ERR_UNKNOWNCOMMAND(client.getNickname(), cmd.name);
   send(client.getFd(), msg.c_str(), msg.size(), 0);
 }
 
