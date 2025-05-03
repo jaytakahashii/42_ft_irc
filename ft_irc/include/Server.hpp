@@ -70,5 +70,5 @@ class Server {
 
   // Lifecycle
   void run();
-  void killServer();
+  void killServer(int exitCode = 0);
 };

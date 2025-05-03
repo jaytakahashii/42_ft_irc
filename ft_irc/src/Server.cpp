@@ -219,15 +219,17 @@ void Server::_removeClient(int clientFd) {
 
 void Server::removeClientFromAllChannels(Client& client) {
   for (std::map<std::string, Channel*>::iterator it = channels.begin();
-       it != channels.end(); ++it) {
+       it != channels.end();) {
     Channel* channel = it->second;
     if (channel->hasClient(&client)) {
       channel->removeClient(&client);
       if (channel->getClientCount() == 0) {
         delete channel;
         it = channels.erase(it);
+        continue;
       }
     }
+    ++it;
   }
 }
 
@@ -343,6 +345,7 @@ std::string Server::getServerPassword() const {
 // ------------------------------
 // Lifecycle
 // ------------------------------
+
 void Server::run() {
   while (true) {
     if (poll(&_pollfds[0], _pollfds.size(), NO_LIMIT) == ERROR) {
@@ -361,7 +364,7 @@ void Server::run() {
   }
 }
 
-void Server::killServer() {
+void Server::killServer(int exitCode) {
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
     std::string msg =
@@ -369,14 +372,14 @@ void Server::killServer() {
     it->second->sendMessage(msg);
   }
 
+  std::cout << BOLDRED "Server is shutting down..." RESET << std::endl;
   sleep(3);  // 3秒待機
 
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
     _removeClient(it->second->getFd());
   }
-
   deleteAllChannels();
   close(_serverSocket);
-  exit(0);
+  exit(exitCode);
 }
