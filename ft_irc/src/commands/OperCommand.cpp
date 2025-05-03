@@ -14,8 +14,10 @@
  * RPL_YOUREOPER: オペレータ権限を取得した
  */
 void OperCommand::execute(const commandS& cmd, Client& client, Server& server) {
+  const std::string& nick =
+      client.getNickname().empty() ? "*" : client.getNickname();
   if (!client.isRegistered()) {
-    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
     client.sendMessage(msg);
     return;
   }
@@ -27,25 +29,28 @@ void OperCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   if (cmd.args.size() < 2) {
-    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
     return;
   }
 
   if (client.getHostname() != AUTHORIZED_HOSTS) {
-    std::string msg = irc::numericReplies::ERR_NOOPERHOST();
+    std::string msg = irc::numericReplies::ERR_NOOPERHOST(client.getNickname());
     client.sendMessage(msg);
     return;
   }
 
   if (cmd.args[0] != client.getUsername()) {
-    std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH();
+    std::string msg =
+        irc::numericReplies::ERR_PASSWDMISMATCH(client.getNickname());
     client.sendMessage(msg);
     return;
   }
 
   if (cmd.args[1] != server.getServerPassword()) {
-    std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH();
+    std::string msg =
+        irc::numericReplies::ERR_PASSWDMISMATCH(client.getNickname());
     client.sendMessage(msg);
     return;
   }

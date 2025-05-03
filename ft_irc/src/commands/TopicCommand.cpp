@@ -7,8 +7,10 @@
 
 void TopicCommand::execute(const commandS& cmd, Client& client,
                            Server& server) {
+  const std::string& nick =
+      client.getNickname().empty() ? "*" : client.getNickname();
   if (!client.isRegistered()) {
-    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
     client.sendMessage(msg);
     return;
   }
