@@ -13,19 +13,22 @@ class Client;
 class Channel {
  private:
   // ===== チャネル基本情報 =====
+
   std::string _name;
   std::string _topic;
   std::string _key;  // 入室パスワード（k モード）
 
   // ===== クライアント・オペレータ管理 =====
+
   std::set<Client*> _clients;
   std::vector<std::string> _operators;
 
   // ===== モード状態 =====
-  bool _inviteOnly;       // i モード：招待制かどうか
-  bool _topicRestricted;  // t モード：オペレータのみトピック変更可
-  bool _isUserLimit;      // l モード：ユーザー数制限が有効か
-  int _userLimit;         // 有効な場合の上限数
+
+  bool _inviteOnly;
+  bool _topicRestricted;
+  bool _isUserLimit;
+  int _userLimit;
 
  public:
   // ===== コンストラクタ / デストラクタ =====
