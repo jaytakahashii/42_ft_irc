@@ -1,55 +1,76 @@
 #pragma once
+
 #include <set>
 #include <string>
 #include <vector>
 
 class Client;
 
+/**
+ * @brief IRCのチャネルを表すクラス
+ * モード情報（i, t, k, l）や、参加クライアント、トピックなどを管理します。
+ */
 class Channel {
  private:
+  // ===== チャネル基本情報 =====
   std::string _name;
-  std::set<Client*> _clients;
-  std::vector<std::string> _operators;  // o
   std::string _topic;
-  std::string _key;  // k
+  std::string _key;  // 入室パスワード（k モード）
 
-  bool _inviteOnly;       // i
-  bool _topicRestricted;  // t
-  bool _isUserLimit;      // l
-  int _userLimit;         // l
+  // ===== クライアント・オペレータ管理 =====
+  std::set<Client*> _clients;
+  std::vector<std::string> _operators;
+
+  // ===== モード状態 =====
+  bool _inviteOnly;       // i モード：招待制かどうか
+  bool _topicRestricted;  // t モード：オペレータのみトピック変更可
+  bool _isUserLimit;      // l モード：ユーザー数制限が有効か
+  int _userLimit;         // 有効な場合の上限数（l 値）
 
  public:
+  // ===== コンストラクタ / デストラクタ =====
+
   Channel(const std::string& name);
   ~Channel();
 
+  // ===== 基本情報の取得 =====
+
   const std::string& getName() const;
-  void addClient(Client* client);
-  Client* getClient(const std::string& nickname) const;
-  void removeClient(Client* client);
-  const std::set<Client*>& getClients() const;
-  bool hasClient(Client* client) const;
-  int getClientCount() const;
-
-  void addOperator(const std::string& operatorName);
-  bool isOperator(const std::string& operatorName) const;
-  void removeOperator(const std::string& operatorName);
-  const std::vector<std::string>& getOperators() const;
-
-  void setTopic(const std::string& topic);
   const std::string& getTopic() const;
-
-  void sendToAll(const std::string& message) const;
-
-  void setKey(const std::string& key);
   const std::string& getKey() const;
   bool hasKey() const;
 
+  // ===== クライアント管理 =====
+
+  void addClient(Client* client);
+  void removeClient(Client* client);
+  bool hasClient(Client* client) const;
+  Client* getClient(const std::string& nickname) const;
+  const std::set<Client*>& getClients() const;
+  int getClientCount() const;
+
+  // ===== オペレータ管理 =====
+
+  void addOperator(const std::string& operatorName);
+  void removeOperator(const std::string& operatorName);
+  bool isOperator(const std::string& operatorName) const;
+  const std::vector<std::string>& getOperators() const;
+
+  // ===== トピック操作 =====
+
+  void setTopic(const std::string& topic);
+
+  // ===== メッセージ送信 =====
+
+  void sendToAll(const std::string& message) const;
+
+  // ===== モード設定 =====
+
+  void setKey(const std::string& key);
   void setInviteOnly(bool inviteOnly);
   bool isInviteOnly() const;
-
   void setTopicRestricted(bool topicRestricted);
   bool isTopicRestricted() const;
-
   void setUserLimit(int userLimit, bool isUserLimit);
   std::size_t getUserLimit() const;
 };

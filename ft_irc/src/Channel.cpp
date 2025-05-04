@@ -4,6 +4,8 @@
 
 #include "Client.hpp"
 
+// ===== コンストラクタ / デストラクタ =====
+
 Channel::Channel(const std::string& name)
     : _name(name),
       _topic("no topic"),
@@ -18,24 +20,32 @@ Channel::Channel(const std::string& name)
 }
 
 Channel::~Channel() {
+  _clients.clear();
+  _operators.clear();
 }
+
+// ===== 基本情報の取得 =====
 
 const std::string& Channel::getName() const {
   return _name;
 }
 
-void Channel::addClient(Client* client) {
-  _clients.insert(client);
+const std::string& Channel::getTopic() const {
+  return _topic;
 }
 
-Client* Channel::getClient(const std::string& nickname) const {
-  for (std::set<Client*>::const_iterator it = _clients.begin();
-       it != _clients.end(); ++it) {
-    if ((*it)->getNickname() == nickname) {
-      return *it;
-    }
-  }
-  return NULL;
+const std::string& Channel::getKey() const {
+  return _key;
+}
+
+bool Channel::hasKey() const {
+  return !_key.empty();
+}
+
+// ===== クライアント管理 =====
+
+void Channel::addClient(Client* client) {
+  _clients.insert(client);
 }
 
 void Channel::removeClient(Client* client) {
@@ -58,25 +68,32 @@ void Channel::removeClient(Client* client) {
                     "@" + client->getHostname() + " PART " + _name + "\r\n";
 }
 
-const std::set<Client*>& Channel::getClients() const {
-  return _clients;
-}
-
 bool Channel::hasClient(Client* client) const {
   return _clients.count(client) > 0;
+}
+
+Client* Channel::getClient(const std::string& nickname) const {
+  for (std::set<Client*>::const_iterator it = _clients.begin();
+       it != _clients.end(); ++it) {
+    if ((*it)->getNickname() == nickname) {
+      return *it;
+    }
+  }
+  return NULL;
+}
+
+const std::set<Client*>& Channel::getClients() const {
+  return _clients;
 }
 
 int Channel::getClientCount() const {
   return _clients.size();
 }
 
+// ===== オペレータ管理 =====
+
 void Channel::addOperator(const std::string& operatorName) {
   _operators.push_back(operatorName);
-}
-
-bool Channel::isOperator(const std::string& operatorName) const {
-  return std::find(_operators.begin(), _operators.end(), operatorName) !=
-         _operators.end();
 }
 
 void Channel::removeOperator(const std::string& operatorName) {
@@ -85,17 +102,22 @@ void Channel::removeOperator(const std::string& operatorName) {
       _operators.end());
 }
 
+bool Channel::isOperator(const std::string& operatorName) const {
+  return std::find(_operators.begin(), _operators.end(), operatorName) !=
+         _operators.end();
+}
+
 const std::vector<std::string>& Channel::getOperators() const {
   return _operators;
 }
+
+// ===== トピック操作 =====
 
 void Channel::setTopic(const std::string& topic) {
   _topic = topic;
 }
 
-const std::string& Channel::getTopic() const {
-  return _topic;
-}
+// ===== メッセージ送信 =====
 
 void Channel::sendToAll(const std::string& message) const {
   for (std::set<Client*>::const_iterator it = _clients.begin();
@@ -104,16 +126,10 @@ void Channel::sendToAll(const std::string& message) const {
   }
 }
 
-bool Channel::hasKey() const {
-  return !_key.empty();
-}
+// ===== モード設定 =====
 
 void Channel::setKey(const std::string& key) {
   _key = key;
-}
-
-const std::string& Channel::getKey() const {
-  return _key;
 }
 
 void Channel::setInviteOnly(bool inviteOnly) {
