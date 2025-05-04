@@ -25,7 +25,7 @@ class Channel {
   bool _inviteOnly;       // i モード：招待制かどうか
   bool _topicRestricted;  // t モード：オペレータのみトピック変更可
   bool _isUserLimit;      // l モード：ユーザー数制限が有効か
-  int _userLimit;         // 有効な場合の上限数（l 値）
+  int _userLimit;         // 有効な場合の上限数
 
  public:
   // ===== コンストラクタ / デストラクタ =====
