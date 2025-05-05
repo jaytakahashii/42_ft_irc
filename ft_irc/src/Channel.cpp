@@ -132,6 +132,16 @@ void Channel::sendToAll(const std::string& message) const {
   }
 }
 
+void Channel::sendToAllExcept(Client* exclude,
+                              const std::string& message) const {
+  for (std::vector<Client*>::const_iterator it = _clientList.begin();
+       it != _clientList.end(); ++it) {
+    if (*it != exclude) {
+      (*it)->sendMessage(message);
+    }
+  }
+}
+
 // ===== モード設定 =====
 
 void Channel::setKey(const std::string& key) {

@@ -67,6 +67,7 @@ class Channel {
   // ===== メッセージ送信 =====
 
   void sendToAll(const std::string& message) const;
+  void sendToAllExcept(Client* exclude, const std::string& message) const;
 
   // ===== モード設定 =====
 
