@@ -10,17 +10,18 @@ Channel::Channel(const std::string& name)
     : _name(name),
       _topic("no topic"),
       _key(""),
+      _clientsByNick(std::map<std::string, Client*>()),
       _inviteOnly(false),
       _topicRestricted(false),
       _isUserLimit(false),
       _userLimit(0) {
-  // チャンネルの初期化
-  _clients.clear();
   _operators.clear();
+  _clientList.clear();
 }
 
 Channel::~Channel() {
-  _clients.clear();
+  _clientsByNick.clear();
+  _clientList.clear();
   _operators.clear();
 }
 
@@ -45,7 +46,10 @@ bool Channel::hasKey() const {
 // ===== クライアント管理 =====
 
 void Channel::addClient(Client* client) {
-  _clients.insert(client);
+  if (hasClient(client))
+    return;
+  _clientsByNick[client->getNickname()] = client;
+  _clientList.push_back(client);
 }
 
 void Channel::removeClient(Client* client) {
@@ -54,12 +58,15 @@ void Channel::removeClient(Client* client) {
                                  client->getNickname()),
                      _operators.end());
   }
-  _clients.erase(client);
+  _clientsByNick.erase(client->getNickname());
+  _clientList.erase(std::remove(_clientList.begin(), _clientList.end(), client),
+                    _clientList.end());
 
   if (_operators.empty()) {
     // 一番前に登録されたクライアントをオペレーターにする
-    std::set<Client*>::iterator it = _clients.begin();
-    if (it != _clients.end()) {
+    std::vector<Client*>::iterator it =
+        std::find(_clientList.begin(), _clientList.end(), client);
+    if (it != _clientList.end()) {
       _operators.push_back((*it)->getNickname());
     }
   }
@@ -69,25 +76,24 @@ void Channel::removeClient(Client* client) {
 }
 
 bool Channel::hasClient(Client* client) const {
-  return _clients.count(client) > 0;
+  return _clientsByNick.find(client->getNickname()) != _clientsByNick.end();
 }
 
 Client* Channel::getClient(const std::string& nickname) const {
-  for (std::set<Client*>::const_iterator it = _clients.begin();
-       it != _clients.end(); ++it) {
-    if ((*it)->getNickname() == nickname) {
-      return *it;
-    }
+  std::map<std::string, Client*>::const_iterator it =
+      _clientsByNick.find(nickname);
+  if (it != _clientsByNick.end()) {
+    return it->second;
   }
   return NULL;
 }
 
-const std::set<Client*>& Channel::getClients() const {
-  return _clients;
+const std::map<std::string, Client*>& Channel::getClients() const {
+  return _clientsByNick;
 }
 
 int Channel::getClientCount() const {
-  return _clients.size();
+  return _clientList.size();
 }
 
 // ===== オペレータ管理 =====
@@ -120,8 +126,8 @@ void Channel::setTopic(const std::string& topic) {
 // ===== メッセージ送信 =====
 
 void Channel::sendToAll(const std::string& message) const {
-  for (std::set<Client*>::const_iterator it = _clients.begin();
-       it != _clients.end(); ++it) {
+  for (std::vector<Client*>::const_iterator it = _clientList.begin();
+       it != _clientList.end(); ++it) {
     (*it)->sendMessage(message);
   }
 }

@@ -62,10 +62,7 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   std::string kickMsg = ":" + client.getNickname() + "!KICK!" +
                         client.getUsername() + "@localhost KICK " +
                         channelName + " :" + targetNickname + "\r\n";
-  for (std::set<Client*>::iterator it = channel->getClients().begin();
-       it != channel->getClients().end(); ++it) {
-    (*it)->sendMessage(kickMsg);
-  }
+  channel->sendToAll(kickMsg);
 
   // ターゲットにも通知
   std::string targetMsg = ":" + client.getNickname() + "!KICK!" +

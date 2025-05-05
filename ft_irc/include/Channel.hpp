@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <set>
 #include <string>
 #include <vector>
@@ -19,8 +20,9 @@ class Channel {
   std::string _key;  // 入室パスワード（k モード）
 
   // ===== クライアント・オペレータ管理 =====
-
-  std::set<Client*> _clients;
+  std::map<std::string, Client*>
+      _clientsByNick;                // クライアント名→ポインタ（検索用）
+  std::vector<Client*> _clientList;  // JOIN順の保持・ブロードキャスト用
   std::vector<std::string> _operators;
 
   // ===== モード状態 =====
@@ -49,7 +51,7 @@ class Channel {
   void removeClient(Client* client);
   bool hasClient(Client* client) const;
   Client* getClient(const std::string& nickname) const;
-  const std::set<Client*>& getClients() const;
+  const std::map<std::string, Client*>& getClients() const;
   int getClientCount() const;
 
   // ===== オペレータ管理 =====
