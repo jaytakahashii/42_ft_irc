@@ -20,8 +20,7 @@ class Channel {
   std::string _key;  // 入室パスワード（k モード）
 
   // ===== クライアント・オペレータ管理 =====
-  std::map<std::string, Client*>
-      _clientsByNick;                // クライアント名→ポインタ（検索用）
+  std::map<std::string, Client*> _clientsByNick;  // クライアント名→ポインタ
   std::vector<Client*> _clientList;  // JOIN順の保持・ブロードキャスト用
   std::vector<std::string> _operators;
 
