@@ -1,12 +1,25 @@
 #include "utils/utils.hpp"
 
+#include <sys/socket.h>
+
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <iostream>
 
 #include "utils/color.hpp"
 
 void printError(const std::string& message) {
-  std::cerr << RED "Error: " << message << RESET << std::endl;
+  if (errno == 0) {
+    std::cerr << RED "Error: " << message << RESET << std::endl;
+    return;
+  }
+  if (message.empty()) {
+    std::cerr << RED "Error: " << strerror(errno) << RESET << std::endl;
+  } else {
+    std::cerr << RED "Error: " << message << ": (" << strerror(errno) << ")"
+              << RESET << std::endl;
+  }
 }
 
 std::string toIrcCharacters(const std::string& str) {
@@ -94,4 +107,10 @@ bool ircEqual(const std::string& text, const std::string& pattern,
                    ::tolower);
   }
   return matchHelper(textStr, 0, patternStr, 0);
+}
+
+void ft_send(int fd, const std::string& message) {
+  if (send(fd, message.c_str(), message.size(), 0) == -1) {
+    printError("send() failed");
+  }
 }

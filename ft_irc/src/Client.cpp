@@ -3,6 +3,8 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
+#include "utils/utils.hpp"
+
 std::string Client::_getClientHostname() const {
   struct sockaddr_storage addr;
   socklen_t len = sizeof(addr);
@@ -92,12 +94,11 @@ bool Client::isValidUsername(const std::string& username) const {
 
 bool Client::isValidRealname(const std::string& realname) const {
   /**
-   * * Should be 1-15 characters long
+   * * Should not be empty
    * * Should not contain NUL, CR, LR, "@"
    */
-  if (realname.empty() || realname.size() > 15) {
+  if (realname.empty())
     return false;
-  }
   for (size_t i = 0; i < realname.size(); ++i) {
     char c = realname[i];
     if (c == '\0' || c == '\r' || c == '\n' || c == '@') {
@@ -112,7 +113,7 @@ std::string& Client::getReadBuffer() {
 }
 
 void Client::sendMessage(const std::string& message) const {
-  send(_fd, message.c_str(), message.size(), 0);
+  ft_send(_fd, message);
 }
 
 const std::string& Client::getNickname() const {
