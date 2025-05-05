@@ -3,16 +3,21 @@
 
 class Client {
  private:
+  // 接続情報・認証情報
+
   int _fd;
   bool _authenticated;  // PASS
   bool _registered;     // PASS -> NICK -> USER
-  bool _isOperator;     // Server operator
-  std::string _hostname;
   std::string _readBuffer;
+  std::string _hostname;
+
+  // ユーザ情報
   std::string _nickname;
   std::string _username;
   std::string _realname;
 
+  // 権限
+  bool _isOperator;  // Server operator
   std::string _getClientHostname() const;
 
  public:
