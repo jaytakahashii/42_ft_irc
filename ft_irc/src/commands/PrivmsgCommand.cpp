@@ -7,15 +7,18 @@
 
 void PrivmsgCommand::execute(const commandS& cmd, Client& client,
                              Server& server) {
+  const std::string& nick =
+      client.getNickname().empty() ? "*" : client.getNickname();
   if (!client.isRegistered()) {
-    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
     client.sendMessage(msg);
     return;
   }
 
   if (cmd.args.size() < 2) {
-    client.sendMessage(":server 411 " + client.getNickname() +
-                       " :No recipient given\r\n");
+    std::string msg =
+        irc::numericReplies::ERR_NORECIPIENT(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
     return;
   }
 
@@ -28,13 +31,11 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
     if (channel) {
       std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
                             " :" + message + "\r\n";
-      for (std::set<Client*>::iterator it = channel->getClients().begin();
-           it != channel->getClients().end(); ++it) {
-        (*it)->sendMessage(privmsg);
-      }
+      channel->sendToAll(privmsg);
     } else {
-      client.sendMessage(":server 403 " + client.getNickname() + " " + target +
-                         " :No such channel\r\n");
+      std::string msg =
+          irc::numericReplies::ERR_NOSUCHCHANNEL(client.getNickname(), target);
+      client.sendMessage(msg);
     }
   }
   // ユーザーにメッセージを送信

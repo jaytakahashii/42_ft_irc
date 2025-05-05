@@ -36,13 +36,15 @@ static const std::vector<std::string> parsers(std::string params) {
  */
 void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (!client.isRegistered()) {
-    std::string msg = irc::numericReplies::ERR_NOTREGISTERED();
+    std::string msg =
+        irc::numericReplies::ERR_NOTREGISTERED(client.getNickname());
     client.sendMessage(msg);
     return;
   }
 
   if (cmd.args.size() < 1) {
-    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(cmd.name);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
     return;
   }
@@ -51,7 +53,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   std::vector<std::string> channels = parsers(cmd.args[0]);
   for (size_t i = 0; i < channels.size(); ++i) {
     if (!server.isValidChannelName(channels[i])) {
-      std::string msg = irc::numericReplies::ERR_BADCHANMASK(channels[i]);
+      std::string msg = irc::numericReplies::ERR_BADCHANMASK(
+          client.getNickname(), channels[i]);
       client.sendMessage(msg);
       return;
     }
@@ -62,7 +65,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     keys = parsers(cmd.args[1]);
     for (size_t i = 0; i < keys.size(); ++i) {
       if (!server.isValidChannelKey(keys[i])) {
-        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(channels[i]);
+        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
+            client.getNickname(), keys[i]);
         client.sendMessage(msg);
         return;
       }
@@ -81,29 +85,34 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       // チャンネルに参加する
       Channel* channel = server.channels[channels[i]];  // チャンネルを取得
       if (channel->getClientCount() >= 50) {            // TODO
-        std::string msg = irc::numericReplies::ERR_CHANNELISFULL(channels[i]);
+        std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
+            client.getNickname(), channels[i]);
         client.sendMessage(msg);
         return;
       }
       if (channel->isInviteOnly()) {
-        std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(channels[i]);
+        std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(
+            client.getNickname(), channels[i]);
         client.sendMessage(msg);
         return;
       }
       if (channel->hasClient(&client)) {
-        std::string msg = irc::numericReplies::ERR_BANNEDFROMCHAN(channels[i]);
+        std::string msg = irc::numericReplies::ERR_BANNEDFROMCHAN(
+            client.getNickname(), channels[i]);
         client.sendMessage(msg);
         return;
       }
       // チャンネルに参加する
       if (keys.size() > i) {
         if (keys[i] != channel->getKey()) {
-          std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(channels[i]);
+          std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
+              client.getNickname(), channels[i]);
           client.sendMessage(msg);
           return;
         }
       } else if (channel->getKey() != "") {
-        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(channels[i]);
+        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
+            client.getNickname(), channels[i]);
         client.sendMessage(msg);
         return;
       }
@@ -113,8 +122,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
                             client.getUsername() + "@" + client.getHostname() +
                             " JOIN " + channels[i] + "\r\n";
       channel->sendToAll(joinMsg);
-      std::string topicMsg =
-          irc::numericReplies::RPL_TOPIC(channels[i], channel->getTopic());
+      std::string topicMsg = irc::numericReplies::RPL_TOPIC(
+          client.getNickname(), channels[i], channel->getTopic());
       client.sendMessage(topicMsg);
     }
   }
