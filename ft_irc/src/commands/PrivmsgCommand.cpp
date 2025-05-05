@@ -31,10 +31,7 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
     if (channel) {
       std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
                             " :" + message + "\r\n";
-      for (std::set<Client*>::iterator it = channel->getClients().begin();
-           it != channel->getClients().end(); ++it) {
-        (*it)->sendMessage(privmsg);
-      }
+      channel->sendToAll(privmsg);
     } else {
       std::string msg =
           irc::numericReplies::ERR_NOSUCHCHANNEL(client.getNickname(), target);
