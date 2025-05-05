@@ -94,12 +94,11 @@ bool Client::isValidUsername(const std::string& username) const {
 
 bool Client::isValidRealname(const std::string& realname) const {
   /**
-   * * Should be 1-15 characters long
+   * * Should not be empty
    * * Should not contain NUL, CR, LR, "@"
    */
-  if (realname.empty() || realname.size() > 15) {
+  if (realname.empty())
     return false;
-  }
   for (size_t i = 0; i < realname.size(); ++i) {
     char c = realname[i];
     if (c == '\0' || c == '\r' || c == '\n' || c == '@') {
