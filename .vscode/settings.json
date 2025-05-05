@@ -73,7 +73,8 @@
     "ratio": "cpp",
     "stack": "cpp",
     "variant": "cpp",
-    "__assertion_handler": "cpp"
+    "__assertion_handler": "cpp",
+    "__tree": "cpp"
   },
   "cSpell.words": [
     "ALREADYREGISTRED",
