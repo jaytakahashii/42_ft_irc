@@ -39,17 +39,26 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 			// Find next comma
 			keyPos = keys.find(',');
 			
+			// std::cout << "keyPos: " << keyPos << " ";
 			// Extract key token
 			if (keyPos != std::string::npos) {
 				// Get the key segment and assign it to the current channel
 				it->second = keys.substr(0, keyPos);
 				// Remove the key and the comma from the keys string
 				keys.erase(0, keyPos + 1);
-			} else {
+			}
+			else if (keyPos == 0)
+			{
+				it->second = "";
+				keys.erase(0, keyPos + 1);
+			}
+			else {
 				// This is the last key
 				it->second = keys;
 				keys = "";
 			}
+
+			// std::cout << "key: " << it->second << std::endl;
 			
 			++it;
 		}
@@ -74,27 +83,26 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
  * * * RPL_TOPIC
  */
 void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
-  if (!client.isRegistered()) {
-    std::string msg =
+	if (!client.isRegistered()) {
+		std::string msg =
         irc::numericReplies::ERR_NOTREGISTERED(client.getNickname());
-    client.sendMessage(msg);
-    return;
-  }
-
-  if (cmd.args.size() < 1) {
-    std::string msg =
+		client.sendMessage(msg);
+		return;
+	}
+	
+	if (cmd.args.size() < 1) {
+		std::string msg =
         irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
-    client.sendMessage(msg);
-    return;
-  }
+		client.sendMessage(msg);
+		return;
+	}
+	
 
+	// std::cout << cmd.args[1] << std::endl;
+	// /join test1,test2,test3 key,,keyとすると、args[1]にkey,x,keyが入ってる todo
+	
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
-  // print map
-  for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
-	std::cout << "key: " << it->first << ", value: " << it->second << std::endl;
-  }
-
   
   for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
     if (!server.isValidChannelName(it->first)) {
