@@ -5,18 +5,44 @@
 #include "numericsReplies/300-399.hpp"
 #include "numericsReplies/400-499.hpp"
 
-static const std::vector<std::string> parsers(std::string params) {
-  // ','で分割
-  std::vector<std::string> result;
-  std::string token;
-  size_t pos = 0;
-  while ((pos = params.find(',')) != std::string::npos) {
-    token = params.substr(0, pos);
-    result.push_back(token);
-    params.erase(0, pos + 1);
-  }
-  result.push_back(params);
-  return result;
+static const std::map<std::string, std::string> parsers(const commandS cmd) {
+	// ','で分割
+	std::map<std::string, std::string> ret;
+	std::string channels = cmd.args[0];
+	std::string keys = cmd.args.size() == 2 ? cmd.args[1] : "";
+
+	size_t channelPos = 0;
+	std::string token;
+	
+	// Parse channels
+	while ((channelPos = channels.find(',')) != std::string::npos) {
+		token = channels.substr(0, channelPos);
+		ret[token] = ""; // Initially set empty key
+		channels.erase(0, channelPos + 1);
+	}
+	if (!channels.empty()) {
+		ret[channels] = ""; // Add the last channel
+	}
+	
+	// Parse keys if they exist
+	if (!keys.empty()) {
+		size_t keyPos = 0;
+		std::string keyToken;
+		std::map<std::string, std::string>::iterator it = ret.begin();
+		
+		while ((keyPos = keys.find(',')) != std::string::npos && it != ret.end()) {
+			keyToken = keys.substr(0, keyPos);
+			it->second = keyToken; // Assign key to corresponding channel
+			keys.erase(0, keyPos + 1);
+			++it;
+		}
+		// Assign the last key
+		if (!keys.empty() && it != ret.end()) {
+			it->second = keys;
+		}
+	}
+	
+	return ret;
 }
 
 /**
@@ -50,69 +76,70 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   // チャンネル名のバリデーション
-  std::vector<std::string> channels = parsers(cmd.args[0]);
-  for (size_t i = 0; i < channels.size(); ++i) {
-    if (!server.isValidChannelName(channels[i])) {
+  std::map<std::string, std::string> channels = parsers(cmd);
+  // print map
+  for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
+	std::cout << "key: " << it->first << ", value: " << it->second << std::endl;
+  }
+
+  
+  for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
+    if (!server.isValidChannelName(it->first)) {
       std::string msg = irc::numericReplies::ERR_BADCHANMASK(
-          client.getNickname(), channels[i]);
+          client.getNickname(), it->first);
+      client.sendMessage(msg);
+      return;
+    }
+    
+    // Key validation
+    if (!it->second.empty() && !server.isValidChannelKey(it->second)) {
+      std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
+          client.getNickname(), it->first);
       client.sendMessage(msg);
       return;
     }
   }
-  // key validation
-  std::vector<std::string> keys = std::vector<std::string>();
-  if (cmd.args.size() == 2) {
-    keys = parsers(cmd.args[1]);
-    for (size_t i = 0; i < keys.size(); ++i) {
-      if (!server.isValidChannelKey(keys[i])) {
-        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
-            client.getNickname(), keys[i]);
-        client.sendMessage(msg);
-        return;
-      }
-    }
-  }
 
-  for (size_t i = 0; i < channels.size(); ++i) {
+  for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
     // チャンネルが存在しない場合は新規作成
-    if (!server.hasChannel(channels[i])) {
-      server.channels[channels[i]] = new Channel(channels[i]);
+    if (!server.hasChannel(it->first)) {
+      server.channels[it->first] = new Channel(it->first);
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +
-                            " JOIN " + channels[i] + "\r\n";
+                            " JOIN " + it->first + "\r\n";
       client.sendMessage(joinMsg);
     } else {
       // チャンネルに参加する
-      Channel* channel = server.channels[channels[i]];  // チャンネルを取得
+      Channel* channel = server.channels[it->first];  // チャンネルを取得
       if (channel->getClientCount() >= 50) {            // TODO
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
-            client.getNickname(), channels[i]);
+            client.getNickname(), it->first);
         client.sendMessage(msg);
         return;
       }
       if (channel->isInviteOnly()) {
         std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(
-            client.getNickname(), channels[i]);
+            client.getNickname(), it->first);
         client.sendMessage(msg);
         return;
       }
       if (channel->hasClient(&client)) {
         std::string msg = irc::numericReplies::ERR_BANNEDFROMCHAN(
-            client.getNickname(), channels[i]);
+            client.getNickname(), it->first);
         client.sendMessage(msg);
         return;
       }
       // チャンネルに参加する
-      if (keys.size() > i) {
-        if (keys[i] != channel->getKey()) {
+      if (!it->second.empty()) {
+        if (it->second != channel->getKey()) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
-              client.getNickname(), channels[i]);
+              client.getNickname(), it->first);
           client.sendMessage(msg);
           return;
         }
       } else if (channel->getKey() != "") {
         std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
-            client.getNickname(), channels[i]);
+            client.getNickname(), it->first);
         client.sendMessage(msg);
         return;
       }
@@ -120,10 +147,10 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       channel->addClient(&client);
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +
-                            " JOIN " + channels[i] + "\r\n";
+                            " JOIN " + it->first + "\r\n";
       channel->sendToAll(joinMsg);
       std::string topicMsg = irc::numericReplies::RPL_TOPIC(
-          client.getNickname(), channels[i], channel->getTopic());
+          client.getNickname(), it->first, channel->getTopic());
       client.sendMessage(topicMsg);
     }
   }
