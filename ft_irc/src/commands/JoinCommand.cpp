@@ -11,14 +11,14 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 	std::string channels = cmd.args[0];
 	std::string keys = cmd.args.size() == 2 ? cmd.args[1] : "";
 
-	size_t channelPos = 0;
+	size_t pos = 0;
 	std::string token;
 	
 	// Parse channels
-	while ((channelPos = channels.find(',')) != std::string::npos) {
-		token = channels.substr(0, channelPos);
+	while ((pos = channels.find(',')) != std::string::npos) {
+		token = channels.substr(0, pos);
 		ret[token] = ""; // Initially set empty key
-		channels.erase(0, channelPos + 1);
+		channels.erase(0, pos + 1);
 	}
 	if (!channels.empty()) {
 		ret[channels] = ""; // Add the last channel
@@ -27,18 +27,31 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 	// Parse keys if they exist
 	if (!keys.empty()) {
 		size_t keyPos = 0;
-		std::string keyToken;
 		std::map<std::string, std::string>::iterator it = ret.begin();
 		
-		while ((keyPos = keys.find(',')) != std::string::npos && it != ret.end()) {
-			keyToken = keys.substr(0, keyPos);
-			it->second = keyToken; // Assign key to corresponding channel
-			keys.erase(0, keyPos + 1);
+		// Handle keys parsing with proper empty key support
+		while (it != ret.end()) {
+			// Check if we've reached the end of the keys string
+			if (keys.empty()) {
+				break;
+			}
+			
+			// Find next comma
+			keyPos = keys.find(',');
+			
+			// Extract key token
+			if (keyPos != std::string::npos) {
+				// Get the key segment and assign it to the current channel
+				it->second = keys.substr(0, keyPos);
+				// Remove the key and the comma from the keys string
+				keys.erase(0, keyPos + 1);
+			} else {
+				// This is the last key
+				it->second = keys;
+				keys = "";
+			}
+			
 			++it;
-		}
-		// Assign the last key
-		if (!keys.empty() && it != ret.end()) {
-			it->second = keys;
 		}
 	}
 	
