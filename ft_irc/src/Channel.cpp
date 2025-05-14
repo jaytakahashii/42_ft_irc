@@ -52,11 +52,9 @@ void Channel::addClient(Client* client) {
   _clientList.push_back(client);
 }
 
-#include <iostream>
-
 void Channel::removeClient(Client* client) {
   // デバッグログの追加
-  std::cout << "Removing client " << client->getNickname() << " from channel " << _name << std::endl;
+//   std::cout << "Removing client " << client->getNickname() << " from channel " << _name << std::endl;
   
   // オペレータリストから削除
   if (isOperator(client->getNickname())) {
@@ -76,11 +74,11 @@ void Channel::removeClient(Client* client) {
   if (_operators.empty() && !_clientList.empty()) {
     // 最初のクライアントをオペレータに設定
     _operators.push_back(_clientList[0]->getNickname());
-    std::cout << "Setting new operator: " << _clientList[0]->getNickname() << std::endl;
+    // std::cout << "Setting new operator: " << _clientList[0]->getNickname() << std::endl;
   }
   
   // クライアント数の表示
-  std::cout << "Clients remaining in channel " << _name << ": " << _clientList.size() << std::endl;
+//   std::cout << "Clients remaining in channel " << _name << ": " << _clientList.size() << std::endl;
 }
 
 bool Channel::hasClient(Client* client) const {

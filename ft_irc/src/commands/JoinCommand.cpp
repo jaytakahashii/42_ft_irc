@@ -49,7 +49,6 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 			else {
 				// This is the last key
 				it->second = keys;
-				std::cout << "last key" << std::endl;
 				keys = "";
 			}
 
