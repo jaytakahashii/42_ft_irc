@@ -182,19 +182,27 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
         client.sendMessage(msg);
         return;
       }
-      // チャンネルに参加する
-      if (!it->second.empty()) {
+      // MODEコマンドで設定されたキーの確認
+      if (channel->hasKey()) {
+        // クライアントがキーを提供しているか確認
+        if (it->second.empty()) {
+          // キーが要求されるが提供されていない
+          std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
+              client.getNickname(), it->first);
+          client.sendMessage(msg);
+          std::cout << "JOIN failed: Channel " << it->first << " requires a key, but none provided" << std::endl;
+          return;
+        } 
+        // 提供されたキーが正しいか確認
         if (it->second != channel->getKey()) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
           client.sendMessage(msg);
+          std::cout << "JOIN failed: Incorrect key for channel " << it->first << std::endl;
           return;
         }
-      } else if (channel->getKey() != "") {
-        std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
-            client.getNickname(), it->first);
-        client.sendMessage(msg);
-        return;
+        // ここまで来たら正しいキーが提供された
+        std::cout << "JOIN: Correct key provided for channel " << it->first << std::endl;
       }
 
       channel->addClient(&client);
