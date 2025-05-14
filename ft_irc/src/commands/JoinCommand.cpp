@@ -39,7 +39,6 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 			// Find next comma
 			keyPos = keys.find(',');
 			
-			// std::cout << "keyPos: " << keyPos << " ";
 			// Extract key token
 			if (keyPos != std::string::npos) {
 				// Get the key segment and assign it to the current channel
@@ -47,19 +46,13 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 				// Remove the key and the comma from the keys string
 				keys.erase(0, keyPos + 1);
 			}
-			else if (keyPos == 0)
-			{
-				it->second = "";
-				keys.erase(0, keyPos + 1);
-			}
 			else {
 				// This is the last key
 				it->second = keys;
+				std::cout << "last key" << std::endl;
 				keys = "";
 			}
 
-			// std::cout << "key: " << it->second << std::endl;
-			
 			++it;
 		}
 	}
@@ -103,6 +96,11 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
 	
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
+
+  // print channnels
+//   for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
+// 	std::cout << "channel: " << it->first << ", key: " << it->second << std::endl;
+//   }
   
   for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
     if (!server.isValidChannelName(it->first)) {
