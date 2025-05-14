@@ -11,17 +11,50 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 	std::string channels = cmd.args[0];
 	std::string keys = cmd.args.size() == 2 ? cmd.args[1] : "";
 
+	// 重複チャンネル検出用の一時的なセット
+	std::set<std::string> uniqueChannels;
+	
+	// チャンネルの処理とメッセージ出力のためのベクトル
+	std::vector<std::string> channelsList;
+	std::vector<std::string> duplicateChannels;
+
 	size_t pos = 0;
 	std::string token;
 	
 	// Parse channels
 	while ((pos = channels.find(',')) != std::string::npos) {
 		token = channels.substr(0, pos);
-		ret[token] = ""; // Initially set empty key
+		
+		// 重複チェック
+		if (uniqueChannels.find(token) == uniqueChannels.end()) {
+			uniqueChannels.insert(token);
+			ret[token] = ""; // Initially set empty key
+			channelsList.push_back(token);
+		} else {
+			// 重複が発見された場合は、前回の指定を上書き（mapが自動的に対応）
+			duplicateChannels.push_back(token);
+		}
+		
 		channels.erase(0, pos + 1);
 	}
+	
+	// 最後のチャンネルも同様に重複チェック
 	if (!channels.empty()) {
-		ret[channels] = ""; // Add the last channel
+		if (uniqueChannels.find(channels) == uniqueChannels.end()) {
+			uniqueChannels.insert(channels);
+			ret[channels] = ""; // Add the last channel
+			channelsList.push_back(channels);
+		} else {
+			duplicateChannels.push_back(channels);
+		}
+	}
+	
+	// デバッグ情報を出力
+	if (!duplicateChannels.empty()) {
+		for (size_t i = 0; i < duplicateChannels.size(); ++i) {
+			std::cout << duplicateChannels[i] << " ";
+		}
+		std::cout << std::endl;
 	}
 	
 	// Parse keys if they exist
@@ -96,10 +129,12 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
 
-  // print channnels
+  // チャンネルとキーの詳細をデバッグ表示
+//   std::cout << "Channels to join: ";
 //   for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
-// 	std::cout << "channel: " << it->first << ", key: " << it->second << std::endl;
+//     std::cout << it->first << " (key: '" << it->second << "') ";
 //   }
+//   std::cout << std::endl;
   
   for (std::map<std::string, std::string>::iterator it = channels.begin(); it != channels.end(); ++it) {
     if (!server.isValidChannelName(it->first)) {
