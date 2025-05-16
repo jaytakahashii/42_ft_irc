@@ -64,12 +64,12 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
     Channel* channel = server.channels[channelName];  // チャンネルを取得
 
     // チャンネルに参加していない場合はエラー
-    // if (!channel->hasClient(&client)) {
-    //   std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(
-    //       client.getNickname(), channelName);
-    //   client.sendMessage(msg);
-    //   continue;  // 次のチャンネルを処理
-    // }
+    if (!channel->hasClient(&client)) {
+      std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(
+          client.getNickname(), channelName);
+      client.sendMessage(msg);
+      continue;  // 次のチャンネルを処理
+    }
 
     // チャンネルから退出メッセージを作成
     std::string partMsg = ":" + client.getNickname() + "!" +
