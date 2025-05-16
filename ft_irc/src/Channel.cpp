@@ -53,26 +53,32 @@ void Channel::addClient(Client* client) {
 }
 
 void Channel::removeClient(Client* client) {
+  // デバッグログの追加
+//   std::cout << "Removing client " << client->getNickname() << " from channel " << _name << std::endl;
+  
+  // オペレータリストから削除
   if (isOperator(client->getNickname())) {
     _operators.erase(std::remove(_operators.begin(), _operators.end(),
                                  client->getNickname()),
                      _operators.end());
   }
+  
+  // クライアント管理マップから削除
   _clientsByNick.erase(client->getNickname());
+  
+  // クライアントリストから削除
   _clientList.erase(std::remove(_clientList.begin(), _clientList.end(), client),
                     _clientList.end());
 
-  if (_operators.empty()) {
-    // 一番前に登録されたクライアントをオペレーターにする
-    std::vector<Client*>::iterator it =
-        std::find(_clientList.begin(), _clientList.end(), client);
-    if (it != _clientList.end()) {
-      _operators.push_back((*it)->getNickname());
-    }
+  // オペレータがいなくなった場合、新しいオペレータを設定
+  if (_operators.empty() && !_clientList.empty()) {
+    // 最初のクライアントをオペレータに設定
+    _operators.push_back(_clientList[0]->getNickname());
+    // std::cout << "Setting new operator: " << _clientList[0]->getNickname() << std::endl;
   }
-
-  std::string msg = ":" + client->getNickname() + "!" + client->getUsername() +
-                    "@" + client->getHostname() + " PART " + _name + "\r\n";
+  
+  // クライアント数の表示
+//   std::cout << "Clients remaining in channel " << _name << ": " << _clientList.size() << std::endl;
 }
 
 bool Channel::hasClient(Client* client) const {
@@ -92,8 +98,12 @@ const std::map<std::string, Client*>& Channel::getClients() const {
   return _clientsByNick;
 }
 
-int Channel::getClientCount() const {
+std::size_t Channel::getClientCount() const {
   return _clientList.size();
+}
+
+bool Channel::getIsUserLimit() const {
+  return _isUserLimit;
 }
 
 // ===== オペレータ管理 =====

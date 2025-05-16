@@ -51,7 +51,8 @@ class Channel {
   bool hasClient(Client* client) const;
   Client* getClient(const std::string& nickname) const;
   const std::map<std::string, Client*>& getClients() const;
-  int getClientCount() const;
+  std::size_t getClientCount() const;
+  bool getIsUserLimit() const;
 
   // ===== オペレータ管理 =====
 

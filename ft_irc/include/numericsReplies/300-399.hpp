@@ -10,7 +10,7 @@ inline std::string RPL_CHANNELMODEIS(const std::string& nick,
                                      const std::string& channel,
                                      const std::string& mode,
                                      const std::string& params) {
-  return ":irc.42tokyo.jp 324 " + nick + " :" + channel + " " + mode + " " +
+  return ":irc.42tokyo.jp 324 " + nick + " " + channel + " " + mode + " " +
          params + "\r\n";
 }
 
