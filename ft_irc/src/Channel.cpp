@@ -98,8 +98,12 @@ const std::map<std::string, Client*>& Channel::getClients() const {
   return _clientsByNick;
 }
 
-int Channel::getClientCount() const {
+std::size_t Channel::getClientCount() const {
   return _clientList.size();
+}
+
+bool Channel::getIsUserLimit() const {
+  return _isUserLimit;
 }
 
 // ===== オペレータ管理 =====

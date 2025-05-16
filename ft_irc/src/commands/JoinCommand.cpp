@@ -185,6 +185,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
         client.sendMessage(msg);
         return;
       }
+      if (channel->getIsUserLimit() &&
+          channel->getClientCount() >= channel->getUserLimit()) {
+        std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
+            client.getNickname(), it->first);
+        client.sendMessage(msg);
+        return;
+      }
       // MODEコマンドで設定されたキーの確認
       if (channel->hasKey()) {
         // クライアントがキーを提供しているか確認
