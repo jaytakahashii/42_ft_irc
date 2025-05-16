@@ -156,6 +156,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
     // チャンネルが存在しない場合は新規作成
+	// todo modeしたあとにjoinするとhasChannelが誤認されてセグフォ server.channelsがaddされている可能性が高い
     if (!server.hasChannel(it->first)) {
       server.channels[it->first] = new Channel(it->first);
       std::string joinMsg = ":" + client.getNickname() + "!" +
