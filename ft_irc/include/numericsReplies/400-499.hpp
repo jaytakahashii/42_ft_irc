@@ -122,6 +122,13 @@ inline std::string ERR_PASSWDMISMATCH(const std::string& nick) {
   return ":server 464 " + nick + " :Password incorrect\r\n";
 }
 
+// 467
+inline std::string ERR_KEYSET(const std::string& nick,
+                               const std::string& channel) {
+  return ":irc.42tokyo.jp 467 " + nick + " " + channel +
+         " :Channel key already set\r\n";
+}
+
 // 471
 inline std::string ERR_CHANNELISFULL(const std::string& nick,
                                      const std::string& channel) {
@@ -174,7 +181,7 @@ inline std::string ERR_NOPRIVILEGES(const std::string& nick) {
 // 482
 inline std::string ERR_CHANOPRIVSNEEDED(const std::string& nick,
                                         const std::string& channel) {
-  return ":irc.42tokyo.jp 482 " + nick + " :" + channel +
+  return ":irc.42tokyo.jp 482 " + nick + " " + channel +
          " :You're not channel operator\r\n";
 }
 

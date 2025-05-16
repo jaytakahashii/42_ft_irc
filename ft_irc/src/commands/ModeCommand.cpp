@@ -40,10 +40,8 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
    * * l: Set/remove the user limit to channel
    */
   // TODO
-  std::cout << "Channel mode1" << std::endl;
-
+  
   if (!channel.isOperator(client.getNickname())) {
-    // todo エラーメッセージがクライアントに来ない
     std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
         client.getNickname(), channel.getName());
     client.sendMessage(msg);
@@ -83,12 +81,6 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
           return;
         }
 
-        // すでにキーが設定されている場合は、古いキーを削除してから新しいキーを設定
-        if (channel.hasKey()) {
-          std::cout << "Replacing existing key for " << channel.getName()
-                    << std::endl;
-        }
-
         // キーのバリデーション - キーは空白を含まない単一の単語である必要がある
         if (cmd.args[2].find(' ') != std::string::npos ||
             !server.isValidChannelKey(cmd.args[2])) {
@@ -98,8 +90,6 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
           return;
         }
 
-        std::cout << "Setting channel key for " << channel.getName()
-                  << " to: " << cmd.args[2] << std::endl;
         channel.setKey(cmd.args[2]);
 
         // キー設定の通知 - モードメッセージをすべてのチャンネルメンバーに送信
@@ -112,9 +102,8 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
         // キーが設定されていない場合はエラー
         if (!channel.hasKey()) {
           // キーが設定されていない場合のカスタムメッセージ
-          std::string msg = ":" + server.getServerName() + " 467 " +
-                            client.getNickname() + " " + channel.getName() +
-                            " :Channel key not set\r\n";
+          std::string msg = irc::numericReplies::ERR_KEYSET(
+              client.getNickname(), channel.getName());
           client.sendMessage(msg);
           return;
         }
@@ -131,8 +120,6 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
         // ただし、パラメータとして現在のキーが提供されているかどうかを確認
         std::string currentKey = channel.getKey();
 
-        std::cout << "Removing channel key for " << channel.getName()
-                  << std::endl;
         channel.setKey("");
 
         // キー削除の通知 - モードメッセージをすべてのチャンネルメンバーに送信
