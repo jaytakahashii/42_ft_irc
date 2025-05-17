@@ -161,7 +161,7 @@ void Server::_handleClientActivity(int clientFd) {
 
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    _removeClient(clientFd);
+    removeClient(clientFd);
     return;
   }
   buffer[bytesRead] = '\0';
@@ -203,7 +203,7 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 // Client Utilities / Channel Utilities
 // ------------------------------
 
-void Server::_removeClient(int clientFd) {
+void Server::removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
   close(clientFd);
   removeClientFromAllChannels(*clients[clientFd]);
@@ -225,7 +225,7 @@ void Server::removeClientFromAllChannels(Client& client) {
       channel->removeClient(&client);
       if (channel->getClientCount() == 0) {
         delete channel;
-        channels.erase(it->first);
+        it = channels.erase(it); // eraseの戻り値でitを更新
         continue;
       }
     }
@@ -248,6 +248,23 @@ void Server::sendAllClients(const std::string& message) const {
        it != clients.end(); ++it) {
     if (it->second->isRegistered())
       it->second->sendMessage(message);
+  }
+}
+
+void Server::sendQuitMessageToRelevantClients(Client& client, const std::string& message) {
+  std::set<int> notifiedFds;
+
+  for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (channel->hasClient(&client)) {
+      const std::map<std::string, Client*>& clientsInChannel = channel->getClients();
+      for (std::map<std::string, Client*>::const_iterator cit = clientsInChannel.begin(); cit != clientsInChannel.end(); ++cit) {
+        Client* otherClient = cit->second;
+        if (otherClient != &client && notifiedFds.insert(otherClient->getFd()).second) {
+          otherClient->sendMessage(message);
+        }
+      }
+    }
   }
 }
 
@@ -377,7 +394,7 @@ void Server::killServer(int exitCode) {
 
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
-    _removeClient(it->second->getFd());
+    removeClient(it->second->getFd());
   }
   deleteAllChannels();
   close(_serverSocket);

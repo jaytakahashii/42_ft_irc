@@ -40,7 +40,7 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
    * * l: Set/remove the user limit to channel
    */
   // TODO
-
+  
   if (!channel.isOperator(client.getNickname())) {
     std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
         client.getNickname(), channel.getName());
@@ -73,49 +73,187 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
     } else if (*it == 't') {
       channel.setTopicRestricted(sign);
     } else if (*it == 'k') {
-      if (cmd.args.size() < 3) {
-        std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
-            client.getNickname(), cmd.name);
-        client.sendMessage(msg);
-        return;
-      }
-      if (sign) {
-        channel.setKey(cmd.args[2]);
-      } else {
-        if (channel.getKey() != cmd.args[2]) {
+      if (sign) {  // キーを設定する場合
+        if (cmd.args.size() < 3 || cmd.args[2].empty()) {
+          std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
+              client.getNickname(), cmd.name);
+          client.sendMessage(msg);
+          return;
+        }
+
+        // キーのバリデーション - キーは空白を含まない単一の単語である必要がある
+        if (cmd.args[2].find(' ') != std::string::npos ||
+            !server.isValidChannelKey(cmd.args[2])) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), channel.getName());
           client.sendMessage(msg);
           return;
         }
-        channel.setKey("");
-      }
-    } else if (*it == 'o') {
-      if (sign) {
-        channel.addOperator(client.getNickname());
-      } else {
-        channel.removeOperator(client.getNickname());
-      }
-    } else if (*it == 'l') {
-      if (sign) {
+
+        channel.setKey(cmd.args[2]);
+
+        // キー設定の通知 - モードメッセージをすべてのチャンネルメンバーに送信
+        std::string modeMsg = ":" + client.getNickname() + "!" +
+                              client.getUsername() + "@" +
+                              client.getHostname() + " MODE " +
+                              channel.getName() + " +k " + cmd.args[2] + "\r\n";
+        channel.sendToAll(modeMsg);
+      } else {  // キーを削除する場合
+        // キーが設定されていない場合はエラー
+        if (!channel.hasKey()) {
+          // キーが設定されていない場合のカスタムメッセージ
+          std::string msg = irc::numericReplies::ERR_KEYSET(
+              client.getNickname(), channel.getName());
+          client.sendMessage(msg);
+          return;
+        }
+
+        // キーの削除にはパラメータが必要（RFC準拠）
         if (cmd.args.size() < 3) {
           std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
               client.getNickname(), cmd.name);
           client.sendMessage(msg);
           return;
         }
-        channel.setUserLimit(atoi(cmd.args[2].c_str()), true);
-      } else {
+
+        // オペレータの場合、キーの一致確認はオプション
+        // ただし、パラメータとして現在のキーが提供されているかどうかを確認
+        std::string currentKey = channel.getKey();
+
+        channel.setKey("");
+
+        // キー削除の通知 - モードメッセージをすべてのチャンネルメンバーに送信
+        std::string modeMsg = ":" + client.getNickname() + "!" +
+                              client.getUsername() + "@" +
+                              client.getHostname() + " MODE " +
+                              channel.getName() + " -k " + cmd.args[2] + "\r\n";
+        channel.sendToAll(modeMsg);
+      }
+    } else if (*it == 'o') {
+      if (cmd.args.size() < 3) {
+        std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
+            client.getNickname(), cmd.name);
+        client.sendMessage(msg);
+        return;
+      }
+
+      // 対象ユーザーのニックネームを取得
+      std::string targetNick = cmd.args[2];
+      Client* targetClient = channel.getClient(targetNick);
+
+      // 対象ユーザーがチャンネルに存在するか確認
+      if (!targetClient) {
+        // ERR_NOSUCHNICKは定義されていないため、同様の意味を持つERR_NOSUCHCHANNELを使用
+        std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(
+            client.getNickname(), channel.getName());
+        client.sendMessage(msg);
+        return;
+      }
+
+      if (sign) {  // オペレータ権限を付与
+        if (!channel.isOperator(targetNick)) {
+          channel.addOperator(targetNick);
+
+          // オペレータ権限付与の通知
+          std::string modeMsg =
+              ":" + client.getNickname() + "!" + client.getUsername() + "@" +
+              client.getHostname() + " MODE " + channel.getName() + " +o " +
+              targetNick + "\r\n";
+          channel.sendToAll(modeMsg);
+        }
+      } else {  // オペレータ権限を剥奪
+        if (channel.isOperator(targetNick)) {
+          // 最後のオペレータを削除しようとしている場合はエラー
+          if (channel.getOperators().size() <= 1 &&
+              channel.isOperator(targetNick)) {
+            std::string msg = ":" + server.getServerName() + " NOTICE " +
+                              client.getNickname() +
+                              " :Cannot remove last operator from channel " +
+                              channel.getName() + "\r\n";
+            client.sendMessage(msg);
+            return;
+          }
+
+          channel.removeOperator(targetNick);
+
+          // オペレータ権限剥奪の通知
+          std::string modeMsg =
+              ":" + client.getNickname() + "!" + client.getUsername() + "@" +
+              client.getHostname() + " MODE " + channel.getName() + " -o " +
+              targetNick + "\r\n";
+          channel.sendToAll(modeMsg);
+        }
+      }
+    } else if (*it == 'l') {
+      if (sign) {  // ユーザー制限を設定
+        if (cmd.args.size() < 3) {
+          std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
+              client.getNickname(), cmd.name);
+          client.sendMessage(msg);
+          return;
+        }
+
+        // 数値のみが有効
+        int limit = atoi(cmd.args[2].c_str());
+        if (limit <= 0) {
+          std::string msg = ":" + server.getServerName() + " NOTICE " +
+                            client.getNickname() +
+                            " :Invalid user limit value\r\n";
+          client.sendMessage(msg);
+          return;
+        }
+
+        channel.setUserLimit(limit, true);
+
+        // ユーザー制限設定の通知
+        std::string modeMsg = ":" + client.getNickname() + "!" +
+                              client.getUsername() + "@" +
+                              client.getHostname() + " MODE " +
+                              channel.getName() + " +l " + cmd.args[2] + "\r\n";
+        channel.sendToAll(modeMsg);
+      } else {  // ユーザー制限を解除
         channel.setUserLimit(-1, false);
+
+        // ユーザー制限解除の通知
+        std::string modeMsg =
+            ":" + client.getNickname() + "!" + client.getUsername() + "@" +
+            client.getHostname() + " MODE " + channel.getName() + " -l\r\n";
+        channel.sendToAll(modeMsg);
       }
     }
+    // 各モード適用後にレスポンスを送信
+    // 注: 実際のモード設定値と正しいパラメータを使用
+    std::string modeParams = "";
+    if (*it == 'k' || *it == 'l' || *it == 'o') {
+      if (cmd.args.size() >= 3) {
+        modeParams = cmd.args[2];
+      }
+    }
+
+    // 各モードに対する正しいパラメータを構築
+    std::string modeString =
+        std::string(1, cmd.args[1][0]) + std::string(1, *it);
+    std::string paramString = "";
+
+    if (*it == 'k' && cmd.args.size() >= 3) {
+      paramString = cmd.args[2];
+    } else if (*it == 'o' && cmd.args.size() >= 3) {
+      paramString = cmd.args[2];
+    } else if (*it == 'l' && sign && cmd.args.size() >= 3) {
+      paramString = cmd.args[2];
+    }
+
+    // チャンネルモード情報のレスポンス送信
     std::string msg = irc::numericReplies::RPL_CHANNELMODEIS(
-        client.getNickname(), channel.getName(), cmd.args[1], cmd.args[2]);
+        client.getNickname(), channel.getName(), modeString, paramString);
+    client.sendMessage(msg);
   }
 
   std::string serverName = server.getServerName();
   (void)serverName;
 }
+
+#include <cstdio>
 
 void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
   std::string nick = client.getNickname().empty() ? "*" : client.getNickname();
@@ -126,6 +264,46 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   if (cmd.args.size() < 2) {
+    // 引数が1つの場合は現在のモードを表示
+    if (cmd.args.size() == 1) {
+      std::string channelPrefix = "#+!&";
+      if (channelPrefix.find(cmd.args[0][0]) != std::string::npos) {
+        std::string channelName = cmd.args[0];
+        Channel* channel = server.channels[channelName];
+
+        if (!channel) {
+          std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
+              client.getNickname(), channelName);
+          client.sendMessage(msg);
+          return;
+        }
+
+        // チャンネルの現在のモードを表示
+        std::string currentModes = "+";
+        std::string modeParams = "";
+
+        if (channel->isInviteOnly())
+          currentModes += "i";
+        if (channel->isTopicRestricted())
+          currentModes += "t";
+        if (channel->hasKey()) {
+          currentModes += "k";
+          modeParams += channel->getKey() + " ";
+        }
+        if (channel->getUserLimit() != (size_t)-1) {
+          currentModes += "l";
+          char buffer[32];
+          // sprintf(buffer, "%zu", channel->getUserLimit());
+          modeParams += buffer;
+        }
+
+        std::string msg = irc::numericReplies::RPL_CHANNELMODEIS(
+            client.getNickname(), channelName, currentModes, modeParams);
+        client.sendMessage(msg);
+        return;
+      }
+    }
+
     std::string msg =
         irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
