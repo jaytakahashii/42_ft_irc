@@ -39,7 +39,6 @@ static bool checkArgmentSize(const commandS& cmd, Client& client) {
 }
 
 static bool checkChannelName(
-  const std::string& channel,
   const std::vector<std::string> channels,
   Client& client,
   Server& server
@@ -147,7 +146,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
                                 ? parsers(cmd.args[1])
                                 : std::vector<std::string>(channels.size(), "");
 
-  if (!checkChannelName(cmd.args[0], channels, client, server)) { return; }
+  if (!checkChannelName(channels, client, server)) { return; }
   if (!checkKey(keys, client, server)) { return; }
 
   for (size_t i = 0; i < channels.size(); ++i) {
