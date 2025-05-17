@@ -293,7 +293,7 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
         if (channel->getUserLimit() != (size_t)-1) {
           currentModes += "l";
           char buffer[32];
-          sprintf(buffer, "%zu", channel->getUserLimit());
+          // sprintf(buffer, "%zu", channel->getUserLimit());
           modeParams += buffer;
         }
 
