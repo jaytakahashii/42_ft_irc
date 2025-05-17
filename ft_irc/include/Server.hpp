@@ -42,7 +42,7 @@ class Server {
   void _handleClientActivity(int clientFd);
   void _processClientBuffer(Client* client);
   void _commandDispatch(const commandS& cmd, Client& client);
-  void _removeClient(int clientFd);
+//   void removeClient(int clientFd);
 
  public:
   // Client & Channel registry
@@ -71,4 +71,7 @@ class Server {
   // Lifecycle
   void run();
   void killServer(int exitCode = 0);
+
+  // Client management
+  void removeClient(int clientFd);
 };

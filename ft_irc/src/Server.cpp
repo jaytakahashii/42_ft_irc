@@ -161,7 +161,7 @@ void Server::_handleClientActivity(int clientFd) {
 
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    _removeClient(clientFd);
+    removeClient(clientFd);
     return;
   }
   buffer[bytesRead] = '\0';
@@ -203,7 +203,7 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 // Client Utilities / Channel Utilities
 // ------------------------------
 
-void Server::_removeClient(int clientFd) {
+void Server::removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
   close(clientFd);
   removeClientFromAllChannels(*clients[clientFd]);
@@ -377,7 +377,7 @@ void Server::killServer(int exitCode) {
 
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
-    _removeClient(it->second->getFd());
+    removeClient(it->second->getFd());
   }
   deleteAllChannels();
   close(_serverSocket);
