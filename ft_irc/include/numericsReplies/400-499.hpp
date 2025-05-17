@@ -99,6 +99,14 @@ inline std::string ERR_NOTONCHANNEL(const std::string& nick,
          " :You're not on that channel\r\n";
 }
 
+// 443
+inline std::string ERR_USERONCHANNEL(const std::string& nick,
+                                      const std::string& user,
+                                      const std::string& channel) {
+  return ":irc.42tokyo.jp 443 " + nick + " " + user + " " + channel +
+         " :is already on channel\r\n";
+}
+
 // 451
 inline std::string ERR_NOTREGISTERED(const std::string& nick) {
   return ":irc.42tokyo.jp 451 " + nick + " :You have not registered\r\n";

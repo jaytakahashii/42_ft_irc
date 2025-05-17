@@ -74,7 +74,8 @@
     "stack": "cpp",
     "variant": "cpp",
     "__assertion_handler": "cpp",
-    "__tree": "cpp"
+    "__tree": "cpp",
+    "complex": "cpp"
   },
   "cSpell.words": [
     "ALREADYREGISTRED",
