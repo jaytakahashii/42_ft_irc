@@ -19,7 +19,7 @@ static const std::vector<std::string> parsers(std::string params) {
   return result;
 }
 
-static const bool checkRegistered(Client& client) {
+static bool checkRegistered(Client& client) {
   if (!client.isRegistered()) {
     std::string msg = irc::numericReplies::ERR_NOTREGISTERED(client.getNickname());
     client.sendMessage(msg);
@@ -28,7 +28,7 @@ static const bool checkRegistered(Client& client) {
   return true;
 }
 
-static const bool checkArgmentSize(const commandS& cmd, Client& client) {
+static bool checkArgmentSize(const commandS& cmd, Client& client) {
   if (cmd.args.size() < 1) {
     std::string msg =
         irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
@@ -38,7 +38,7 @@ static const bool checkArgmentSize(const commandS& cmd, Client& client) {
   return true;
 }
 
-static const bool checkChannelName(
+static bool checkChannelName(
   const std::string& channel,
   const std::vector<std::string> channels,
   Client& client,
@@ -55,7 +55,7 @@ static const bool checkChannelName(
   return true;
 }
 
-static const bool checkKey(
+static bool checkKey(
   const std::vector<std::string> keys,
   Client& client,
   Server& server
@@ -73,7 +73,7 @@ static const bool checkKey(
 }
 
 
-bool isClientAlreadyInChannel(Channel* channel, Client& client, const std::string& channelName) {
+static bool isClientAlreadyInChannel(Channel* channel, Client& client, const std::string& channelName) {
   if (channel->hasClient(&client)) {
     client.sendMessage(irc::numericReplies::ERR_USERONCHANNEL(
         client.getNickname(), client.getNickname(), channelName));
@@ -82,7 +82,7 @@ bool isClientAlreadyInChannel(Channel* channel, Client& client, const std::strin
   return false;
 }
 
-bool isChannelFull(Channel* channel, Client& client, const std::string& channelName) {
+static bool isChannelFull(Channel* channel, Client& client, const std::string& channelName) {
   if (channel->getClientCount() >= 50) {
     client.sendMessage(irc::numericReplies::ERR_CHANNELISFULL(client.getNickname(), channelName));
     return true;
@@ -90,7 +90,7 @@ bool isChannelFull(Channel* channel, Client& client, const std::string& channelN
   return false;
 }
 
-bool isInviteOnlyChannel(Channel* channel, Client& client, const std::string& channelName) {
+static bool isInviteOnlyChannel(Channel* channel, Client& client, const std::string& channelName) {
   if (channel->isInviteOnly()) {
     client.sendMessage(irc::numericReplies::ERR_INVITEONLYCHAN(client.getNickname(), channelName));
     return true;
@@ -99,7 +99,7 @@ bool isInviteOnlyChannel(Channel* channel, Client& client, const std::string& ch
 }
 
 /* TODO: hasClient -> isBanned */
-bool isClientBannedFromChannel(Channel* channel, Client& client, const std::string& channelName) {
+static bool isClientBannedFromChannel(Channel* channel, Client& client, const std::string& channelName) {
   if (channel->hasClient(&client)) {
     client.sendMessage(irc::numericReplies::ERR_BANNEDFROMCHAN(client.getNickname(), channelName));
     return true;
@@ -107,7 +107,7 @@ bool isClientBannedFromChannel(Channel* channel, Client& client, const std::stri
   return false;
 }
 
-bool checkChannelKey(Channel* channel, const std::string& key, 
+static bool checkChannelKey(Channel* channel, const std::string& key, 
   Client& client, const std::string& channelName) {
   if (!key.empty()) {
     if (key != channel->getKey()) {
