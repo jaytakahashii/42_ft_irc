@@ -14,6 +14,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Parser.hpp"
+#include "commands/InviteCommand.hpp"
 #include "commands/JoinCommand.hpp"
 #include "commands/KickCommand.hpp"
 #include "commands/ModeCommand.hpp"
@@ -90,6 +91,7 @@ void Server::_addCommandHandlers() {
   _commandHandlers["MODE"] = new ModeCommand();
   _commandHandlers["OPER"] = new OperCommand();
   _commandHandlers["SQUIT"] = new SquitCommand();
+  _commandHandlers["INVITE"] = new InviteCommand();
   // TODO : 他のコマンドもここに追加
 }
 
@@ -241,6 +243,16 @@ bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
     }
   }
   return false;
+}
+
+Client* Server::getClientByNickname(const std::string& nickname) const {
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    if (it->second && it->second->getNickname() == nickname) {
+      return it->second;
+    }
+  }
+  return NULL;  // ユーザーが見つからない場合はNULL
 }
 
 void Server::sendAllClients(const std::string& message) const {

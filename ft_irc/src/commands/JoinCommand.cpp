@@ -174,11 +174,28 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
         client.sendMessage(msg);
         return;
       }
+      // invite-onlyモードが有効な場合、チェック
       if (channel->isInviteOnly()) {
-        std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(
-            client.getNickname(), it->first);
-        client.sendMessage(msg);
-        return;
+        // オペレータか招待されたユーザーのみ参加可能
+        if (!channel->isOperator(client.getNickname()) && !channel->isInvited(client.getNickname())) {
+          std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(
+              client.getNickname(), it->first);
+          client.sendMessage(msg);
+          std::cout << "JOIN: User " << client.getNickname() << " rejected from " 
+                    << it->first << " (invite-only)" << std::endl;
+          return;
+        } else {
+          // 招待されていた場合、デバッグ出力
+          if (channel->isInvited(client.getNickname())) {
+            std::cout << "JOIN: User " << client.getNickname() << " joins " 
+                      << it->first << " via invitation" << std::endl;
+          }
+        }
+      }
+      
+      // 招待リストから削除（招待によるJOINの場合）
+      if (channel->isInvited(client.getNickname())) {
+        channel->removeInvite(client.getNickname());
       }
       if (channel->hasClient(&client)) {
         std::string msg = irc::numericReplies::ERR_BANNEDFROMCHAN(

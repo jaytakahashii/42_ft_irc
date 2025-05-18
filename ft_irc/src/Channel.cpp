@@ -14,15 +14,18 @@ Channel::Channel(const std::string& name)
       _inviteOnly(false),
       _topicRestricted(false),
       _isUserLimit(false),
-      _userLimit(0) {
+      _userLimit(0),
+      _inviteList(std::set<std::string>()) {
   _operators.clear();
   _clientList.clear();
+  _inviteList.clear();
 }
 
 Channel::~Channel() {
   _clientsByNick.clear();
   _clientList.clear();
   _operators.clear();
+  _inviteList.clear();
 }
 
 // ===== 基本情報の取得 =====
@@ -188,4 +191,18 @@ std::size_t Channel::getUserLimit() const {
     return _userLimit;
   }
   return -1;  // TODO
+}
+
+// ===== 招待管理 =====
+
+void Channel::invite(const std::string& nickname) {
+  _inviteList.insert(nickname);
+}
+
+bool Channel::isInvited(const std::string& nickname) const {
+  return _inviteList.find(nickname) != _inviteList.end();
+}
+
+void Channel::removeInvite(const std::string& nickname) {
+  _inviteList.erase(nickname);
 }

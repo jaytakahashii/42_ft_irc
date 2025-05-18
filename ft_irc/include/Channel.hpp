@@ -30,6 +30,9 @@ class Channel {
   bool _topicRestricted;
   bool _isUserLimit;
   int _userLimit;
+  
+  // ===== 招待リスト =====
+  std::set<std::string> _inviteList;  // 招待されたユーザーのニックネーム
 
  public:
   // ===== コンストラクタ / デストラクタ =====
@@ -79,4 +82,9 @@ class Channel {
   bool isTopicRestricted() const;
   void setUserLimit(int userLimit, bool isUserLimit);
   std::size_t getUserLimit() const;
+  
+  // ===== 招待管理 =====
+  void invite(const std::string& nickname);
+  bool isInvited(const std::string& nickname) const;
+  void removeInvite(const std::string& nickname);
 };

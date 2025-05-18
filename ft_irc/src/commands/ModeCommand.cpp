@@ -78,6 +78,10 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
                            channel.getName() + " " + 
                            (sign ? "+" : "-") + "i\r\n";
       channel.sendToAll(modeMsg);
+      
+      // デバッグ出力
+      std::cout << "MODE: Changed invite-only status for " << channel.getName() 
+                << " to " << (sign ? "enabled" : "disabled") << std::endl;
     } else if (*it == 't') {
       channel.setTopicRestricted(sign);
       

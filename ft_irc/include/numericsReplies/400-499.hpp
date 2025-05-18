@@ -5,6 +5,13 @@
 namespace irc {
 namespace numericReplies {
 
+// 401
+inline std::string ERR_NOSUCHNICK(const std::string& nick,
+								   const std::string& target) {
+  return ":irc.42tokyo.jp 401 " + nick + " " + target +
+		 " :No such nick/channel\r\n";
+}
+
 // 402
 inline std::string ERR_NOSUCHSERVER(const std::string& nick,
                                     const std::string& serverName) {
@@ -127,6 +134,14 @@ inline std::string ERR_KEYSET(const std::string& nick,
                                const std::string& channel) {
   return ":irc.42tokyo.jp 467 " + nick + " " + channel +
          " :Channel key already set\r\n";
+}
+
+// 443
+inline std::string ERR_USERONCHANNEL(const std::string& nick,
+                                    const std::string& target,
+                                    const std::string& channel) {
+  return ":irc.42tokyo.jp 443 " + nick + " " + target + " " + channel +
+         " :is already on channel\r\n";
 }
 
 // 471

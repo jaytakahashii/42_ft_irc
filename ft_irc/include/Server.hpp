@@ -59,6 +59,7 @@ class Server {
 
   // Client Utilities
   bool isAlreadyUsedNickname(const std::string& nickname) const;
+  Client* getClientByNickname(const std::string& nickname) const;
   void sendAllClients(const std::string& message) const;
   void removeClientFromAllChannels(Client& client);
 
