@@ -70,8 +70,30 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
        it != cmd.args[1].end(); ++it) {
     if (*it == 'i') {
       channel.setInviteOnly(sign);
+      
+      // Invite-only モード変更の通知
+      std::string modeMsg = ":" + client.getNickname() + "!" +
+                           client.getUsername() + "@" +
+                           client.getHostname() + " MODE " +
+                           channel.getName() + " " + 
+                           (sign ? "+" : "-") + "i\r\n";
+      channel.sendToAll(modeMsg);
     } else if (*it == 't') {
       channel.setTopicRestricted(sign);
+      
+      // Topic制限モード変更の通知
+      // sign==trueの場合: +tでトピックをチャンネルオペレータのみが設定可能
+      // sign==falseの場合: -tで誰でもトピックを設定可能
+      std::string modeMsg = ":" + client.getNickname() + "!" +
+                           client.getUsername() + "@" +
+                           client.getHostname() + " MODE " +
+                           channel.getName() + " " + 
+                           (sign ? "+" : "-") + "t\r\n";
+      channel.sendToAll(modeMsg);
+      
+      // デバッグ出力
+    //   std::cout << "MODE: Changed topic restriction for " << channel.getName() 
+    //             << " to " << (sign ? "operators only" : "everyone") << std::endl;
     } else if (*it == 'k') {
       if (sign) {  // キーを設定する場合
         if (cmd.args.size() < 3 || cmd.args[2].empty()) {

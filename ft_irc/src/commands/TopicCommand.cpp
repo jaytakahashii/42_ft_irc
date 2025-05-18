@@ -16,7 +16,8 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
   }
 
   if (cmd.args.size() != 1 && cmd.args.size() != 2) {
-    client.sendMessage("461 TOPIC :Not enough parameters\r\n");
+    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
     return;
   }
 
@@ -24,15 +25,17 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
 
   // チャンネルが存在しない場合はエラー
   if (server.channels.find(channelName) == server.channels.end()) {
-    client.sendMessage(":server 403 " + client.getNickname() + " " +
-                       channelName + " :No such channel\r\n");
+    std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
+        client.getNickname(), channelName);
+    client.sendMessage(msg);
     return;
   }
   Channel* channel = server.channels[channelName];
   // チャンネルに参加していない場合はエラー
   if (!channel->hasClient(&client)) {
-    client.sendMessage(":server 442 " + client.getNickname() + " " +
-                       channelName + " :You're not on that channel\r\n");
+    std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(
+        client.getNickname(), channelName);
+    client.sendMessage(msg);
     return;
   }
 
@@ -40,22 +43,33 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
     // トピックを取得
     std::string topic = channel->getTopic();
     if (topic.empty()) {
-      client.sendMessage(":server 331 " + client.getNickname() + " " +
-                         channelName + " :No topic is set\r\n");
+      // RPL_NOTOPICのレスポンス送信
+      std::string msg = ":" + server.getServerName() + " 331 " + client.getNickname() + " " +
+                         channelName + " :No topic is set\r\n";
+      client.sendMessage(msg);
     } else {
-      client.sendMessage(":server 332 " + client.getNickname() + " " +
-                         channelName + " :" + topic + "\r\n");
+      // RPL_TOPICのレスポンス送信
+      std::string msg = ":" + server.getServerName() + " 332 " + client.getNickname() + " " +
+                         channelName + " :" + topic + "\r\n";
+      client.sendMessage(msg);
     }
   } else {
     // トピックを設定
-    if (!channel->isOperator(client.getNickname())) {
-      client.sendMessage(":server 482 " + client.getNickname() + " " +
-                         channelName + " :You're not channel operator\r\n");
+    // トピック制限モードが有効で、オペレータでない場合はエラー
+    if (channel->isTopicRestricted() && !channel->isOperator(client.getNickname())) {
+      std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
+          client.getNickname(), channelName);
+      client.sendMessage(msg);
+      std::cout << "TOPIC command rejected: Channel " << channelName 
+                << " has topic restriction (+t) and user is not an operator" << std::endl;
       return;
     }
+    
     std::string newTopic = cmd.args[1];
     channel->setTopic(newTopic);
-    std::string msg = ":" + client.getNickname() + " TOPIC " + channelName +
+    std::string msg = ":" + client.getNickname() + "!" + 
+                      client.getUsername() + "@" + 
+                      client.getHostname() + " TOPIC " + channelName +
                       " :" + newTopic + "\r\n";
     channel->sendToAll(msg);
   }
