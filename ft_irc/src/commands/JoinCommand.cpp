@@ -5,6 +5,12 @@
 #include "numericsReplies/300-399.hpp"
 #include "numericsReplies/400-499.hpp"
 
+// 一人が参加できるチャンネルの最大数
+#define MAX_CHANNELS_PER_USER 10
+
+// 一度に参加できるチャンネルの最大数
+#define MAX_JOIN_TARGETS 5
+
 static const std::map<std::string, std::string> parsers(const commandS cmd) {
   // ','で分割
   std::map<std::string, std::string> ret;
@@ -98,7 +104,7 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
  * * * ERR_BADCHANNELKEY
  * * * ERR_CHANNELISFULL
  * * * ERR_BADCHANMASK
- * * * ERR_NOSUCHCHANNEL
+ * * * ERR_NOSUCHCHANNEL todo
  * * * ERR_TOOMANYCHANNELS
  * * * ERR_TOOMANYTARGETS
  * * * ERR_UNAVAILRESOURCE
@@ -119,14 +125,42 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  // std::cout << cmd.args[1] << std::endl;
-  // /join test1,test2,test3 key,,keyとすると、args[1]にkey,x,keyが入ってる todo
-
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
   
+  if (channels.size() > MAX_JOIN_TARGETS) {
+	// std::cout << "JOIN: Too many target channels specified" << std::endl;
+    std::string msg = irc::numericReplies::ERR_TOOMANYTARGETS(
+        client.getNickname(), 
+        "JOIN", 
+        "407", 
+        "Too many target channels specified");
+    client.sendMessage(msg);
+    return;
+  }
+
+//   std::cout << " hello " << std::endl;
+  
+  // JOINしているチャンネルの数をカウント上限を超えている場合は405
+  int currentChannelCount = 0;
+  for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
+       it != server.channels.end(); ++it) {
+    if (it->second->hasClient(&client)) {
+      currentChannelCount++;
+    }
+  }
+  
+  if (currentChannelCount >= MAX_CHANNELS_PER_USER) {
+    std::string msg = irc::numericReplies::ERR_TOOMANYCHANNELS(
+        client.getNickname(), 
+        channels.begin()->first);
+    client.sendMessage(msg);
+    return;
+  }
+  
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
+    // Validate channel name
     if (!server.isValidChannelName(it->first)) {
       std::string msg =
           irc::numericReplies::ERR_BADCHANMASK(client.getNickname(), it->first);
@@ -145,6 +179,16 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
+    // 使えないチャンネル名について。todo
+    if (it->first == "reserved" || it->first == "system" || it->first == "admin") {
+      std::string msg = irc::numericReplies::ERR_UNAVAILRESOURCE(
+          client.getNickname(), 
+          client.getNickname(),
+          it->first);
+      client.sendMessage(msg);
+      continue;
+    }
+    
     // チャンネルが存在しない場合は新規作成
     // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
     if (!server.hasChannel(it->first)) {
@@ -158,7 +202,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     } else {
       // チャンネルに参加する
       Channel* channel = server.channels[it->first];  // チャンネルを取得
-      if (channel->getClientCount() >= 50) {          // TODO
+      if (channel->getClientCount() >= 50) {          // Maximum channel capacity check
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
             client.getNickname(), it->first);
         client.sendMessage(msg);
@@ -187,12 +231,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       if (channel->isInvited(client.getNickname())) {
         channel->removeInvite(client.getNickname());
       }
+      // Check if the user is already in the channel
       if (channel->hasClient(&client)) {
-        std::string msg = irc::numericReplies::ERR_BANNEDFROMCHAN(
-            client.getNickname(), it->first);
-        client.sendMessage(msg);
-        continue;
+        continue; // User is already in the channel, skip
       }
+      
+      // Check if the user is banned
+      std::string userMask = client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
       if (channel->getIsUserLimit() &&
           channel->getClientCount() >= channel->getUserLimit()) {
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
@@ -202,8 +247,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       }
       // MODEコマンドで設定されたキーの確認
       if (channel->hasKey()) {
-        // クライアントがキーを提供しているか確認
-        if (it->second.empty()) {
+        // クライアントがキーを提供しているか確認、提供されたキーが正しいか確認
+        if (it->second.empty() || it->second != channel->getKey()) {
           // キーが要求されるが提供されていない
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
@@ -212,20 +257,28 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
         //             << " requires a key, but none provided" << std::endl;
           continue;
         }
-        // 提供されたキーが正しいか確認
-        if (it->second != channel->getKey()) {
-          std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
-              client.getNickname(), it->first);
-          client.sendMessage(msg);
-        //   std::cout << "JOIN failed: Incorrect key for channel " << it->first
-        //             << std::endl;
-          continue;
-        }
         // ここまで来たら正しいキーが提供された
         // std::cout << "JOIN: Correct key provided for channel " << it->first
         //           << std::endl;
       }
 
+      // チャンネルの上限を超えている場合は405 クライアントを追加する前にもう一回確認
+      int currentJoinedChannels = 0;
+      for (std::map<std::string, Channel*>::iterator chanIt = server.channels.begin();
+           chanIt != server.channels.end(); ++chanIt) {
+        if (chanIt->second->hasClient(&client)) {
+          currentJoinedChannels++;
+        }
+      }
+      
+      if (currentJoinedChannels >= MAX_CHANNELS_PER_USER) {
+        std::string msg = irc::numericReplies::ERR_TOOMANYCHANNELS(
+            client.getNickname(), 
+            it->first);
+        client.sendMessage(msg);
+        continue;
+      }
+      
       channel->addClient(&client);
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +

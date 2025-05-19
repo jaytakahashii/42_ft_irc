@@ -1,11 +1,15 @@
 #include "commands/ModeCommand.hpp"
 
 #include <stdlib.h>
+#include <ctime>
+#include <string>
 
 #include "Channel.hpp"
 #include "Server.hpp"
+#include "numericsReplies/200-299.hpp"
 #include "numericsReplies/300-399.hpp"
 #include "numericsReplies/400-499.hpp"
+#include "numericsReplies/500-599.hpp"
 
 void userMode(const commandS& cmd, Client& client, Server& server) {
   // TODO
@@ -39,7 +43,6 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
    * * o: Give/take channel operator privilege
    * * l: Set/remove the user limit to channel
    */
-  // TODO
   
   if (!channel.isOperator(client.getNickname())) {
     std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
@@ -169,9 +172,9 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
 
       // 対象ユーザーがチャンネルに存在するか確認
       if (!targetClient) {
-        // ERR_NOSUCHNICKは定義されていないため、同様の意味を持つERR_NOSUCHCHANNELを使用
-        std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(
-            client.getNickname(), channel.getName());
+        // The target user is not on the channel - use ERR_USERNOTINCHANNEL
+        std::string msg = irc::numericReplies::ERR_USERNOTINCHANNEL(
+            client.getNickname(), targetNick, channel.getName());
         client.sendMessage(msg);
         return;
       }
@@ -326,6 +329,15 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
         std::string msg = irc::numericReplies::RPL_CHANNELMODEIS(
             client.getNickname(), channelName, currentModes, modeParams);
         client.sendMessage(msg);
+        
+        // If the channel has exactly one operator, send RPL_UNIQOPIS
+        if (channel->getOperators().size() == 1) {
+          std::string uniqueOp = channel->getOperators()[0];
+          msg = irc::numericReplies::RPL_UNIQOPIS(
+              client.getNickname(), channelName, uniqueOp);
+          client.sendMessage(msg);
+        }
+        
         return;
       }
     }
@@ -350,6 +362,14 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
     }
     
     Channel* channel = server.channels[channelName];
+    
+    // Check if the channel supports modes (for example, some special channels might not support modes)
+    if (channelName[0] == '&' && cmd.args.size() > 1) {  // Assuming & channels don't support modes
+      std::string msg = irc::numericReplies::ERR_NOCHANMODES(
+          client.getNickname(), channelName);
+      client.sendMessage(msg);
+      return;
+    }
 
     channelMode(cmd, *channel, client, server);
   } else {  // ユーザーモード

@@ -210,5 +210,20 @@ inline std::string ERR_NOOPERHOST(const std::string& nick) {
   return ":irc.42tokyo.jp 491 " + nick + " :No O-lines for your host\r\n";
 }
 
+// 441
+inline std::string ERR_USERNOTINCHANNEL(const std::string& nick,
+                                       const std::string& target,
+                                       const std::string& channel) {
+  return ":irc.42tokyo.jp 441 " + nick + " " + target + " " + channel +
+         " :They aren't on that channel\r\n";
+}
+
+// 477
+inline std::string ERR_NOCHANMODES(const std::string& nick,
+                                  const std::string& channel) {
+  return ":irc.42tokyo.jp 477 " + nick + " " + channel +
+         " :Channel doesn't support modes\r\n";
+}
+
 }  // namespace numericReplies
 }  // namespace irc
