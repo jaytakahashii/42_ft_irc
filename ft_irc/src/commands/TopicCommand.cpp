@@ -60,8 +60,8 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
       std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
           client.getNickname(), channelName);
       client.sendMessage(msg);
-      std::cout << "TOPIC command rejected: Channel " << channelName 
-                << " has topic restriction (+t) and user is not an operator" << std::endl;
+    //   std::cout << "TOPIC command rejected: Channel " << channelName 
+    //             << " has topic restriction (+t) and user is not an operator" << std::endl;
       return;
     }
     

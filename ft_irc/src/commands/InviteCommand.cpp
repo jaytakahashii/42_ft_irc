@@ -94,6 +94,6 @@ void InviteCommand::execute(const commandS& cmd, Client& client, Server& server)
   targetClient->sendMessage(inviteNotification);
   
   // デバッグ出力
-  std::cout << "INVITE: " << client.getNickname() << " invited " 
-            << targetNick << " to " << channelName << std::endl;
+//   std::cout << "INVITE: " << client.getNickname() << " invited " 
+//             << targetNick << " to " << channelName << std::endl;
 }

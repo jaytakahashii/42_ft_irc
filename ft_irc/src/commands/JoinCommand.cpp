@@ -181,15 +181,15 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
           std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-          std::cout << "JOIN: User " << client.getNickname() << " rejected from " 
-                    << it->first << " (invite-only)" << std::endl;
+        //   std::cout << "JOIN: User " << client.getNickname() << " rejected from " 
+        //             << it->first << " (invite-only)" << std::endl;
           return;
         } else {
           // 招待されていた場合、デバッグ出力
-          if (channel->isInvited(client.getNickname())) {
-            std::cout << "JOIN: User " << client.getNickname() << " joins " 
-                      << it->first << " via invitation" << std::endl;
-          }
+        //   if (channel->isInvited(client.getNickname())) {
+        //     std::cout << "JOIN: User " << client.getNickname() << " joins " 
+        //               << it->first << " via invitation" << std::endl;
+        //   }
         }
       }
       
@@ -218,8 +218,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-          std::cout << "JOIN failed: Channel " << it->first
-                    << " requires a key, but none provided" << std::endl;
+        //   std::cout << "JOIN failed: Channel " << it->first
+        //             << " requires a key, but none provided" << std::endl;
           return;
         }
         // 提供されたキーが正しいか確認
@@ -227,13 +227,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-          std::cout << "JOIN failed: Incorrect key for channel " << it->first
-                    << std::endl;
+        //   std::cout << "JOIN failed: Incorrect key for channel " << it->first
+        //             << std::endl;
           return;
         }
         // ここまで来たら正しいキーが提供された
-        std::cout << "JOIN: Correct key provided for channel " << it->first
-                  << std::endl;
+        // std::cout << "JOIN: Correct key provided for channel " << it->first
+        //           << std::endl;
       }
 
       channel->addClient(&client);
