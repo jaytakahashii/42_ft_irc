@@ -220,20 +220,39 @@ void Server::removeClient(int clientFd) {
 }
 
 void Server::removeClientFromAllChannels(Client& client) {
-  for (std::map<std::string, Channel*>::iterator it = channels.begin();
-       it != channels.end();) {
-    Channel* channel = it->second;
-    if (channel->hasClient(&client)) {
-      channel->removeClient(&client);
-      if (channel->getClientCount() == 0) {
-        delete channel;
-        it = channels.erase(it); // eraseの戻り値でitを更新
-        continue;
-      }
-    }
-    ++it;
-  }
+   std::map<std::string, Channel*>::iterator it = channels.begin();
+   while (it != channels.end()) {
+     Channel* channel = it->second;
+     if (channel->hasClient(&client)) {
+       channel->removeClient(&client);
+       if (channel->getClientCount() == 0) {
+         delete channel;
+         std::map<std::string, Channel*>::iterator tmp = it++;
+         channels.erase(tmp);
+       } else {
+         ++it;
+       }
+     } else {
+       ++it;
+     }
+   }
 }
+
+// void Server::removeClientFromAllChannels(Client& client) {
+//   for (std::map<std::string, Channel*>::iterator it = channels.begin();
+//        it != channels.end();) {
+//     Channel* channel = it->second;
+//     if (channel->hasClient(&client)) {
+//       channel->removeClient(&client);
+//       if (channel->getClientCount() == 0) {
+//         delete channel;
+//         it = channels.erase(it); // eraseの戻り値でitを更新
+//         continue;
+//       }
+//     }
+//     ++it;
+//   }
+// }
 
 bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
   for (std::map<int, Client*>::const_iterator it = clients.begin();
