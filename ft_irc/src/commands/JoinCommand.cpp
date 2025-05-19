@@ -11,30 +11,28 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   std::string channels = cmd.args[0];
   std::string keys = cmd.args.size() == 2 ? cmd.args[1] : "";
 
+  // チャンネルリストとキーリストを作成
+  std::vector<std::string> channelsList;
+  std::vector<std::string> keysList;
+  
   // 重複チャンネル検出用の一時的なセット
   std::set<std::string> uniqueChannels;
-
-  // チャンネルの処理とメッセージ出力のためのベクトル
-  std::vector<std::string> channelsList;
   std::vector<std::string> duplicateChannels;
 
+  // チャンネルをパース
   size_t pos = 0;
   std::string token;
-
-  // Parse channels
   while ((pos = channels.find(',')) != std::string::npos) {
     token = channels.substr(0, pos);
-
+    
     // 重複チェック
-    if (uniqueChannels.find(token) == uniqueChannels.end()) {
+    if (!token.empty() && uniqueChannels.find(token) == uniqueChannels.end()) {
       uniqueChannels.insert(token);
-      ret[token] = "";  // Initially set empty key
       channelsList.push_back(token);
-    } else {
-      // 重複が発見された場合は、前回の指定を上書き（mapが自動的に対応）
+    } else if (!token.empty()) {
       duplicateChannels.push_back(token);
     }
-
+    
     channels.erase(0, pos + 1);
   }
 
@@ -42,7 +40,6 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   if (!channels.empty()) {
     if (uniqueChannels.find(channels) == uniqueChannels.end()) {
       uniqueChannels.insert(channels);
-      ret[channels] = "";  // Add the last channel
       channelsList.push_back(channels);
     } else {
       duplicateChannels.push_back(channels);
@@ -51,41 +48,42 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 
   // デバッグ情報を出力
   if (!duplicateChannels.empty()) {
+    std::cout << "Duplicate channels detected: ";
     for (size_t i = 0; i < duplicateChannels.size(); ++i) {
       std::cout << duplicateChannels[i] << " ";
     }
     std::cout << std::endl;
   }
 
-  // Parse keys if they exist
+  // キーをパース
   if (!keys.empty()) {
-    size_t keyPos = 0;
-    std::map<std::string, std::string>::iterator it = ret.begin();
-
-    // Handle keys parsing with proper empty key support
-    while (it != ret.end()) {
-      // Check if we've reached the end of the keys string
-      if (keys.empty()) {
-        break;
-      }
-
-      // Find next comma
-      keyPos = keys.find(',');
-
-      // Extract key token
-      if (keyPos != std::string::npos) {
-        // Get the key segment and assign it to the current channel
-        it->second = keys.substr(0, keyPos);
-        // Remove the key and the comma from the keys string
-        keys.erase(0, keyPos + 1);
-      } else {
-        // This is the last key
-        it->second = keys;
-        keys = "";
-      }
-
-      ++it;
+    pos = 0;
+    while ((pos = keys.find(',')) != std::string::npos) {
+      token = keys.substr(0, pos);
+      keysList.push_back(token); // 空のキーも保持する
+      keys.erase(0, pos + 1);
     }
+    // 最後のキー
+    keysList.push_back(keys);
+  }
+
+  // チャンネルとキーをマッピング
+  for (size_t i = 0; i < channelsList.size(); ++i) {
+    std::string channelName = channelsList[i];
+    std::string keyValue = "";
+    
+    // キーがある場合は対応するキーを取得
+    if (i < keysList.size()) {
+      keyValue = keysList[i];
+    }
+    
+    ret[channelName] = keyValue;
+  }
+
+  // デバッグ出力: チャンネルとキーのマッピング
+  std::cout << "Channel-Key mapping:" << std::endl;
+  for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
+    std::cout << "  " << it->first << " -> '" << it->second << "'" << std::endl;
   }
 
   return ret;
@@ -126,15 +124,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
-
-  // チャンネルとキーの詳細をデバッグ表示
-  //   std::cout << "Channels to join: ";
-  //   for (std::map<std::string, std::string>::iterator it = channels.begin();
-  //   it != channels.end(); ++it) {
-  //     std::cout << it->first << " (key: '" << it->second << "') ";
-  //   }
-  //   std::cout << std::endl;
-
+  
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
     if (!server.isValidChannelName(it->first)) {
@@ -218,8 +208,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-        //   std::cout << "JOIN failed: Channel " << it->first
-        //             << " requires a key, but none provided" << std::endl;
+          std::cout << "JOIN failed: Channel " << it->first
+                    << " requires a key, but none provided" << std::endl;
           return;
         }
         // 提供されたキーが正しいか確認
@@ -227,13 +217,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-        //   std::cout << "JOIN failed: Incorrect key for channel " << it->first
-        //             << std::endl;
+          std::cout << "JOIN failed: Incorrect key for channel " << it->first
+                    << std::endl;
           return;
         }
         // ここまで来たら正しいキーが提供された
-        // std::cout << "JOIN: Correct key provided for channel " << it->first
-        //           << std::endl;
+        std::cout << "JOIN: Correct key provided for channel " << it->first
+                  << std::endl;
       }
 
       channel->addClient(&client);
