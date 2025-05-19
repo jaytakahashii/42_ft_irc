@@ -293,14 +293,16 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
       std::string channelPrefix = "#+!&";
       if (channelPrefix.find(cmd.args[0][0]) != std::string::npos) {
         std::string channelName = cmd.args[0];
-        Channel* channel = server.channels[channelName];
-
-        if (!channel) {
+        
+        // server.channelsに直接アクセスする前にhasChannelで存在確認
+        if (!server.hasChannel(channelName)) {
           std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
               client.getNickname(), channelName);
           client.sendMessage(msg);
           return;
         }
+        
+        Channel* channel = server.channels[channelName];
 
         // チャンネルの現在のモードを表示
         std::string currentModes = "+";
@@ -338,14 +340,16 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (channelPrefix.find(cmd.args[0][0]) !=
       std::string::npos) {  // チャンネルモード
     std::string channelName = cmd.args[0];
-    Channel* channel = server.channels[channelName];
-
-    if (!channel) {
+    
+    // server.channelsに直接アクセスする前にhasChannelで存在確認
+    if (!server.hasChannel(channelName)) {
       std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
           client.getNickname(), channelName);
       client.sendMessage(msg);
       return;
     }
+    
+    Channel* channel = server.channels[channelName];
 
     channelMode(cmd, *channel, client, server);
   } else {  // ユーザーモード

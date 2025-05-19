@@ -47,13 +47,13 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   }
 
   // デバッグ情報を出力
-  if (!duplicateChannels.empty()) {
-    std::cout << "Duplicate channels detected: ";
-    for (size_t i = 0; i < duplicateChannels.size(); ++i) {
-      std::cout << duplicateChannels[i] << " ";
-    }
-    std::cout << std::endl;
-  }
+//   if (!duplicateChannels.empty()) {
+//     std::cout << "Duplicate channels detected: ";
+//     for (size_t i = 0; i < duplicateChannels.size(); ++i) {
+//       std::cout << duplicateChannels[i] << " ";
+//     }
+//     std::cout << std::endl;
+//   }
 
   // キーをパース
   if (!keys.empty()) {
@@ -81,10 +81,10 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   }
 
   // デバッグ出力: チャンネルとキーのマッピング
-  std::cout << "Channel-Key mapping:" << std::endl;
-  for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
-    std::cout << "  " << it->first << " -> '" << it->second << "'" << std::endl;
-  }
+//   std::cout << "Channel-Key mapping:" << std::endl;
+//   for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
+//     std::cout << "  " << it->first << " -> '" << it->second << "'" << std::endl;
+//   }
 
   return ret;
 }
@@ -131,7 +131,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       std::string msg =
           irc::numericReplies::ERR_BADCHANMASK(client.getNickname(), it->first);
       client.sendMessage(msg);
-      return;
+      continue;
     }
 
     // Key validation
@@ -139,14 +139,14 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
           client.getNickname(), it->first);
       client.sendMessage(msg);
-      return;
+      continue;
     }
   }
 
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
     // チャンネルが存在しない場合は新規作成
-	// todo modeしたあとにjoinするとhasChannelが誤認されてセグフォ server.channelsがaddされている可能性が高い
+    // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
     if (!server.hasChannel(it->first)) {
       server.channels[it->first] = new Channel(it->first);
       std::string joinMsg = ":" + client.getNickname() + "!" +
