@@ -52,12 +52,16 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
 
     // 受信者が見つかった場合
     if (recipient) {
+      std::cout << recipient << std::endl;
       std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
                             " :" + message + "\r\n";
+      std::cout << privmsg << std::endl;
       recipient->sendMessage(privmsg);
+      std::cout << "send" << std::endl;
     } else {  // 受信者が見つからない場合
-      client.sendMessage(":server 401 " + client.getNickname() + " " + target +
-                         " :No such nick/channel\r\n");
+      std::string msg =
+          irc::numericReplies::ERR_NOSUCHNICK(client.getNickname(), target);
+      client.sendMessage(msg);
     }
   }
 }
