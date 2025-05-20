@@ -43,8 +43,9 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   // ターゲットがチャンネルに参加していない場合はエラー
   Client* targetClient = channel->getClient(targetNickname);
   if (targetClient == NULL) {
-    client.sendMessage(":irc.42tokyo.jp 441 " + nick + " " + targetNickname +
-                       " " + channelName + " :They aren't on that channel\r\n");
+    std::string msg = irc::numericReplies::ERR_USERNOTINCHANNEL(
+        nick, targetNickname, channelName);
+    client.sendMessage(msg);
     return;
   }
 

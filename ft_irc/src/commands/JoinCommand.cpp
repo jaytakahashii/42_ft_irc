@@ -142,8 +142,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  //   std::cout << " hello " << std::endl;
-
   // JOINしているチャンネルの数をカウント上限を超えている場合は405
   int currentChannelCount = 0;
   for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
@@ -177,10 +175,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       client.sendMessage(msg);
       continue;
     }
-  }
 
-  for (std::map<std::string, std::string>::iterator it = channels.begin();
-       it != channels.end(); ++it) {
+
     // 使えないチャンネル名について。todo
     if (it->first == "reserved" || it->first == "system" ||
         it->first == "admin") {
@@ -203,7 +199,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     } else {
       // チャンネルに参加する
       Channel* channel = server.channels[it->first];  // チャンネルを取得
-      if (channel->getClientCount() >= MAX_CHANNEL_MEMBERS) {  // Maximum channel capacity check
+      if (channel->getClientCount() >=
+          MAX_CHANNEL_MEMBERS) {  // Maximum channel capacity check
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
             client.getNickname(), it->first);
         client.sendMessage(msg);

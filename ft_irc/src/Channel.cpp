@@ -14,8 +14,7 @@ Channel::Channel(const std::string& name)
       _inviteOnly(false),
       _topicRestricted(false),
       _isUserLimit(false),
-      _userLimit(0),
-      _inviteList(std::set<std::string>()) {
+      _userLimit(0) {
   _operators.clear();
   _clientList.clear();
   _inviteList.clear();
