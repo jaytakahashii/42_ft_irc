@@ -142,8 +142,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  //   std::cout << " hello " << std::endl;
-
   // JOINしているチャンネルの数をカウント上限を超えている場合は405
   int currentChannelCount = 0;
   for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
@@ -159,9 +157,9 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     client.sendMessage(msg);
     return;
   }
-
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
+
     // Validate channel name
     if (!server.isValidChannelName(it->first)) {
       std::string msg =
@@ -177,10 +175,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       client.sendMessage(msg);
       continue;
     }
-  }
 
-  for (std::map<std::string, std::string>::iterator it = channels.begin();
-       it != channels.end(); ++it) {
     // 使えないチャンネル名について。todo
     if (it->first == "reserved" || it->first == "system" ||
         it->first == "admin") {
@@ -193,6 +188,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     // チャンネルが存在しない場合は新規作成
     // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
     if (!server.hasChannel(it->first)) {
+      std::cout << "JOIN: Creating new channel " << it->first << std::endl;
       server.channels[it->first] = new Channel(it->first);
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +

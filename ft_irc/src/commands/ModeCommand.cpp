@@ -295,7 +295,8 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (cmd.args.size() < 2) {
     // 引数が1つの場合は現在のモードを表示
     if (cmd.args.size() == 1) {
-      std::string channelPrefix = "#+!&";
+      std::string channelPrefix = "#";
+      // std::string channelPrefix = "#+!&";
       if (channelPrefix.find(cmd.args[0][0]) != std::string::npos) {
         std::string channelName = cmd.args[0];
 
@@ -350,7 +351,8 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  std::string channelPrefix = "#+!&";
+  std::string channelPrefix = "#";
+  // std::string channelPrefix = "#+!&";
   if (channelPrefix.find(cmd.args[0][0]) !=
       std::string::npos) {  // チャンネルモード
     std::string channelName = cmd.args[0];

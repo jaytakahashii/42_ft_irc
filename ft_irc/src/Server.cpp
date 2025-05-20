@@ -338,21 +338,25 @@ bool Server::isValidChannelName(const std::string& name) const {
     return false;
   }
 
-  if (name[0] == '!' && name.length() >= 6) {
-    for (int i = 1; i <= 5; ++i) {
-      if (!std::isupper(name[i]) && !std::isdigit(name[i])) {
-        return false;
-      }
-    }
-    for (std::size_t i = 6; i < name.length(); ++i) {
-      if (isInvalidChannelChar(name[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
+  // if (name[0] == '!' && name.length() >= 6) {
+  //   for (int i = 1; i <= 5; ++i) {
+  //     if (!std::isupper(name[i]) && !std::isdigit(name[i])) {
+  //       return false;
+  //     }
+  //   }
+  //   for (std::size_t i = 6; i < name.length(); ++i) {
+  //     if (isInvalidChannelChar(name[i])) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
 
-  if (name[0] != '&' && name[0] != '#' && name[0] != '+') {
+  // if (name[0] != '&' && name[0] != '#' && name[0] != '+') {
+  //   return false;
+  // }
+
+  if (name[0] != '#') {
     return false;
   }
 
