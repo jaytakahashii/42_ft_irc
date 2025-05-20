@@ -39,6 +39,7 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (cmd.args.size() > 1) {
     reason = " :" + cmd.args[1];
   }
+  channels.push_back(channelsStr);  // 最後のチャンネル名を追加
 
   // print channnel names
   //   std::cout << channels[0] << std::endl;
@@ -79,7 +80,7 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
     // 全チャンネルメンバーに通知（自分も含む）
     channel->sendToAll(partMsg);
-
+    
     // クライアントをチャンネルから削除
     channel->removeClient(&client);
 

@@ -176,6 +176,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       continue;
     }
 
+
     // 使えないチャンネル名について。todo
     if (it->first == "reserved" || it->first == "system" ||
         it->first == "admin") {
@@ -188,7 +189,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     // チャンネルが存在しない場合は新規作成
     // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
     if (!server.hasChannel(it->first)) {
-      std::cout << "JOIN: Creating new channel " << it->first << std::endl;
       server.channels[it->first] = new Channel(it->first);
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +
