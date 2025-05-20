@@ -20,7 +20,7 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   // チャンネルリストとキーリストを作成
   std::vector<std::string> channelsList;
   std::vector<std::string> keysList;
-  
+
   // 重複チャンネル検出用の一時的なセット
   std::set<std::string> uniqueChannels;
   std::vector<std::string> duplicateChannels;
@@ -30,7 +30,7 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   std::string token;
   while ((pos = channels.find(',')) != std::string::npos) {
     token = channels.substr(0, pos);
-    
+
     // 重複チェック
     if (!token.empty() && uniqueChannels.find(token) == uniqueChannels.end()) {
       uniqueChannels.insert(token);
@@ -38,7 +38,7 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
     } else if (!token.empty()) {
       duplicateChannels.push_back(token);
     }
-    
+
     channels.erase(0, pos + 1);
   }
 
@@ -53,20 +53,20 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   }
 
   // デバッグ情報を出力
-//   if (!duplicateChannels.empty()) {
-//     std::cout << "Duplicate channels detected: ";
-//     for (size_t i = 0; i < duplicateChannels.size(); ++i) {
-//       std::cout << duplicateChannels[i] << " ";
-//     }
-//     std::cout << std::endl;
-//   }
+  //   if (!duplicateChannels.empty()) {
+  //     std::cout << "Duplicate channels detected: ";
+  //     for (size_t i = 0; i < duplicateChannels.size(); ++i) {
+  //       std::cout << duplicateChannels[i] << " ";
+  //     }
+  //     std::cout << std::endl;
+  //   }
 
   // キーをパース
   if (!keys.empty()) {
     pos = 0;
     while ((pos = keys.find(',')) != std::string::npos) {
       token = keys.substr(0, pos);
-      keysList.push_back(token); // 空のキーも保持する
+      keysList.push_back(token);  // 空のキーも保持する
       keys.erase(0, pos + 1);
     }
     // 最後のキー
@@ -77,20 +77,22 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
   for (size_t i = 0; i < channelsList.size(); ++i) {
     std::string channelName = channelsList[i];
     std::string keyValue = "";
-    
+
     // キーがある場合は対応するキーを取得
     if (i < keysList.size()) {
       keyValue = keysList[i];
     }
-    
+
     ret[channelName] = keyValue;
   }
 
   // デバッグ出力: チャンネルとキーのマッピング
-//   std::cout << "Channel-Key mapping:" << std::endl;
-//   for (std::map<std::string, std::string>::iterator it = ret.begin(); it != ret.end(); ++it) {
-//     std::cout << "  " << it->first << " -> '" << it->second << "'" << std::endl;
-//   }
+  //   std::cout << "Channel-Key mapping:" << std::endl;
+  //   for (std::map<std::string, std::string>::iterator it = ret.begin(); it !=
+  //   ret.end(); ++it) {
+  //     std::cout << "  " << it->first << " -> '" << it->second << "'" <<
+  //     std::endl;
+  //   }
 
   return ret;
 }
@@ -127,20 +129,18 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
-  
+
   if (channels.size() > MAX_JOIN_TARGETS) {
-	// std::cout << "JOIN: Too many target channels specified" << std::endl;
+    // std::cout << "JOIN: Too many target channels specified" << std::endl;
     std::string msg = irc::numericReplies::ERR_TOOMANYTARGETS(
-        client.getNickname(), 
-        "JOIN", 
-        "407", 
+        client.getNickname(), "JOIN", "407",
         "Too many target channels specified");
     client.sendMessage(msg);
     return;
   }
 
-//   std::cout << " hello " << std::endl;
-  
+  //   std::cout << " hello " << std::endl;
+
   // JOINしているチャンネルの数をカウント上限を超えている場合は405
   int currentChannelCount = 0;
   for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
@@ -149,15 +149,14 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       currentChannelCount++;
     }
   }
-  
+
   if (currentChannelCount >= MAX_CHANNELS_PER_USER) {
     std::string msg = irc::numericReplies::ERR_TOOMANYCHANNELS(
-        client.getNickname(), 
-        channels.begin()->first);
+        client.getNickname(), channels.begin()->first);
     client.sendMessage(msg);
     return;
   }
-  
+
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
     // Validate channel name
@@ -180,15 +179,14 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
     // 使えないチャンネル名について。todo
-    if (it->first == "reserved" || it->first == "system" || it->first == "admin") {
+    if (it->first == "reserved" || it->first == "system" ||
+        it->first == "admin") {
       std::string msg = irc::numericReplies::ERR_UNAVAILRESOURCE(
-          client.getNickname(), 
-          client.getNickname(),
-          it->first);
+          client.getNickname(), client.getNickname(), it->first);
       client.sendMessage(msg);
       continue;
     }
-    
+
     // チャンネルが存在しない場合は新規作成
     // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
     if (!server.hasChannel(it->first)) {
@@ -202,7 +200,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     } else {
       // チャンネルに参加する
       Channel* channel = server.channels[it->first];  // チャンネルを取得
-      if (channel->getClientCount() >= 50) {          // Maximum channel capacity check
+      if (channel->getClientCount() >= 50) {  // Maximum channel capacity check
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
             client.getNickname(), it->first);
         client.sendMessage(msg);
@@ -211,33 +209,36 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       // invite-onlyモードが有効な場合、チェック
       if (channel->isInviteOnly()) {
         // オペレータか招待されたユーザーのみ参加可能
-        if (!channel->isOperator(client.getNickname()) && !channel->isInvited(client.getNickname())) {
+        if (!channel->isOperator(client.getNickname()) &&
+            !channel->isInvited(client.getNickname())) {
           std::string msg = irc::numericReplies::ERR_INVITEONLYCHAN(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-        //   std::cout << "JOIN: User " << client.getNickname() << " rejected from " 
-        //             << it->first << " (invite-only)" << std::endl;
+          //   std::cout << "JOIN: User " << client.getNickname() << " rejected
+          //   from "
+          //             << it->first << " (invite-only)" << std::endl;
           continue;
         } else {
           // 招待されていた場合、デバッグ出力
-        //   if (channel->isInvited(client.getNickname())) {
-        //     std::cout << "JOIN: User " << client.getNickname() << " joins " 
-        //               << it->first << " via invitation" << std::endl;
-        //   }
+          //   if (channel->isInvited(client.getNickname())) {
+          //     std::cout << "JOIN: User " << client.getNickname() << " joins "
+          //               << it->first << " via invitation" << std::endl;
+          //   }
         }
       }
-      
+
       // 招待リストから削除（招待によるJOINの場合）
       if (channel->isInvited(client.getNickname())) {
         channel->removeInvite(client.getNickname());
       }
       // Check if the user is already in the channel
       if (channel->hasClient(&client)) {
-        continue; // User is already in the channel, skip
+        continue;  // User is already in the channel, skip
       }
-      
+
       // Check if the user is banned
-      std::string userMask = client.getNickname() + "!" + client.getUsername() + "@" + client.getHostname();
+      std::string userMask = client.getNickname() + "!" + client.getUsername() +
+                             "@" + client.getHostname();
       if (channel->getIsUserLimit() &&
           channel->getClientCount() >= channel->getUserLimit()) {
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
@@ -253,8 +254,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
           std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(
               client.getNickname(), it->first);
           client.sendMessage(msg);
-        //   std::cout << "JOIN failed: Channel " << it->first
-        //             << " requires a key, but none provided" << std::endl;
+          //   std::cout << "JOIN failed: Channel " << it->first
+          //             << " requires a key, but none provided" << std::endl;
           continue;
         }
         // ここまで来たら正しいキーが提供された
@@ -262,23 +263,24 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
         //           << std::endl;
       }
 
-      // チャンネルの上限を超えている場合は405 クライアントを追加する前にもう一回確認
+      // チャンネルの上限を超えている場合は405
+      // クライアントを追加する前にもう一回確認
       int currentJoinedChannels = 0;
-      for (std::map<std::string, Channel*>::iterator chanIt = server.channels.begin();
+      for (std::map<std::string, Channel*>::iterator chanIt =
+               server.channels.begin();
            chanIt != server.channels.end(); ++chanIt) {
         if (chanIt->second->hasClient(&client)) {
           currentJoinedChannels++;
         }
       }
-      
+
       if (currentJoinedChannels >= MAX_CHANNELS_PER_USER) {
         std::string msg = irc::numericReplies::ERR_TOOMANYCHANNELS(
-            client.getNickname(), 
-            it->first);
+            client.getNickname(), it->first);
         client.sendMessage(msg);
         continue;
       }
-      
+
       channel->addClient(&client);
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +

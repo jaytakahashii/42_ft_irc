@@ -25,7 +25,7 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
   std::vector<std::string> channels;
   std::string token;
   size_t pos = 0;
-  
+
   // カンマで区切られたチャンネル名を分割
   while ((pos = channelsStr.find(',')) != std::string::npos) {
     token = channelsStr.substr(0, pos);
@@ -41,13 +41,14 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   // print channnel names
-//   std::cout << channels[0] << std::endl;
+  //   std::cout << channels[0] << std::endl;
   // サーバー上の全チャンネルを表示
-//   std::cout << "Available channels on server: ";
-//   for (std::map<std::string, Channel*>::const_iterator it = server.channels.begin();
-//        it != server.channels.end(); ++it) {
-//     std::cout << it->first << " ";
-//   }
+  //   std::cout << "Available channels on server: ";
+  //   for (std::map<std::string, Channel*>::const_iterator it =
+  //   server.channels.begin();
+  //        it != server.channels.end(); ++it) {
+  //     std::cout << it->first << " ";
+  //   }
 
   // 指定された各チャンネルから退出
   for (size_t i = 0; i < channels.size(); ++i) {
@@ -73,23 +74,24 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
     // チャンネルから退出メッセージを作成
     std::string partMsg = ":" + client.getNickname() + "!" +
-                         client.getUsername() + "@" + client.getHostname() +
-                         " PART " + channelName + reason + "\r\n";
-    
+                          client.getUsername() + "@" + client.getHostname() +
+                          " PART " + channelName + reason + "\r\n";
+
     // 全チャンネルメンバーに通知（自分も含む）
     channel->sendToAll(partMsg);
-    
+
     // IRC クライアントに確実に応答を送るため、直接クライアントにも送信
     client.sendMessage(partMsg);
-    
+
     // std::cout << "PART message sent to client: " << partMsg;
-    
+
     // クライアントをチャンネルから削除
     channel->removeClient(&client);
 
     // チャンネルにクライアントがいなくなった場合は削除
     if (channel->getClientCount() == 0) {
-    //   std::cout << "Channel " << channelName << " is now empty, deleting..." << std::endl;
+      //   std::cout << "Channel " << channelName << " is now empty,
+      //   deleting..." << std::endl;
       delete channel;
       server.channels.erase(channelName);
     }
