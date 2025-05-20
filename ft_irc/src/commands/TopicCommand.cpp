@@ -16,7 +16,8 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
   }
 
   if (cmd.args.size() != 1 && cmd.args.size() != 2) {
-    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
     return;
   }
@@ -44,32 +45,35 @@ void TopicCommand::execute(const commandS& cmd, Client& client,
     std::string topic = channel->getTopic();
     if (topic.empty()) {
       // RPL_NOTOPICのレスポンス送信
-      std::string msg = ":" + server.getServerName() + " 331 " + client.getNickname() + " " +
-                         channelName + " :No topic is set\r\n";
+      std::string msg = ":" + server.getServerName() + " 331 " +
+                        client.getNickname() + " " + channelName +
+                        " :No topic is set\r\n";
       client.sendMessage(msg);
     } else {
       // RPL_TOPICのレスポンス送信
-      std::string msg = ":" + server.getServerName() + " 332 " + client.getNickname() + " " +
-                         channelName + " :" + topic + "\r\n";
+      std::string msg = ":" + server.getServerName() + " 332 " +
+                        client.getNickname() + " " + channelName + " :" +
+                        topic + "\r\n";
       client.sendMessage(msg);
     }
   } else {
     // トピックを設定
     // トピック制限モードが有効で、オペレータでない場合はエラー
-    if (channel->isTopicRestricted() && !channel->isOperator(client.getNickname())) {
+    if (channel->isTopicRestricted() &&
+        !channel->isOperator(client.getNickname())) {
       std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
           client.getNickname(), channelName);
       client.sendMessage(msg);
-    //   std::cout << "TOPIC command rejected: Channel " << channelName 
-    //             << " has topic restriction (+t) and user is not an operator" << std::endl;
+      //   std::cout << "TOPIC command rejected: Channel " << channelName
+      //             << " has topic restriction (+t) and user is not an
+      //             operator" << std::endl;
       return;
     }
-    
+
     std::string newTopic = cmd.args[1];
     channel->setTopic(newTopic);
-    std::string msg = ":" + client.getNickname() + "!" + 
-                      client.getUsername() + "@" + 
-                      client.getHostname() + " TOPIC " + channelName +
+    std::string msg = ":" + client.getNickname() + "!" + client.getUsername() +
+                      "@" + client.getHostname() + " TOPIC " + channelName +
                       " :" + newTopic + "\r\n";
     channel->sendToAll(msg);
   }

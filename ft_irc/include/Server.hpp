@@ -42,7 +42,7 @@ class Server {
   void _handleClientActivity(int clientFd);
   void _processClientBuffer(Client* client);
   void _commandDispatch(const commandS& cmd, Client& client);
-//   void removeClient(int clientFd);
+  //   void removeClient(int clientFd);
 
  public:
   // Client & Channel registry
@@ -61,7 +61,8 @@ class Server {
   bool isAlreadyUsedNickname(const std::string& nickname) const;
   Client* getClientByNickname(const std::string& nickname) const;
   void sendAllClients(const std::string& message) const;
-  void sendQuitMessageToRelevantClients(Client& client, const std::string& message);
+  void sendQuitMessageToRelevantClients(Client& client,
+                                        const std::string& message);
   void removeClientFromAllChannels(Client& client);
 
   // Channel Utilities

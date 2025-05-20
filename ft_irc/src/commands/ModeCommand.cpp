@@ -1,6 +1,7 @@
 #include "commands/ModeCommand.hpp"
 
 #include <stdlib.h>
+
 #include <ctime>
 #include <string>
 
@@ -43,7 +44,7 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
    * * o: Give/take channel operator privilege
    * * l: Set/remove the user limit to channel
    */
-  
+
   if (!channel.isOperator(client.getNickname())) {
     std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(
         client.getNickname(), channel.getName());
@@ -73,34 +74,35 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
        it != cmd.args[1].end(); ++it) {
     if (*it == 'i') {
       channel.setInviteOnly(sign);
-      
+
       // Invite-only モード変更の通知
       std::string modeMsg = ":" + client.getNickname() + "!" +
-                           client.getUsername() + "@" +
-                           client.getHostname() + " MODE " +
-                           channel.getName() + " " + 
-                           (sign ? "+" : "-") + "i\r\n";
+                            client.getUsername() + "@" + client.getHostname() +
+                            " MODE " + channel.getName() + " " +
+                            (sign ? "+" : "-") + "i\r\n";
       channel.sendToAll(modeMsg);
-      
+
       // デバッグ出力
-    //   std::cout << "MODE: Changed invite-only status for " << channel.getName() 
-    //             << " to " << (sign ? "enabled" : "disabled") << std::endl;
+      //   std::cout << "MODE: Changed invite-only status for " <<
+      //   channel.getName()
+      //             << " to " << (sign ? "enabled" : "disabled") << std::endl;
     } else if (*it == 't') {
       channel.setTopicRestricted(sign);
-      
+
       // Topic制限モード変更の通知
       // sign==trueの場合: +tでトピックをチャンネルオペレータのみが設定可能
       // sign==falseの場合: -tで誰でもトピックを設定可能
       std::string modeMsg = ":" + client.getNickname() + "!" +
-                           client.getUsername() + "@" +
-                           client.getHostname() + " MODE " +
-                           channel.getName() + " " + 
-                           (sign ? "+" : "-") + "t\r\n";
+                            client.getUsername() + "@" + client.getHostname() +
+                            " MODE " + channel.getName() + " " +
+                            (sign ? "+" : "-") + "t\r\n";
       channel.sendToAll(modeMsg);
-      
+
       // デバッグ出力
-    //   std::cout << "MODE: Changed topic restriction for " << channel.getName() 
-    //             << " to " << (sign ? "operators only" : "everyone") << std::endl;
+      //   std::cout << "MODE: Changed topic restriction for " <<
+      //   channel.getName()
+      //             << " to " << (sign ? "operators only" : "everyone") <<
+      //             std::endl;
     } else if (*it == 'k') {
       if (sign) {  // キーを設定する場合
         if (cmd.args.size() < 3 || cmd.args[2].empty()) {
@@ -296,7 +298,7 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
       std::string channelPrefix = "#+!&";
       if (channelPrefix.find(cmd.args[0][0]) != std::string::npos) {
         std::string channelName = cmd.args[0];
-        
+
         // server.channelsに直接アクセスする前にhasChannelで存在確認
         if (!server.hasChannel(channelName)) {
           std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
@@ -304,7 +306,7 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
           client.sendMessage(msg);
           return;
         }
-        
+
         Channel* channel = server.channels[channelName];
 
         // チャンネルの現在のモードを表示
@@ -329,15 +331,15 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
         std::string msg = irc::numericReplies::RPL_CHANNELMODEIS(
             client.getNickname(), channelName, currentModes, modeParams);
         client.sendMessage(msg);
-        
+
         // If the channel has exactly one operator, send RPL_UNIQOPIS
         if (channel->getOperators().size() == 1) {
           std::string uniqueOp = channel->getOperators()[0];
-          msg = irc::numericReplies::RPL_UNIQOPIS(
-              client.getNickname(), channelName, uniqueOp);
+          msg = irc::numericReplies::RPL_UNIQOPIS(client.getNickname(),
+                                                  channelName, uniqueOp);
           client.sendMessage(msg);
         }
-        
+
         return;
       }
     }
@@ -352,7 +354,7 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (channelPrefix.find(cmd.args[0][0]) !=
       std::string::npos) {  // チャンネルモード
     std::string channelName = cmd.args[0];
-    
+
     // server.channelsに直接アクセスする前にhasChannelで存在確認
     if (!server.hasChannel(channelName)) {
       std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
@@ -360,11 +362,13 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
       client.sendMessage(msg);
       return;
     }
-    
+
     Channel* channel = server.channels[channelName];
-    
-    // Check if the channel supports modes (for example, some special channels might not support modes)
-    if (channelName[0] == '&' && cmd.args.size() > 1) {  // Assuming & channels don't support modes
+
+    // Check if the channel supports modes (for example, some special channels
+    // might not support modes)
+    if (channelName[0] == '&' &&
+        cmd.args.size() > 1) {  // Assuming & channels don't support modes
       std::string msg = irc::numericReplies::ERR_NOCHANMODES(
           client.getNickname(), channelName);
       client.sendMessage(msg);

@@ -16,7 +16,8 @@
  * * * ERR_CHANOPRIVSNEEDED
  * * * RPL_INVITING
  */
-void InviteCommand::execute(const commandS& cmd, Client& client, Server& server) {
+void InviteCommand::execute(const commandS& cmd, Client& client,
+                            Server& server) {
   const std::string& nick =
       client.getNickname().empty() ? "*" : client.getNickname();
   if (!client.isRegistered()) {
@@ -27,23 +28,24 @@ void InviteCommand::execute(const commandS& cmd, Client& client, Server& server)
 
   // INVITEコマンドには2つの引数が必要: <nickname> <channel>
   if (cmd.args.size() < 2) {
-    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
     return;
   }
 
   std::string targetNick = cmd.args[0];
   std::string channelName = cmd.args[1];
-  
+
   // 対象ユーザーがサーバーに存在するか確認
   Client* targetClient = server.getClientByNickname(targetNick);
   if (!targetClient) {
-    std::string msg = irc::numericReplies::ERR_NOSUCHNICK(
-        client.getNickname(), targetNick);
+    std::string msg =
+        irc::numericReplies::ERR_NOSUCHNICK(client.getNickname(), targetNick);
     client.sendMessage(msg);
     return;
   }
-  
+
   // チャンネルが存在するか確認
   if (server.channels.find(channelName) == server.channels.end()) {
     std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
@@ -51,9 +53,9 @@ void InviteCommand::execute(const commandS& cmd, Client& client, Server& server)
     client.sendMessage(msg);
     return;
   }
-  
+
   Channel* channel = server.channels[channelName];
-  
+
   // 招待者がチャンネルに参加しているか確認
   if (!channel->hasClient(&client)) {
     std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(
@@ -61,7 +63,7 @@ void InviteCommand::execute(const commandS& cmd, Client& client, Server& server)
     client.sendMessage(msg);
     return;
   }
-  
+
   // 招待先のユーザーがすでにチャンネルに参加しているか確認
   if (channel->hasClient(targetClient)) {
     std::string msg = irc::numericReplies::ERR_USERONCHANNEL(
@@ -77,23 +79,23 @@ void InviteCommand::execute(const commandS& cmd, Client& client, Server& server)
     client.sendMessage(msg);
     return;
   }
-  
+
   // チャンネルの招待リストに追加
   channel->invite(targetNick);
-  
+
   // 招待者に招待成功メッセージを送信
   std::string inviteMsg = irc::numericReplies::RPL_INVITING(
       client.getNickname(), targetNick, channelName);
   client.sendMessage(inviteMsg);
-  
+
   // 対象ユーザーに招待メッセージを送信
   std::string inviteNotification = ":" + client.getNickname() + "!" +
-                                  client.getUsername() + "@" +
-                                  client.getHostname() + " INVITE " +
-                                  targetNick + " " + channelName + "\r\n";
+                                   client.getUsername() + "@" +
+                                   client.getHostname() + " INVITE " +
+                                   targetNick + " " + channelName + "\r\n";
   targetClient->sendMessage(inviteNotification);
-  
+
   // デバッグ出力
-//   std::cout << "INVITE: " << client.getNickname() << " invited " 
-//             << targetNick << " to " << channelName << std::endl;
+  //   std::cout << "INVITE: " << client.getNickname() << " invited "
+  //             << targetNick << " to " << channelName << std::endl;
 }

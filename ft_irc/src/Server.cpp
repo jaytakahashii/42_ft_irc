@@ -220,22 +220,22 @@ void Server::removeClient(int clientFd) {
 }
 
 void Server::removeClientFromAllChannels(Client& client) {
-   std::map<std::string, Channel*>::iterator it = channels.begin();
-   while (it != channels.end()) {
-     Channel* channel = it->second;
-     if (channel->hasClient(&client)) {
-       channel->removeClient(&client);
-       if (channel->getClientCount() == 0) {
-         delete channel;
-         std::map<std::string, Channel*>::iterator tmp = it++;
-         channels.erase(tmp);
-       } else {
-         ++it;
-       }
-     } else {
-       ++it;
-     }
-   }
+  std::map<std::string, Channel*>::iterator it = channels.begin();
+  while (it != channels.end()) {
+    Channel* channel = it->second;
+    if (channel->hasClient(&client)) {
+      channel->removeClient(&client);
+      if (channel->getClientCount() == 0) {
+        delete channel;
+        std::map<std::string, Channel*>::iterator tmp = it++;
+        channels.erase(tmp);
+      } else {
+        ++it;
+      }
+    } else {
+      ++it;
+    }
+  }
 }
 
 // void Server::removeClientFromAllChannels(Client& client) {
@@ -282,16 +282,22 @@ void Server::sendAllClients(const std::string& message) const {
   }
 }
 
-void Server::sendQuitMessageToRelevantClients(Client& client, const std::string& message) {
+void Server::sendQuitMessageToRelevantClients(Client& client,
+                                              const std::string& message) {
   std::set<int> notifiedFds;
 
-  for (std::map<std::string, Channel*>::iterator it = channels.begin(); it != channels.end(); ++it) {
+  for (std::map<std::string, Channel*>::iterator it = channels.begin();
+       it != channels.end(); ++it) {
     Channel* channel = it->second;
     if (channel->hasClient(&client)) {
-      const std::map<std::string, Client*>& clientsInChannel = channel->getClients();
-      for (std::map<std::string, Client*>::const_iterator cit = clientsInChannel.begin(); cit != clientsInChannel.end(); ++cit) {
+      const std::map<std::string, Client*>& clientsInChannel =
+          channel->getClients();
+      for (std::map<std::string, Client*>::const_iterator cit =
+               clientsInChannel.begin();
+           cit != clientsInChannel.end(); ++cit) {
         Client* otherClient = cit->second;
-        if (otherClient != &client && notifiedFds.insert(otherClient->getFd()).second) {
+        if (otherClient != &client &&
+            notifiedFds.insert(otherClient->getFd()).second) {
           otherClient->sendMessage(message);
         }
       }

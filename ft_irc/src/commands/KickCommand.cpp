@@ -43,15 +43,15 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   // ターゲットがチャンネルに参加していない場合はエラー
   Client* targetClient = channel->getClient(targetNickname);
   if (targetClient == NULL) {
-    client.sendMessage(":irc.42tokyo.jp 441 " + nick + " " +
-                       targetNickname + " " + channelName +
-                       " :They aren't on that channel\r\n");
+    client.sendMessage(":irc.42tokyo.jp 441 " + nick + " " + targetNickname +
+                       " " + channelName + " :They aren't on that channel\r\n");
     return;
   }
 
   // チャンネルのオペレーターでない場合はエラー
   if (!channel->isOperator(client.getNickname())) {
-    std::string msg = irc::numericReplies::ERR_CHANOPRIVSNEEDED(nick, channelName);
+    std::string msg =
+        irc::numericReplies::ERR_CHANOPRIVSNEEDED(nick, channelName);
     client.sendMessage(msg);
     return;
   }
@@ -71,11 +71,12 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   // :<prefix> KICK <channel> <user> [<comment>]
   std::string kickMsg = ":" + client.getNickname() + "!" +
                         client.getUsername() + "@localhost KICK " +
-                        channelName + " " + targetNickname + " :" + kickReason + "\r\n";
-  
+                        channelName + " " + targetNickname + " :" + kickReason +
+                        "\r\n";
+
   // チャンネルの全員に通知
   channel->sendToAll(kickMsg);
-  
+
   // キックされたユーザーにも同じメッセージを送信
   // （チャンネルから既に削除されているため）
   targetClient->sendMessage(kickMsg);
