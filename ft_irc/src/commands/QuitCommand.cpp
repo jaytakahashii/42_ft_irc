@@ -6,6 +6,11 @@
 #include "Client.hpp"
 #include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
+#include "utils/color.hpp"
+
+void d() {
+  std::cout << RED << "=== DEBUG ===" << RESET << std::endl;
+}
 
 void QuitCommand::execute(const commandS& cmd, Client& client, Server& server) {
   const std::string& nick =
@@ -24,6 +29,7 @@ void QuitCommand::execute(const commandS& cmd, Client& client, Server& server) {
                         client.getUsername() + "@" + client.getHostname() +
                         " QUIT" + quitMessage + "\r\n";
   // 全てのクライアントにQUITメッセージを送信
-  server.sendAllClients(quitMsg);
-  close(client.getFd());
+  // server.sendAllClients(quitMsg);
+  server.sendQuitMessageToRelevantClients(client, quitMsg);
+  server.removeClient(client.getFd());
 }

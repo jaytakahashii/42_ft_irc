@@ -23,6 +23,7 @@ CMD_H				= PassCommand.hpp \
 							ModeCommand.hpp \
 							OperCommand.hpp \
 							SquitCommand.hpp \
+							InviteCommand.hpp \
 
 UTIL_H			= utils.hpp \
 							color.hpp
@@ -62,6 +63,7 @@ CMD_SRC			= PassCommand.cpp \
 							ModeCommand.cpp \
 							OperCommand.cpp \
 							SquitCommand.cpp \
+							InviteCommand.cpp \
 
 UTIL_SRC		= utils.cpp
 
