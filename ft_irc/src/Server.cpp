@@ -229,12 +229,10 @@ void Server::removeClientFromAllChannels(Client& client) {
         delete channel;
         std::map<std::string, Channel*>::iterator tmp = it++;
         channels.erase(tmp);
-      } else {
-        ++it;
-      }
-    } else {
-      ++it;
+        continue;
+      } 
     }
+    it++;
   }
 }
 

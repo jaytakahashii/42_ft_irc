@@ -11,6 +11,9 @@
 // 一度に参加できるチャンネルの最大数
 #define MAX_JOIN_TARGETS 5
 
+// チャンネルに入れるメンバーの初期最大数
+#define MAX_CHANNEL_MEMBERS 50
+
 static const std::map<std::string, std::string> parsers(const commandS cmd) {
   // ','で分割
   std::map<std::string, std::string> ret;
@@ -200,7 +203,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     } else {
       // チャンネルに参加する
       Channel* channel = server.channels[it->first];  // チャンネルを取得
-      if (channel->getClientCount() >= 50) {  // Maximum channel capacity check
+      if (channel->getClientCount() >= MAX_CHANNEL_MEMBERS) {  // Maximum channel capacity check
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
             client.getNickname(), it->first);
         client.sendMessage(msg);

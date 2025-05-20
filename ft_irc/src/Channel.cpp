@@ -190,10 +190,7 @@ void Channel::setUserLimit(int userLimit, bool isUserLimit) {
 }
 
 std::size_t Channel::getUserLimit() const {
-  if (_isUserLimit) {
-    return _userLimit;
-  }
-  return -1;  // TODO
+  return _userLimit;
 }
 
 // ===== 招待管理 =====
