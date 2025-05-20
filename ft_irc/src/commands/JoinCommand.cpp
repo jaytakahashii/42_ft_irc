@@ -157,9 +157,9 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     client.sendMessage(msg);
     return;
   }
+
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
-
     // Validate channel name
     if (!server.isValidChannelName(it->first)) {
       std::string msg =
@@ -199,7 +199,8 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     } else {
       // チャンネルに参加する
       Channel* channel = server.channels[it->first];  // チャンネルを取得
-      if (channel->getClientCount() >= MAX_CHANNEL_MEMBERS) {  // Maximum channel capacity check
+      if (channel->getClientCount() >=
+          MAX_CHANNEL_MEMBERS) {  // Maximum channel capacity check
         std::string msg = irc::numericReplies::ERR_CHANNELISFULL(
             client.getNickname(), it->first);
         client.sendMessage(msg);

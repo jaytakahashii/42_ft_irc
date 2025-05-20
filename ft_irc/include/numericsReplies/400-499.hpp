@@ -99,6 +99,14 @@ inline std::string ERR_UNAVAILRESOURCE(const std::string& nick,
          " :Nick/channel is temporarily unavailable\r\n";
 }
 
+// 441
+inline std::string ERR_USERNOTINCHANNEL(const std::string& nick,
+                                        const std::string& target,
+                                        const std::string& channel) {
+  return ":irc.42tokyo.jp 441 " + nick + " " + target + " " + channel +
+         " :They aren't on that channel\r\n";
+}
+
 // 442
 inline std::string ERR_NOTONCHANNEL(const std::string& nick,
                                     const std::string& channel) {
@@ -208,14 +216,6 @@ inline std::string ERR_RESTRICTED(const std::string& nick) {
 // 491
 inline std::string ERR_NOOPERHOST(const std::string& nick) {
   return ":irc.42tokyo.jp 491 " + nick + " :No O-lines for your host\r\n";
-}
-
-// 441
-inline std::string ERR_USERNOTINCHANNEL(const std::string& nick,
-                                        const std::string& target,
-                                        const std::string& channel) {
-  return ":irc.42tokyo.jp 441 " + nick + " " + target + " " + channel +
-         " :They aren't on that channel\r\n";
 }
 
 // 477

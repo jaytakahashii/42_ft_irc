@@ -147,10 +147,6 @@ void channelMode(const commandS& cmd, Channel& channel, Client& client,
           return;
         }
 
-        // オペレータの場合、キーの一致確認はオプション
-        // ただし、パラメータとして現在のキーが提供されているかどうかを確認
-        std::string currentKey = channel.getKey();
-
         channel.setKey("");
 
         // キー削除の通知 - モードメッセージをすべてのチャンネルメンバーに送信
