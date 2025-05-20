@@ -14,6 +14,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Parser.hpp"
+#include "commands/InviteCommand.hpp"
 #include "commands/JoinCommand.hpp"
 #include "commands/KickCommand.hpp"
 #include "commands/ModeCommand.hpp"
@@ -90,6 +91,7 @@ void Server::_addCommandHandlers() {
   _commandHandlers["MODE"] = new ModeCommand();
   _commandHandlers["OPER"] = new OperCommand();
   _commandHandlers["SQUIT"] = new SquitCommand();
+  _commandHandlers["INVITE"] = new InviteCommand();
   // TODO : 他のコマンドもここに追加
 }
 
@@ -161,7 +163,7 @@ void Server::_handleClientActivity(int clientFd) {
 
   int bytesRead = recv(clientFd, buffer, sizeof(buffer) - 1, 0);
   if (bytesRead <= 0) {
-    _removeClient(clientFd);
+    removeClient(clientFd);
     return;
   }
   buffer[bytesRead] = '\0';
@@ -203,7 +205,7 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 // Client Utilities / Channel Utilities
 // ------------------------------
 
-void Server::_removeClient(int clientFd) {
+void Server::removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
   close(clientFd);
   removeClientFromAllChannels(*clients[clientFd]);
@@ -218,20 +220,37 @@ void Server::_removeClient(int clientFd) {
 }
 
 void Server::removeClientFromAllChannels(Client& client) {
-  for (std::map<std::string, Channel*>::iterator it = channels.begin();
-       it != channels.end();) {
+  std::map<std::string, Channel*>::iterator it = channels.begin();
+  while (it != channels.end()) {
     Channel* channel = it->second;
     if (channel->hasClient(&client)) {
       channel->removeClient(&client);
       if (channel->getClientCount() == 0) {
         delete channel;
-        channels.erase(it->first);
+        std::map<std::string, Channel*>::iterator tmp = it++;
+        channels.erase(tmp);
         continue;
-      }
+      } 
     }
-    ++it;
+    it++;
   }
 }
+
+// void Server::removeClientFromAllChannels(Client& client) {
+//   for (std::map<std::string, Channel*>::iterator it = channels.begin();
+//        it != channels.end();) {
+//     Channel* channel = it->second;
+//     if (channel->hasClient(&client)) {
+//       channel->removeClient(&client);
+//       if (channel->getClientCount() == 0) {
+//         delete channel;
+//         it = channels.erase(it); // eraseの戻り値でitを更新
+//         continue;
+//       }
+//     }
+//     ++it;
+//   }
+// }
 
 bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
   for (std::map<int, Client*>::const_iterator it = clients.begin();
@@ -243,11 +262,44 @@ bool Server::isAlreadyUsedNickname(const std::string& nickname) const {
   return false;
 }
 
+Client* Server::getClientByNickname(const std::string& nickname) const {
+  for (std::map<int, Client*>::const_iterator it = clients.begin();
+       it != clients.end(); ++it) {
+    if (it->second && it->second->getNickname() == nickname) {
+      return it->second;
+    }
+  }
+  return NULL;  // ユーザーが見つからない場合はNULL
+}
+
 void Server::sendAllClients(const std::string& message) const {
   for (std::map<int, Client*>::const_iterator it = clients.begin();
        it != clients.end(); ++it) {
     if (it->second->isRegistered())
       it->second->sendMessage(message);
+  }
+}
+
+void Server::sendQuitMessageToRelevantClients(Client& client,
+                                              const std::string& message) {
+  std::set<int> notifiedFds;
+
+  for (std::map<std::string, Channel*>::iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    Channel* channel = it->second;
+    if (channel->hasClient(&client)) {
+      const std::map<std::string, Client*>& clientsInChannel =
+          channel->getClients();
+      for (std::map<std::string, Client*>::const_iterator cit =
+               clientsInChannel.begin();
+           cit != clientsInChannel.end(); ++cit) {
+        Client* otherClient = cit->second;
+        if (otherClient != &client &&
+            notifiedFds.insert(otherClient->getFd()).second) {
+          otherClient->sendMessage(message);
+        }
+      }
+    }
   }
 }
 
@@ -377,7 +429,7 @@ void Server::killServer(int exitCode) {
 
   for (std::map<int, Client*>::iterator it = clients.begin();
        it != clients.end(); ++it) {
-    _removeClient(it->second->getFd());
+    removeClient(it->second->getFd());
   }
   deleteAllChannels();
   close(_serverSocket);

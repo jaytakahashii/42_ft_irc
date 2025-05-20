@@ -5,6 +5,13 @@
 namespace irc {
 namespace numericReplies {
 
+// 401
+inline std::string ERR_NOSUCHNICK(const std::string& nick,
+                                  const std::string& target) {
+  return ":irc.42tokyo.jp 401 " + nick + " " + target +
+         " :No such nick/channel\r\n";
+}
+
 // 402
 inline std::string ERR_NOSUCHSERVER(const std::string& nick,
                                     const std::string& serverName) {
@@ -122,6 +129,21 @@ inline std::string ERR_PASSWDMISMATCH(const std::string& nick) {
   return ":server 464 " + nick + " :Password incorrect\r\n";
 }
 
+// 467
+inline std::string ERR_KEYSET(const std::string& nick,
+                              const std::string& channel) {
+  return ":irc.42tokyo.jp 467 " + nick + " " + channel +
+         " :Channel key already set\r\n";
+}
+
+// 443
+inline std::string ERR_USERONCHANNEL(const std::string& nick,
+                                     const std::string& target,
+                                     const std::string& channel) {
+  return ":irc.42tokyo.jp 443 " + nick + " " + target + " " + channel +
+         " :is already on channel\r\n";
+}
+
 // 471
 inline std::string ERR_CHANNELISFULL(const std::string& nick,
                                      const std::string& channel) {
@@ -174,7 +196,7 @@ inline std::string ERR_NOPRIVILEGES(const std::string& nick) {
 // 482
 inline std::string ERR_CHANOPRIVSNEEDED(const std::string& nick,
                                         const std::string& channel) {
-  return ":irc.42tokyo.jp 482 " + nick + " :" + channel +
+  return ":irc.42tokyo.jp 482 " + nick + " " + channel +
          " :You're not channel operator\r\n";
 }
 
@@ -186,6 +208,21 @@ inline std::string ERR_RESTRICTED(const std::string& nick) {
 // 491
 inline std::string ERR_NOOPERHOST(const std::string& nick) {
   return ":irc.42tokyo.jp 491 " + nick + " :No O-lines for your host\r\n";
+}
+
+// 441
+inline std::string ERR_USERNOTINCHANNEL(const std::string& nick,
+                                        const std::string& target,
+                                        const std::string& channel) {
+  return ":irc.42tokyo.jp 441 " + nick + " " + target + " " + channel +
+         " :They aren't on that channel\r\n";
+}
+
+// 477
+inline std::string ERR_NOCHANMODES(const std::string& nick,
+                                   const std::string& channel) {
+  return ":irc.42tokyo.jp 477 " + nick + " " + channel +
+         " :Channel doesn't support modes\r\n";
 }
 
 }  // namespace numericReplies
