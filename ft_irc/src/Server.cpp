@@ -173,16 +173,22 @@ void Server::_handleClientActivity(int clientFd) {
 
 void Server::_processClientBuffer(Client* client) {
   std::string& buf = client->getReadBuffer();
-  size_t pos;
-  size_t erasePos;
 
-  while (buf.find("\n") != std::string::npos) {
-    if (buf.find("\r\n") != std::string::npos) {
-      pos = buf.find("\r\n");
+  while (true) {
+    size_t crlfPos = buf.find("\r\n");
+    size_t lfPos = buf.find("\n");
+    size_t pos;
+    size_t erasePos;
+
+    if (crlfPos != std::string::npos &&
+        (lfPos == std::string::npos || crlfPos < lfPos)) {
+      pos = crlfPos;
       erasePos = pos + 2;
-    } else {
-      pos = buf.find("\n");
+    } else if (lfPos != std::string::npos) {
+      pos = lfPos;
       erasePos = pos + 1;
+    } else {
+      break;  // No more delimiters found
     }
 
     std::string line = buf.substr(0, pos);
