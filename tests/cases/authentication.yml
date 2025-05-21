@@ -1,11 +1,19 @@
 - name: "登録に成功"
   steps:
-    - send: "PASS password"
-    - send: "NICK testNick"
-    - send: "USER user 0 * :Real Name"
-  expect: ":irc.42tokyo.jp 001 testNick :Welcome to the Internet Relay Network testNick!user@127.0.0.1\r\n"
+    - client: client1
+      send: "PASS password"
+    - client: client1
+      send: "NICK testNick"
+    - client: client1
+      send: "USER user 0 * :Real Name"
+  expect:
+    - client: client1
+      receive: ":irc.42tokyo.jp 001 testNick :Welcome to the Internet Relay Network testNick!user@127.0.0.1\r\n"
 
 - name: "PASSなしでNICK送信 → エラーになる"
   steps:
-    - send: "NICK testNick"
-  expect: ":irc.42tokyo.jp 451 * :You have not registered\r\n"
+    - client: client1
+      send: "NICK testNick"
+  expect:
+    - client: client1
+      receive: ":irc.42tokyo.jp 451 * :You have not registered\r\n"
