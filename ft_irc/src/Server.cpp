@@ -188,7 +188,14 @@ void Server::_processClientBuffer(Client* client) {
       pos = lfPos;
       erasePos = pos + 1;
     } else {
-      break;  // No more delimiters found
+      if (!buf.empty()) {
+        commandS cmd = _parser.parseCommand(buf);
+        if (!cmd.name.empty()) {
+          _commandDispatch(cmd, *client);
+        }
+      }
+      buf.clear();  // Clear the buffer if no complete command is found
+      break;        // No more delimiters found
     }
 
     std::string line = buf.substr(0, pos);
