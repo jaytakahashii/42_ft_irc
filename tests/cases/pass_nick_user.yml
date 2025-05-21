@@ -1,6 +1,6 @@
 - name: "登録に成功する"
   steps:
-    - send: "PASS pass"
+    - send: "PASS password"
     - send: "NICK testNick"
     - send: "USER user 0 * :Real Name"
   expect: ":irc.42tokyo.jp 001 testNick :Welcome to the Internet Relay Network testNick!user@127.0.0.1\r\n"
