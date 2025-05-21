@@ -16,7 +16,8 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   if (cmd.args.size() < 2) {
-    client.sendMessage("461 KICK :Not enough parameters\r\n");
+    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(nick, "KICK");
+    client.sendMessage(msg);
     return;
   }
 
@@ -25,8 +26,8 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   // チャンネルが存在しない場合はエラー
   if (server.channels.find(channelName) == server.channels.end()) {
-    client.sendMessage(":server 403 " + client.getNickname() + " " +
-                       channelName + " :No such channel\r\n");
+    std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(nick, channelName);
+    client.sendMessage(msg);
     return;
   }
 
@@ -34,42 +35,50 @@ void KickCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   // チャンネルに参加していない場合はエラー
   if (!channel->hasClient(&client)) {
-    client.sendMessage(":server 442 " + client.getNickname() + " " +
-                       channelName + " :You're not on that channel\r\n");
+    std::string msg = irc::numericReplies::ERR_NOTONCHANNEL(nick, channelName);
+    client.sendMessage(msg);
     return;
   }
 
   // ターゲットがチャンネルに参加していない場合はエラー
   Client* targetClient = channel->getClient(targetNickname);
   if (targetClient == NULL) {
-    client.sendMessage(":server 441 " + client.getNickname() + " " +
-                       targetNickname + " " + channelName +
-                       " :They aren't on that channel\r\n");
+    std::string msg = irc::numericReplies::ERR_USERNOTINCHANNEL(
+        nick, targetNickname, channelName);
+    client.sendMessage(msg);
     return;
   }
 
   // チャンネルのオペレーターでない場合はエラー
   if (!channel->isOperator(client.getNickname())) {
-    client.sendMessage(":server 482 " + client.getNickname() + " " +
-                       channelName + " :You're not channel operator\r\n");
+    std::string msg =
+        irc::numericReplies::ERR_CHANOPRIVSNEEDED(nick, channelName);
+    client.sendMessage(msg);
     return;
+  }
+
+  // キック理由（オプション）を取得
+  std::string kickReason = "";
+  if (cmd.args.size() >= 3) {
+    kickReason = cmd.args[2];
+  } else {
+    kickReason = targetNickname;  // デフォルトではターゲットのニックネーム
   }
 
   // ターゲットをチャンネルから削除
   channel->removeClient(targetClient);
 
-  // KICK通知をそのチャンネルの全員に送信
-  std::string kickMsg = ":" + client.getNickname() + "!KICK!" +
+  // RFC2812に準拠したKICKメッセージフォーマット
+  // :<prefix> KICK <channel> <user> [<comment>]
+  std::string kickMsg = ":" + client.getNickname() + "!" +
                         client.getUsername() + "@localhost KICK " +
-                        channelName + " :" + targetNickname + "\r\n";
+                        channelName + " " + targetNickname + " :" + kickReason +
+                        "\r\n";
+
+  // チャンネルの全員に通知
   channel->sendToAll(kickMsg);
 
-  // ターゲットにも通知
-  std::string targetMsg = ":" + client.getNickname() + "!KICK!" +
-                          client.getUsername() + "@localhost KICK " +
-                          channelName + " :" + targetNickname + "\r\n";
-  targetClient->sendMessage(targetMsg);
-  targetClient->sendMessage("You have been kicked from " + channelName +
-                            "\r\n");
-  close(targetClient->getFd());
+  // キックされたユーザーにも同じメッセージを送信
+  // （チャンネルから既に削除されているため）
+  targetClient->sendMessage(kickMsg);
 }
