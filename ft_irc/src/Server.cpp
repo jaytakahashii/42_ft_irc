@@ -174,10 +174,19 @@ void Server::_handleClientActivity(int clientFd) {
 void Server::_processClientBuffer(Client* client) {
   std::string& buf = client->getReadBuffer();
   size_t pos;
+  size_t erasePos;
 
-  while ((pos = buf.find("\r\n")) != std::string::npos) {
+  while (buf.find("\n") != std::string::npos) {
+    if (buf.find("\r\n") != std::string::npos) {
+      pos = buf.find("\r\n");
+      erasePos = pos + 2;
+    } else {
+      pos = buf.find("\n");
+      erasePos = pos + 1;
+    }
+
     std::string line = buf.substr(0, pos);
-    buf.erase(0, pos + 2);  // "\r\n"を削除
+    buf.erase(0, erasePos);
     if (line.empty())
       continue;
     commandS cmd = _parser.parseCommand(line);
@@ -230,7 +239,7 @@ void Server::removeClientFromAllChannels(Client& client) {
         std::map<std::string, Channel*>::iterator tmp = it++;
         channels.erase(tmp);
         continue;
-      } 
+      }
     }
     it++;
   }
