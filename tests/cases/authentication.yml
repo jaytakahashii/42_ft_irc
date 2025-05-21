@@ -1,4 +1,4 @@
-- name: "登録に成功する"
+- name: "登録に成功"
   steps:
     - send: "PASS password"
     - send: "NICK testNick"
