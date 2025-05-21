@@ -58,6 +58,7 @@ class Server {
   std::string getServerPassword() const;
 
   // Client Utilities
+  bool isClient(int clientFd) const;
   bool isAlreadyUsedNickname(const std::string& nickname) const;
   Client* getClientByNickname(const std::string& nickname) const;
   void sendAllClients(const std::string& message) const;

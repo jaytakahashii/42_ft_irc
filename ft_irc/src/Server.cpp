@@ -174,6 +174,7 @@ void Server::_handleClientActivity(int clientFd) {
 void Server::_processClientBuffer(Client* client) {
   std::string& buf = client->getReadBuffer();
   size_t pos;
+  int clientFd = client->getFd();
 
   while ((pos = buf.find("\r\n")) != std::string::npos) {
     std::string line = buf.substr(0, pos);
@@ -184,6 +185,9 @@ void Server::_processClientBuffer(Client* client) {
     if (cmd.name.empty())
       continue;
     _commandDispatch(cmd, *client);
+    if (!isClient(clientFd)) {
+      return;
+    }
   }
 }
 
@@ -204,6 +208,10 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 // ------------------------------
 // Client Utilities / Channel Utilities
 // ------------------------------
+
+bool Server::isClient(int clientFd) const {
+  return clients.find(clientFd) != clients.end();
+}
 
 void Server::removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
@@ -230,7 +238,7 @@ void Server::removeClientFromAllChannels(Client& client) {
         std::map<std::string, Channel*>::iterator tmp = it++;
         channels.erase(tmp);
         continue;
-      } 
+      }
     }
     it++;
   }
