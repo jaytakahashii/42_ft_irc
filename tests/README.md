@@ -38,7 +38,7 @@ python test_runner.py
 
 ## 📁 ディレクトリ構成
 
-```
+```bash
 .
 ├── venv/ # 仮想環境（Git 追跡対象外）
 ├── cases/ # YAML 形式で定義されたテストケース
