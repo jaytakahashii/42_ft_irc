@@ -9,6 +9,14 @@ SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 4242
 TIMEOUT = 2.0
 
+RED = "\033[31m"
+GREEN = "\033[32m"
+BOLDWHITE = "\033[1;37m"
+BOLDYELLOW = "\033[1;33m"
+BOLDBLUE = "\033[1;34m"
+BOLDRED = "\033[1;31m"
+RESET = "\033[0m"
+
 class IRCClient:
     def __init__(self, name):
         self.name = name
@@ -79,24 +87,25 @@ def test_case(case):
     expects = case.get("expect", [])
 
     try:
-        # 最初にすべての client を作成して connect
         all_client_names = {s.get("client", "client1") for s in steps + expects}
         for name in all_client_names:
-            if name not in clients:
-                clients[name] = IRCClient(name)
+            clients[name] = IRCClient(name)
 
-        # 各ステップ実行
         for step in steps:
             client_name = step.get("client", "client1")
             if "send" in step:
                 clients[client_name].send(step["send"])
                 time.sleep(0.05)
-
-        # 各クライアントの期待値確認
-        for expect in expects:
-            client_name = expect.get("client", "client1")
-            response = clients[client_name].receive()
-            assert expect["receive"] in response
+            if "receive" in step:
+                response = clients[client_name].receive()
+                lines = response.splitlines()
+                assert any(step["receive"] == line for line in lines), (
+                    f"Clients: {client_name}\n"
+                    f"\nExpected:\n"
+                    f"'{BOLDWHITE}{step['receive']}{RESET}{RED}'{RESET}\n"
+                    f"{RED}Received:\n{RESET}"
+                    f"{RED}'{RESET}{BOLDWHITE}" + "\n".join(lines) + f"{RESET}{RED}'{RESET}\n"
+                )
 
     finally:
         for client in clients.values():
