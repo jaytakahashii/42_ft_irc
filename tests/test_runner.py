@@ -5,8 +5,10 @@ import yaml
 import os
 import glob
 
+import builtins
+
 SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 4242
+SERVER_PORT = getattr(builtins, "SERVER_PORT", 4242)
 TIMEOUT = 2.0
 
 RED = "\033[31m"
