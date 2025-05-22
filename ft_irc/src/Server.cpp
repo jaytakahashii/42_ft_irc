@@ -206,6 +206,9 @@ void Server::_processClientBuffer(Client* client) {
     if (cmd.name.empty())
       continue;
     _commandDispatch(cmd, *client);
+    if (!isClient(clientFd)) {
+      return;
+    }
   }
 }
 
@@ -226,6 +229,10 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 // ------------------------------
 // Client Utilities / Channel Utilities
 // ------------------------------
+
+bool Server::isClient(int clientFd) const {
+  return clients.find(clientFd) != clients.end();
+}
 
 void Server::removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;

@@ -28,12 +28,6 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
   // チャンネルにメッセージを送信
   if (target[0] == '#') {
     Channel* channel = server.channels[target];
-    // print server.channels
-    std::cout << "server.channels: " << std::endl;
-    for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
-         it != server.channels.end(); ++it) {
-      std::cout << "  " << it->first << std::endl;
-    }
     if (channel) {
       std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
                             " :" + message + "\r\n";
