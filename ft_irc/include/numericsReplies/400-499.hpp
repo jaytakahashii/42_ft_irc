@@ -134,7 +134,7 @@ inline std::string ERR_ALREADYREGISTRED(const std::string& nick) {
 
 // 464
 inline std::string ERR_PASSWDMISMATCH(const std::string& nick) {
-  return ":server 464 " + nick + " :Password incorrect\r\n";
+  return ":irc.42tokyo.jp 464 " + nick + " :Password incorrect\r\n";
 }
 
 // 467

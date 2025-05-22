@@ -18,8 +18,9 @@ void PingCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (cmd.args.size() < 1) {
     // server が unused なのでとりあえず表示 TODO
     std::string password = server.getServerPassword();
-    client.sendMessage(password + ":server 461 " + client.getNickname() +
-                       " PING :Not enough parameters\r\n");
+	std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
+		client.getNickname(), cmd.name);
+	client.sendMessage(msg);
     return;
   }
 
