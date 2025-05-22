@@ -59,6 +59,7 @@
     - send: "PASS password"
     - send: "NICK user"
     - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
     - send: "NICK "
       receive: ":irc.42tokyo.jp 431 user :No nickname given"
 

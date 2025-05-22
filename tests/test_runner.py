@@ -109,6 +109,7 @@ def test_case(case):
                     f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
                     f"{CYAN}Source{RESET}:    {case.get('_source_file', '')}\n"
                     f"{CYAN}Client{RESET}:    {client_name}\n"
+                    f"{CYAN}Command{RESET}:   '{step.get('send', '')}'\n"
                     f"{GREEN}Expected:  {BOLDWHITE}{step['receive']}{RESET}\n"
                     f"{RED}Received:  {BOLDWHITE}" + "\n".join(lines) + f"{RESET}\n"
                 )
