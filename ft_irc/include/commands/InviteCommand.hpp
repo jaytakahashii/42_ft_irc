@@ -1,5 +1,5 @@
 #pragma once
-#include "commands/ICommand.hpp"
+#include "ICommand.hpp"
 
 class InviteCommand : public ICommand {
  public:

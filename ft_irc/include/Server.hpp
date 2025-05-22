@@ -18,7 +18,7 @@ class ICommand;
 #define SERVER_NAME "irc.42tokyo.jp"
 #define NO_LIMIT -1
 #define ERROR -1
-#define ENY_PROTOCOL 0
+#define ANY_PROTOCOL 0
 #define BUFFER_SIZE 512
 #define NON_OPTIONAL 0
 #define MAX_TRY 3

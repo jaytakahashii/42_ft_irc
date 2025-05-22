@@ -1,4 +1,10 @@
 {
+	"files.autoSave": "onFocusChange",
+	"editor.formatOnSave": true,
+	"editor.formatOnType": true,
+	"editor.defaultFormatter": "ms-vscode.cpptools",
+	"files.insertFinalNewline": true,
+	"files.trimFinalNewlines": true,
   "files.associations": {
     "*.page-template": "vue",
     "*.layout-template": "vue",
