@@ -1,12 +1,13 @@
-import pytest # type: ignore
+import pytest
 import socket
-import yaml
 import time
-from threading import Thread
+import yaml
+import os
+import glob
 
 SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 4242  # 適宜変更
-TIMEOUT = 1.0
+SERVER_PORT = 4242
+TIMEOUT = 2.0
 
 class IRCClient:
     def __init__(self, name):
@@ -14,74 +15,88 @@ class IRCClient:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(TIMEOUT)
         self.sock.connect((SERVER_HOST, SERVER_PORT))
-        self.received = ""
 
-    def send(self, message):
-        if not message.endswith("\r\n"):
-            message += "\r\n"
-        self.sock.sendall(message.encode("utf-8"))
+    def send(self, msg):
+        if not msg.endswith("\r\n"):
+            msg += "\r\n"
+        self.sock.sendall(msg.encode())
 
-    def recv(self):
+    def receive(self):
         try:
-            data = self.sock.recv(4096)
-            if not data:
-                return None
-            decoded = data.decode("utf-8")
-            self.received += decoded
-            return decoded
+            return self.sock.recv(4096).decode()
         except socket.timeout:
             return ""
 
     def close(self):
         self.sock.close()
 
-    def get_all_messages(self):
-        # 一定時間待機してからすべての受信を取得
-        time.sleep(0.1)
-        while True:
-            msg = self.recv()
-            if not msg:
-                break
-        return self.received
+def expand_repeat_case(case):
+    if "repeat" not in case:
+        return [case]
 
+    expanded = []
+    count = case["repeat"]
+    for i in range(count):
+        new_case = {
+            "name": f"{case['name']} (#{i})",
+            "steps": [],
+            "expect": []
+        }
 
-def load_cases(path):
-    with open(path, "r") as f:
-        return yaml.safe_load(f)
+        for step in case.get("steps", []):
+            new_step = {}
+            for k, v in step.items():
+                new_step[k] = v.replace("{{i}}", str(i))
+            new_step["client"] = f"client{i}"
+            new_case["steps"].append(new_step)
 
+        for exp in case.get("expect", []):
+            new_exp = {}
+            for k, v in exp.items():
+                new_exp[k] = v.replace("{{i}}", str(i))
+            new_exp["client"] = f"client{i}"
+            new_case["expect"].append(new_exp)
 
-@pytest.mark.parametrize("case", load_cases("cases/authentication.yml"))
+        expanded.append(new_case)
+    return expanded
+
+def load_all_cases(directory):
+    all_cases = []
+    for path in glob.glob(os.path.join(directory, "*.yml")):
+        with open(path) as f:
+            content = yaml.safe_load(f)
+            for case in content:
+                expanded = expand_repeat_case(case)
+                for expanded_case in expanded:
+                    expanded_case["_source_file"] = os.path.basename(path)
+                all_cases.extend(expanded)
+    return all_cases
+
+@pytest.mark.parametrize("case", load_all_cases("cases"))
 def test_case(case):
     clients = {}
     steps = case.get("steps", [])
     expects = case.get("expect", [])
 
-    # デフォルトで1人だけのケースも想定
-    if isinstance(expects, dict):
-        expects = [expects]
-
     try:
+        # 最初にすべての client を作成して connect
+        all_client_names = {s.get("client", "client1") for s in steps + expects}
+        for name in all_client_names:
+            if name not in clients:
+                clients[name] = IRCClient(name)
+
+        # 各ステップ実行
         for step in steps:
             client_name = step.get("client", "client1")
-            if client_name not in clients:
-                clients[client_name] = IRCClient(client_name)
-
             if "send" in step:
                 clients[client_name].send(step["send"])
-            if "sleep" in step:
-                time.sleep(step["sleep"])
+                time.sleep(0.05)
 
-        # 検証（各クライアントが受け取ったデータに expect が含まれているか）
+        # 各クライアントの期待値確認
         for expect in expects:
-            if isinstance(expect, str):
-                client_name = "client1"
-                expected_msg = expect
-            else:
-                client_name = expect["client"]
-                expected_msg = expect["receive"]
-
-            actual = clients[client_name].get_all_messages()
-            assert expected_msg in actual, f"[{client_name}] Expected:\n{expected_msg}\n\nGot:\n{actual}"
+            client_name = expect.get("client", "client1")
+            response = clients[client_name].receive()
+            assert expect["receive"] in response
 
     finally:
         for client in clients.values():
