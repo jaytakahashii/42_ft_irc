@@ -1,19 +1,22 @@
 - name: "登録に成功"
+  repeat: 3
   steps:
-    - client: client1
-      send: "PASS password"
-    - client: client1
-      send: "NICK testNick"
-    - client: client1
-      send: "USER user 0 * :Real Name"
-  expect:
-    - client: client1
-      receive: ":irc.42tokyo.jp 001 testNick :Welcome to the Internet Relay Network testNick!user@127.0.0.1\r\n"
+    - send: "PASS password"
+    - send: "NICK user{{i}}"
+    - send: "USER user{{i}} 0 * :Real Name {{i}}"
+    - receive: ":irc.42tokyo.jp 001 user{{i}} :Welcome to the Internet Relay Network user{{i}}!user{{i}}@127.0.0.1"
 
-- name: "PASSなしでNICK送信 → エラーになる"
+- name: "password を間違える（3回目で強制的に切断）"
   steps:
-    - client: client1
-      send: "NICK testNick"
-  expect:
-    - client: client1
-      receive: ":irc.42tokyo.jp 451 * :You have not registered\r\n"
+    - send: "PASS wrong_password"
+      receive: ":irc.42tokyo.jp 464 * :Password incorrect"
+    - send: "PASS wrong_password"
+      receive: ":irc.42tokyo.jp 464 * :Password incorrect"
+    - send: "PASS wrong_password"
+      receive: ":irc.42tokyo.jp 484 * :Your connection is restricted!"
+
+- name: "PASSなしでNICK → エラー"
+  repeat: 2
+  steps:
+    - send: "NICK user{{i}}"
+    - receive: ":irc.42tokyo.jp 451 * :You have not registered"
