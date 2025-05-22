@@ -36,9 +36,13 @@ pip install -r requirements.txt # 2回目以降は不要
 
 ## 🚀 テストの実行方法
 
+1. IRC サーバーを起動します。
+
+2. 以下のコマンドを実行して、テストを実行します。
 ```bash
-pytest --tb=short
-# --tb=short により、失敗時のトレースバックを簡潔に表示します。
+pytest --tb=short --port=4242
+# 4242: IRCサーバーのポート番号
+# --tb=short は、pytestのオプションで、失敗時のトレースバックを簡潔に表示します。
 ```
 
 ## 🧪 テストケース記述ルール（YAML）
