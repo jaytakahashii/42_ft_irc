@@ -8,6 +8,9 @@
 #include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
 
+// 一度に送信できるターゲット（ユーザー、チャンネル）の最大数
+#define MAX_PRIVMSG_TARGETS 5
+
 /**
  * @brief カンマで区切られた文字列を分割するヘルパー関数
  * @param str 分割する文字列
@@ -73,6 +76,14 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
   if (targetList.empty()) {
     std::string msg = 
         irc::numericReplies::ERR_NORECIPIENT(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
+    return;
+  }
+  
+  // ターゲット数が制限を超えている場合はエラー
+  if (targetList.size() > MAX_PRIVMSG_TARGETS) {
+    std::string msg = irc::numericReplies::ERR_TOOMANYTARGETS(
+        client.getNickname(), targets, "407", "Too many targets specified");
     client.sendMessage(msg);
     return;
   }
