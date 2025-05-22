@@ -4,12 +4,12 @@
 class Client {
  private:
   // 接続情報・認証情報
-
   int _fd;
   bool _authenticated;  // PASS
   bool _registered;     // PASS -> NICK -> USER
   std::string _readBuffer;
   std::string _hostname;
+  int _failPassCount;  // PASSの失敗回数
 
   // ユーザ情報
   std::string _nickname;
@@ -42,6 +42,8 @@ class Client {
   const std::string& getNickname() const;
   const std::string& getUsername() const;
   const std::string& getRealname() const;
+  const int& getFailPassCount() const;
+  void incrementFailPassCount();
   void setNickname(const std::string& nickname);
   void setUsername(const std::string& username);
   void setRealname(const std::string& realname);
