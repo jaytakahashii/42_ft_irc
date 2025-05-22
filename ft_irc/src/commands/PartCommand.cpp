@@ -1,5 +1,7 @@
 #include "commands/PartCommand.hpp"
 
+#include <sstream>
+
 #include "Channel.hpp"
 #include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
@@ -24,36 +26,38 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
   std::string channelsStr = cmd.args[0];
   std::vector<std::string> channels;
   std::string token;
-  size_t pos = 0;
-
-  // カンマで区切られたチャンネル名を分割
-  while ((pos = channelsStr.find(',')) != std::string::npos) {
-    token = channelsStr.substr(0, pos);
-    channels.push_back(token);
-    channelsStr.erase(0, pos + 1);
+  std::istringstream tokenStream(channelsStr);
+  
+  // カンマで区切られたチャンネル名を分割（より堅牢な方法）
+  while (std::getline(tokenStream, token, ',')) {
+    if (!token.empty()) {
+      channels.push_back(token);
+    }
   }
-  channels.push_back(channelsStr);  // 最後のチャンネル名を追加
+
+  // チャンネル名が指定されていない場合はエラー
+  if (channels.empty()) {
+    std::string msg = 
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
+    return;
+  }
 
   // 退出理由（オプション）
   std::string reason = "";
   if (cmd.args.size() > 1) {
     reason = " :" + cmd.args[1];
   }
-  channels.push_back(channelsStr);  // 最後のチャンネル名を追加
 
-  // print channnel names
-  //   std::cout << channels[0] << std::endl;
-  // サーバー上の全チャンネルを表示
-  //   std::cout << "Available channels on server: ";
-  //   for (std::map<std::string, Channel*>::const_iterator it =
-  //   server.channels.begin();
-  //        it != server.channels.end(); ++it) {
-  //     std::cout << it->first << " ";
-  //   }
+  // 処理する前に対象チャンネルのリストをコピー（ループ中に変更が入るのを防ぐため）
+  std::vector<std::string> channelsToProcess = channels;
 
   // 指定された各チャンネルから退出
-  for (size_t i = 0; i < channels.size(); ++i) {
-    std::string& channelName = channels[i];
+  for (size_t i = 0; i < channelsToProcess.size(); ++i) {
+    std::string channelName = channelsToProcess[i];
+    
+    // デバッグ用のログを追加
+    // std::cout << "Processing PART for channel: '" << channelName << "'" << std::endl;
 
     // チャンネルが存在しない場合はエラー
     if (server.channels.find(channelName) == server.channels.end()) {
@@ -73,10 +77,13 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
       continue;  // 次のチャンネルを処理
     }
 
+    // 先にローカル変数にチャンネル名を保存（チャンネル削除後も使えるように）
+    std::string savedChannelName = channelName;
+    
     // チャンネルから退出メッセージを作成
     std::string partMsg = ":" + client.getNickname() + "!" +
                           client.getUsername() + "@" + client.getHostname() +
-                          " PART " + channelName + reason + "\r\n";
+                          " PART " + savedChannelName + reason + "\r\n";
 
     // 全チャンネルメンバーに通知（自分も含む）
     channel->sendToAll(partMsg);
@@ -85,11 +92,12 @@ void PartCommand::execute(const commandS& cmd, Client& client, Server& server) {
     channel->removeClient(&client);
 
     // チャンネルにクライアントがいなくなった場合は削除
+    // 削除後はチャンネルポインタを使用しないこと
     if (channel->getClientCount() == 0) {
-      //   std::cout << "Channel " << channelName << " is now empty,
-      //   deleting..." << std::endl;
+      // 先にチャンネルを削除
+      server.channels.erase(savedChannelName);
       delete channel;
-      server.channels.erase(channelName);
+      channel = NULL; // 無効なポインタ参照を防ぐ
     }
   }
 }
