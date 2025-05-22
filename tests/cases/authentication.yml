@@ -15,8 +15,159 @@
     - send: "PASS wrong_password"
       receive: ":irc.42tokyo.jp 484 * :Your connection is restricted!"
 
-- name: "NICK command before PASS"
-  repeat: 2
+- name: "PASS: no param"
   steps:
-    - send: "NICK user{{i}}"
+    - send: "PASS"
+      receive: ":irc.42tokyo.jp 461 * :Not enough parameters"
+
+- name: "PASS: no param (with trailing space)"
+  steps:
+    - send: "PASS "
+      receive: ":irc.42tokyo.jp 461 * :Not enough parameters"
+
+- name: "PASS: already registered"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+    - send: "PASS password"
+      receive: ":irc.42tokyo.jp 462 user :Unauthorized command (already registered)"
+
+- name: "NICK command before PASS"
+  steps:
+    - send: "NICK user"
     - receive: ":irc.42tokyo.jp 451 * :You have not registered"
+
+- name: "NICK: no param (before registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK"
+      receive: ":irc.42tokyo.jp 431 * :No nickname given"
+
+- name: "NICK: no param (after registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+    - send: "NICK"
+      receive: ":irc.42tokyo.jp 431 user :No nickname given"
+
+- name: "NICK: no param (after registration, with trailing space)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+    - send: "NICK "
+      receive: ":irc.42tokyo.jp 431 user :No nickname given"
+
+- name: "NICK: invalid nickname (before registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK invalid_nick"
+      receive: ":irc.42tokyo.jp 432 * invalid_nick :Erroneous nickname"
+
+- name: "NICK: invalid nickname (after registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+    - send: "NICK invalid_nick"
+      receive: ":irc.42tokyo.jp 432 user invalid_nick :Erroneous nickname"
+
+- name: "NICK: already in use (before registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "NICK user"
+      receive: ":irc.42tokyo.jp 433 user user :Nickname is already in use"
+
+- name: "NICK: already in use (after registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+    - send: "NICK user"
+      receive: ":irc.42tokyo.jp 433 user user :Nickname is already in use"
+
+- name: "NICK: already in use (other client)"
+  steps:
+    - client: user1
+      send: "PASS password"
+    - client: user1
+      send: "NICK user1"
+    - client: user1
+      send: "USER user1 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user1 :Welcome to the Internet Relay Network user1!user1@127.0.0.1"
+
+    - client: user2
+      send: "PASS password"
+    - client: user2
+      send: "NICK user1"
+      receive: ":irc.42tokyo.jp 433 * user1 :Nickname is already in use"
+
+- name: "NICK: invalid character"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user@"
+      receive: ":irc.42tokyo.jp 432 * user@ :Erroneous nickname"
+
+
+- name: "USER command before PASS"
+  steps:
+    - send: "USER user"
+    - receive: ":irc.42tokyo.jp 451 * :You have not registered"
+
+- name: "USER: before registration"
+  steps:
+    - send: "PASS password"
+    - send: "USER"
+      receive: ":irc.42tokyo.jp 451 * :You have not registered"
+
+- name: "USER: after registration"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+    - send: "USER user"
+      receive: ":irc.42tokyo.jp 462 user :Unauthorized command (already registered)"
+
+- name: "USER: no param (before registration)"
+  steps:
+    - send: "PASS password"
+    - send: "USER"
+      receive: ":irc.42tokyo.jp 451 * :You have not registered"
+
+- name: "USER: no param (after registration)"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+    - send: "USER"
+      receive: ":irc.42tokyo.jp 462 user :Unauthorized command (already registered)"
+
+- name: "USER: before NICK"
+  steps:
+    - send: "PASS password"
+    - send: "USER user 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 451 * :You have not registered"
+
+- name: "USER: invalid username or prams num"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user 0 *"
+      receive: ":irc.42tokyo.jp 461 user USER :Not enough parameters"
+    - send: "USER user 0 *  0 :Real Name"
+      receive: ":irc.42tokyo.jp 461 user USER :Not enough parameters"
+
+- name: "USER: invalid username"
+  steps:
+    - send: "PASS password"
+    - send: "NICK user"
+    - send: "USER user@ 0 * :Real Name"
+      receive: ":irc.42tokyo.jp 432 user user@ :Erroneous nickname"
