@@ -1,4 +1,4 @@
-- name: "登録に成功"
+- name: "Successful authentication"
   repeat: 3
   steps:
     - send: "PASS password"
@@ -6,7 +6,7 @@
     - send: "USER user{{i}} 0 * :Real Name {{i}}"
     - receive: ":irc.42tokyo.jp 001 user{{i}} :Welcome to the Internet Relay Network user{{i}}!user{{i}}@127.0.0.1"
 
-- name: "password を間違える（3回目で強制的に切断）"
+- name: "Missing PASS command 3 times"
   steps:
     - send: "PASS wrong_password"
       receive: ":irc.42tokyo.jp 464 * :Password incorrect"
@@ -15,7 +15,7 @@
     - send: "PASS wrong_password"
       receive: ":irc.42tokyo.jp 484 * :Your connection is restricted!"
 
-- name: "PASSなしでNICK → エラー"
+- name: "NICK command before PASS"
   repeat: 2
   steps:
     - send: "NICK user{{i}}"
