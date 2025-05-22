@@ -1,14 +1,23 @@
 # IRC Server Test Suite
 
-本ディレクトリは IRC サーバーの動作確認・自動テストを行うためのテストスイートです。
+このリポジトリは、IRC サーバーの動作を自動的に検証するための **pytest + YAMLベースのテストスイート**です。複数クライアントの接続・メッセージ送信・受信・状態遷移を YAML によって宣言的に記述し、`test_runner.py` がそれを自動実行します。
 
 ---
 
-## 📦 必要環境
+## ✅ 特徴
+
+- YAML による簡潔なテストケース定義
+- 複数クライアント (`client0`, `client1`, ...) に対応
+- `repeat` / `{{i}}` によるテストケースの展開
+- `pytest` による簡易・高速なテスト実行と出力
+
+---
+
+## 📦 動作環境
 
 - Python 3.8 以上
-- `venv` による仮想環境推奨
-- 依存ライブラリは `requirements.txt` に記載されています
+- UNIX 系 OS (Linux / macOS)
+- IRC サーバーが `127.0.0.1:4242` にて起動していること
 
 ---
 
@@ -16,50 +25,91 @@
 
 ```bash
 # 仮想環境の作成
-python3 -m venv venv
+python3 -m venv venv # 一度作成したら、以降は不要
 
 # 仮想環境の有効化
-source venv/bin/activate  # Mac/Linux
+source venv/bin/activate # 2回目以降はここから
 
 # 依存ライブラリのインストール
-pip install -r requirements.txt
-
-# 終了後
-deactivate  # 仮想環境の無効化
+pip install -r requirements.txt # 2回目以降は不要
 ```
 
-## 🚀 テストの実行
+## 🚀 テストの実行方法
 
 ```bash
-python test_runner.py
+pytest --tb=short
+# --tb=short により、失敗時のトレースバックを簡潔に表示します。
 ```
 
-オプションやテストケースの絞り込みがある場合は test_runner.py 側で対応してください。
+## 🧪 テストケース記述ルール（YAML）
+
+YAMLファイルは cases/ ディレクトリに配置してください。
+
+### 基本構成
+
+```yaml
+- name: "テスト名"
+  repeat: 3              # 任意、{{i}} と連動して複数展開されます
+  steps:
+    - send: "PASS password"
+    - send: "NICK user{{i}}"
+    - send: "USER user{{i}} 0 * :Real Name {{i}}"
+    - receive: ":irc.42tokyo.jp 001 user{{i}} :Welcome to the Internet Relay Network user{{i}}!user{{i}}@127.0.0.1"
+```
+
+- steps: 各クライアントが送信・受信する IRC コマンド列
+
+- send: クライアントからサーバーへ送信
+
+- receive: サーバーからクライアントへの期待レスポンス
+
+- repeat: {{i}} を展開して client0, client1, ... を自動生成
+
+### 複数クライアントの例
+
+README用の例であり、正確ではありません。実際のテストケースは適宜変更してください。
+
+```yaml
+- name: "privmsg client0 to client1"
+  steps:
+    - client: client0
+      send: "JOIN #test"
+      receive: ":irc.42tokyo.jp 353 client0 = #test :client0"
+    - client: client1
+      send: "JOIN #test"
+      receive: ":irc.42tokyo.jp 353 client1 = #test :client0 client1"
+    - client: client0
+      send: "PRIVMSG #test :Hello, world!"
+    - client: client1
+      receive: ":irc.42tokyo.jp PRIVMSG #test :Hello, world!"
+```
+
+## 🧾 出力例（失敗時）
+
+```bash
+FAILED test_runner.py::test_case[Missing PASS command 3 times]
+
+Test Name: Missing PASS command 3 times
+Source:    authentication.yml
+Client:    client1
+Expected:  :irc.42tokyo.jp 464 * :Password incorrect
+Received:  :irc.42tokyo.jp 484 * :Your connection is restricted!
+```
 
 ## 📁 ディレクトリ構成
 
 ```bash
 .
-├── venv/ # 仮想環境（Git 追跡対象外）
-├── cases/ # YAML 形式で定義されたテストケース
-│ └── pass_nick_user.yml
-├── test_runner.py # テストエントリポイント
-├── requirements.txt # 依存ライブラリ一覧
-└── README.md
+├── cases/                # YAMLで記述されたテストケース群
+│   └── authentication.yml
+├── test_runner.py        # テストランナー（pytestベース）
+├── requirements.txt      # pip依存パッケージ
+├── README.md             # このファイル
+└── venv/                 # Python仮想環境（.gitignore推奨）
 ```
 
-## 🧪 テストケースの形式 (例)
+## 仮想環境の無効化
 
-```yml
-- name: "登録に成功する"
-  steps:
-    - send: "PASS password"
-    - send: "NICK testNick"
-    - send: "USER user 0 * :Real Name"
-  expect: ":irc.42tokyo.jp 001 testNick :Welcome to the Internet Relay Network testNick!user@127.0.0.1\r\n"
-
-- name: "PASSなしでNICK送信 → エラーになる"
-  steps:
-    - send: "NICK testNick"
-  expect: ":irc.42tokyo.jp 451 * :You have not registered\r\n"
+```bash
+deactivate
 ```
