@@ -173,12 +173,34 @@ void Server::_handleClientActivity(int clientFd) {
 
 void Server::_processClientBuffer(Client* client) {
   std::string& buf = client->getReadBuffer();
-  size_t pos;
   int clientFd = client->getFd();
 
-  while ((pos = buf.find("\r\n")) != std::string::npos) {
+  while (true) {
+    size_t crlfPos = buf.find("\r\n");
+    size_t lfPos = buf.find("\n");
+    size_t pos;
+    size_t erasePos;
+
+    if (crlfPos != std::string::npos &&
+        (lfPos == std::string::npos || crlfPos < lfPos)) {
+      pos = crlfPos;
+      erasePos = pos + 2;
+    } else if (lfPos != std::string::npos) {
+      pos = lfPos;
+      erasePos = pos + 1;
+    } else {
+      if (!buf.empty()) {
+        commandS cmd = _parser.parseCommand(buf);
+        if (!cmd.name.empty()) {
+          _commandDispatch(cmd, *client);
+        }
+      }
+      buf.clear();  // Clear the buffer if no complete command is found
+      break;        // No more delimiters found
+    }
+
     std::string line = buf.substr(0, pos);
-    buf.erase(0, pos + 2);  // "\r\n"を削除
+    buf.erase(0, erasePos);
     if (line.empty())
       continue;
     commandS cmd = _parser.parseCommand(line);
