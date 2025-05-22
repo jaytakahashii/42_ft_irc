@@ -11,10 +11,8 @@ TIMEOUT = 2.0
 
 RED = "\033[31m"
 GREEN = "\033[32m"
+CYAN = "\033[36m"
 BOLDWHITE = "\033[1;37m"
-BOLDYELLOW = "\033[1;33m"
-BOLDBLUE = "\033[1;34m"
-BOLDRED = "\033[1;31m"
 RESET = "\033[0m"
 
 class IRCClient:
@@ -80,7 +78,12 @@ def load_all_cases(directory):
                 all_cases.extend(expanded)
     return all_cases
 
-@pytest.mark.parametrize("case", load_all_cases("cases"))
+# ids=lambda case: ... で pytest の表示名をカスタマイズ
+@pytest.mark.parametrize(
+    "case",
+    load_all_cases("cases"),
+    ids=lambda case: case.get("name", case.get("_source_file", "unnamed_case"))
+)
 def test_case(case):
     clients = {}
     steps = case.get("steps", [])
@@ -99,12 +102,13 @@ def test_case(case):
             if "receive" in step:
                 response = clients[client_name].receive()
                 lines = response.splitlines()
+
                 assert any(step["receive"] == line for line in lines), (
-                    f"Clients: {client_name}\n"
-                    f"\nExpected:\n"
-                    f"'{BOLDWHITE}{step['receive']}{RESET}{RED}'{RESET}\n"
-                    f"{RED}Received:\n{RESET}"
-                    f"{RED}'{RESET}{BOLDWHITE}" + "\n".join(lines) + f"{RESET}{RED}'{RESET}\n"
+                    f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
+                    f"{CYAN}Source{RESET}:    {case.get('_source_file', '')}\n"
+                    f"{CYAN}Client{RESET}:    {client_name}\n"
+                    f"{GREEN}Expected:  {BOLDWHITE}{step['receive']}{RESET}\n"
+                    f"{RED}Received:  {BOLDWHITE}" + "\n".join(lines) + f"{RESET}\n"
                 )
 
     finally:
