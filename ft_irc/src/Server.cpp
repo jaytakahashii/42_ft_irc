@@ -173,6 +173,7 @@ void Server::_handleClientActivity(int clientFd) {
 
 void Server::_processClientBuffer(Client* client) {
   std::string& buf = client->getReadBuffer();
+  int clientFd = client->getFd();
 
   while (true) {
     size_t crlfPos = buf.find("\r\n");
