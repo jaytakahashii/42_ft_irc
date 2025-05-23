@@ -14,6 +14,13 @@ inline std::string RPL_CHANNELMODEIS(const std::string& nick,
          params + "\r\n";
 }
 
+// 331
+inline std::string RPL_NOTOPIC(const std::string& nick,
+                               const std::string& channel) {
+  return ":" + SERVER_NAME + " 331 " + nick + " " + channel +
+         " :No topic is set\r\n";
+}
+
 // 332
 inline std::string RPL_TOPIC(const std::string& nick,
                              const std::string& channel,
@@ -28,6 +35,22 @@ inline std::string RPL_INVITING(const std::string& nick,
                                 const std::string& channel) {
   return ":" + SERVER_NAME + " 341 " + nick + " " + target + " " + channel +
          "\r\n";
+}
+
+// 353
+inline std::string RPL_NAMREPLY(const std::string& nick,
+                                const std::string& symbol,
+                                const std::string& channel,
+                                const std::string& names) {
+  return ":" + SERVER_NAME + " 353 " + nick + " " + symbol + " " + channel +
+         " :" + names + "\r\n";
+}
+
+// 366
+inline std::string RPL_ENDOFNAMES(const std::string& nick,
+                                  const std::string& channel) {
+  return ":" + SERVER_NAME + " 366 " + nick + " " + channel +
+         " :End of /NAMES list\r\n";
 }
 
 // 367
