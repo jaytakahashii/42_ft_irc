@@ -24,8 +24,6 @@ void PassCommand::execute(const commandS& cmd, Client& client, Server& server) {
   if (cmd.args[0] == password) {
     client.setAuthenticated(true);
   } else {
-	std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH(nick);
-	client.sendMessage(msg);
     client.incrementFailPassCount();
     if (client.getFailPassCount() >= MAX_TRY) {
       std::string msg = irc::numericReplies::ERR_RESTRICTED(nick);
@@ -33,5 +31,7 @@ void PassCommand::execute(const commandS& cmd, Client& client, Server& server) {
       server.removeClient(client.getFd());
       return;
     }
+    std::string msg = irc::numericReplies::ERR_PASSWDMISMATCH(nick);
+    client.sendMessage(msg);
   }
 }
