@@ -43,6 +43,7 @@ class Channel {
   // ===== 基本情報の取得 =====
 
   const std::string& getName() const;
+  const std::string& getNameList() const;
   const std::string& getTopic() const;
   const std::string& getKey() const;
   bool hasKey() const;

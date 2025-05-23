@@ -8,7 +8,7 @@
 
 Channel::Channel(const std::string& name)
     : _name(name),
-      _topic("no topic"),
+      _topic(),
       _key(""),
       _clientsByNick(std::map<std::string, Client*>()),
       _inviteOnly(false),
@@ -43,6 +43,22 @@ const std::string& Channel::getKey() const {
 
 bool Channel::hasKey() const {
   return !_key.empty();
+}
+
+const std::string& Channel::getNameList() const {
+  static std::string ret;
+  ret.clear();  // 前回の内容をクリア
+
+  std::map<std::string, Client*>::const_iterator it = _clientsByNick.begin();
+
+  while (it != _clientsByNick.end()) {
+    ret += it->first;
+    ++it;
+    if (it != _clientsByNick.end()) {
+      ret += " ";
+    }
+  }
+  return ret;
 }
 
 // ===== クライアント管理 =====

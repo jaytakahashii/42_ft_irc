@@ -139,12 +139,26 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
     if (!server.hasChannel(it->first)) {
       server.channels[it->first] = new Channel(it->first);
+      Channel* channel = server.channels[it->first];
       std::string joinMsg = ":" + client.getNickname() + "!" +
                             client.getUsername() + "@" + client.getHostname() +
                             " JOIN " + it->first + "\r\n";
-      server.channels[it->first]->addClient(&client);
-      server.channels[it->first]->addOperator(client.getNickname());
+      channel->addClient(&client);
+      channel->addOperator(client.getNickname());
       client.sendMessage(joinMsg);
+
+      std::string topicMsg = irc::numericReplies::RPL_NOTOPIC(
+          client.getNickname(), channel->getName());
+      client.sendMessage(topicMsg);
+
+      std::string nameMsg = irc::numericReplies::RPL_NAMREPLY(
+          client.getNickname(), "=", channel->getName(),
+          channel->getNameList());
+      client.sendMessage(nameMsg);
+
+      std::string nameLastMsg = irc::numericReplies::RPL_ENDOFNAMES(
+          client.getNickname(), channel->getName());
+      client.sendMessage(nameLastMsg);
     } else {
       // チャンネルに参加する
       Channel* channel = server.channels[it->first];  // チャンネルを取得
@@ -215,12 +229,24 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
                             " JOIN " + it->first + "\r\n";
       channel->sendToAll(joinMsg);
 
-      std::string topicMsg = irc::numericReplies::RPL_TOPIC(
-          client.getNickname(), it->first, channel->getTopic());
+      std::string topicMsg;
+      if (channel->getTopic().empty()) {
+        topicMsg = irc::numericReplies::RPL_NOTOPIC(client.getNickname(),
+                                                    channel->getName());
+      } else {
+        topicMsg = irc::numericReplies::RPL_TOPIC(
+            client.getNickname(), it->first, channel->getTopic());
+      }
       client.sendMessage(topicMsg);
 
       std::string nameMsg = irc::numericReplies::RPL_NAMREPLY(
-          client.getNickname(), "=", channel->getName(), channel->)
+          client.getNickname(), "=", channel->getName(),
+          channel->getNameList());
+      client.sendMessage(nameMsg);
+
+      std::string nameLastMsg = irc::numericReplies::RPL_ENDOFNAMES(
+          client.getNickname(), channel->getName());
+      client.sendMessage(nameLastMsg);
     }
   }
 }
