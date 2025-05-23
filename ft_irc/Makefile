@@ -21,8 +21,6 @@ CMD_H				= PassCommand.hpp \
 							KickCommand.hpp \
 							TopicCommand.hpp \
 							ModeCommand.hpp \
-							OperCommand.hpp \
-							SquitCommand.hpp \
 							InviteCommand.hpp \
 
 UTIL_H			= utils.hpp \
@@ -61,8 +59,6 @@ CMD_SRC			= PassCommand.cpp \
 							KickCommand.cpp \
 							TopicCommand.cpp \
 							ModeCommand.cpp \
-							OperCommand.cpp \
-							SquitCommand.cpp \
 							InviteCommand.cpp \
 
 UTIL_SRC		= utils.cpp

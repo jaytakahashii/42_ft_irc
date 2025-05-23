@@ -86,7 +86,7 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
  * * * ERR_BADCHANNELKEY
  * * * ERR_CHANNELISFULL
  * * * ERR_BADCHANMASK
- * * * ERR_NOSUCHCHANNEL todo
+ * * * ERR_NOSUCHCHANNEL
  * * * ERR_TOOMANYCHANNELS
  * * * ERR_TOOMANYTARGETS
  * * * ERR_UNAVAILRESOURCE

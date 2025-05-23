@@ -19,13 +19,11 @@
 #include "commands/KickCommand.hpp"
 #include "commands/ModeCommand.hpp"
 #include "commands/NickCommand.hpp"
-#include "commands/OperCommand.hpp"
 #include "commands/PartCommand.hpp"
 #include "commands/PassCommand.hpp"
 #include "commands/PingCommand.hpp"
 #include "commands/PrivmsgCommand.hpp"
 #include "commands/QuitCommand.hpp"
-#include "commands/SquitCommand.hpp"
 #include "commands/TopicCommand.hpp"
 #include "commands/UserCommand.hpp"
 #include "numericsReplies/400-499.hpp"
@@ -89,10 +87,7 @@ void Server::_addCommandHandlers() {
   _commandHandlers["KICK"] = new KickCommand();
   _commandHandlers["TOPIC"] = new TopicCommand();
   _commandHandlers["MODE"] = new ModeCommand();
-  _commandHandlers["OPER"] = new OperCommand();
-  _commandHandlers["SQUIT"] = new SquitCommand();
   _commandHandlers["INVITE"] = new InviteCommand();
-  // TODO : 他のコマンドもここに追加
 }
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
