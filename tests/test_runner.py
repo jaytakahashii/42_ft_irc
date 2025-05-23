@@ -1,7 +1,7 @@
-import pytest
+import pytest # type: ignore
 import socket
 import time
-import yaml
+import yaml # type: ignore
 import os
 import glob
 
@@ -89,29 +89,60 @@ def load_all_cases(directory):
 def test_case(case):
     clients = {}
     steps = case.get("steps", [])
-    expects = case.get("expect", [])
 
     try:
-        all_client_names = {s.get("client", "client1") for s in steps + expects}
+        # クライアント初期化
+        all_client_names = {
+            s["client"] for s in steps if isinstance(s, dict) and "client" in s
+        }
         for name in all_client_names:
             clients[name] = IRCClient(name)
 
+        # 各ステップ処理
         for step in steps:
-            client_name = step.get("client", "client1")
-            if "send" in step:
-                clients[client_name].send(step["send"])
-                time.sleep(0.05)
-            if "receive" in step:
-                response = clients[client_name].receive()
-                lines = response.splitlines()
+            if "client" in step and "actions" in step:
+                client_name = step["client"]
+                for action in step["actions"]:
+                    if "send" in action:
+                        clients[client_name].send(action["send"])
+                        time.sleep(0.05)
 
-                assert any(step["receive"] == line for line in lines), (
-                    f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
-                    f"{CYAN}Source{RESET}:    {case.get('_source_file', '')}\n"
-                    f"{CYAN}Client{RESET}:    {client_name}\n"
-                    f"{GREEN}Expected:  {BOLDWHITE}{step['receive']}{RESET}\n"
-                    f"{RED}Received:  {BOLDWHITE}" + "\n".join(lines) + f"{RESET}\n"
-                )
+                    if "receive" in action:
+                        expected_lines = action["receive"]
+                        if isinstance(expected_lines, str):
+                            expected_lines = [expected_lines]
+
+                        response = clients[client_name].receive()
+                        received_lines = response.splitlines()
+
+                        for expected in expected_lines:
+                            assert any(expected == line for line in received_lines), (
+                                f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
+                                f"{CYAN}Client{RESET}:    {client_name}\n"
+                                f"{CYAN}Command{RESET}:   '{action.get('send', '')}'\n"
+                                f"{GREEN}Expected:  {BOLDWHITE}{expected}{RESET}\n"
+                                f"{RED}Received:  {BOLDWHITE}" + "\n".join(received_lines) + f"{RESET}\n"
+                            )
+            else:
+                # fallback: legacy format
+                client_name = step.get("client", "client1")
+                if "send" in step:
+                    clients[client_name].send(step["send"])
+                    time.sleep(0.05)
+                if "receive" in step:
+                    expected_lines = step["receive"]
+                    if isinstance(expected_lines, str):
+                        expected_lines = [expected_lines]
+                    response = clients[client_name].receive()
+                    received_lines = response.splitlines()
+                    for expected in expected_lines:
+                        assert any(expected == line for line in received_lines), (
+                            f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
+                            f"{CYAN}Client{RESET}:    {client_name}\n"
+                            f"{CYAN}Command{RESET}:   '{step.get('send', '')}'\n"
+                            f"{GREEN}Expected:  {BOLDWHITE}{expected}{RESET}\n"
+                            f"{RED}Received:  {BOLDWHITE}" + "\n".join(received_lines) + f"{RESET}\n"
+                        )
 
     finally:
         for client in clients.values():

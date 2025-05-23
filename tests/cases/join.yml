@@ -1,0 +1,105 @@
+- name: "JOIN single channel successfully"
+  steps:
+    - client: user1
+      actions:
+        - send: "PASS password"
+        - send: "NICK user"
+        - send: "USER user 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+        - send: "JOIN #channel"
+          receive:
+            - ":user!user@127.0.0.1 JOIN #channel"
+            - ":irc.42tokyo.jp 331 user #channel :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #channel :@user"
+            - ":irc.42tokyo.jp 366 user #channel :End of /NAMES list."
+
+- name: "JOIN with no parameters"
+  steps:
+    - client: user1
+      actions:
+        - send: "PASS password"
+        - send: "NICK user"
+        - send: "USER user 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+        - send: "JOIN"
+          receive: ":irc.42tokyo.jp 461 user JOIN :Not enough parameters"
+
+- name: "JOIN multiple channels successfully"
+  steps:
+    - client: user1
+      actions:
+        - send: "PASS password"
+        - send: "NICK user"
+        - send: "USER user 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+        - send: "JOIN #chan1,#chan2"
+          receive:
+            - ":user!user@127.0.0.1 JOIN #chan1"
+            - ":irc.42tokyo.jp 331 user #chan1 :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #chan1 :@user"
+            - ":irc.42tokyo.jp 366 user #chan1 :End of /NAMES list."
+            - ":user!user@127.0.0.1 JOIN #chan2"
+            - ":irc.42tokyo.jp 331 user #chan2 :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #chan2 :@user"
+            - ":irc.42tokyo.jp 366 user #chan2 :End of /NAMES list."
+
+- name: "JOIN already existing channel"
+  steps:
+    - client: user1
+      actions:
+        - send: "PASS password"
+        - send: "NICK user"
+        - send: "USER user 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+        - send: "JOIN #channel"
+          receive:
+            - ":user!user@127.0.0.1 JOIN #channel"
+            - ":irc.42tokyo.jp 331 user #channel :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #channel :@user"
+            - ":irc.42tokyo.jp 366 user #channel :End of /NAMES list."
+    - client: user2
+      actions:
+        - send: "PASS password"
+        - send: "NICK user2"
+        - send: "USER user2 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user2 :Welcome to the Internet Relay Network user2!user2@127.0.0.1"
+        - send: "JOIN #channel"
+          receive:
+            - ":user!user@127.0.0.1 JOIN #channel"
+            - ":irc.42tokyo.jp 331 user #channel :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #channel :@user user2"
+            - ":irc.42tokyo.jp 366 user #channel :End of /NAMES list."
+
+- name: "JOIN invalid channel name"
+  steps:
+    - client: user1
+      actions:
+        - send: "PASS password"
+        - send: "NICK user"
+        - send: "USER user 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+        - send: "JOIN #\0"
+          receive: ":irc.42tokyo.jp 476 user not_a_channel :Bad Channel Mask"
+
+- name: "JOIN 0 to leave all channels"
+  steps:
+    - client: user1
+      actions:
+        - send: "PASS password"
+        - send: "NICK user"
+        - send: "USER user 0 * :Real Name"
+          receive: ":irc.42tokyo.jp 001 user :Welcome to the Internet Relay Network user!user@127.0.0.1"
+        - send: "JOIN #chan1,#chan2"
+          receive:
+            - ":user!user@127.0.0.1 JOIN #chan1"
+            - ":irc.42tokyo.jp 331 user #chan1 :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #chan1 :@user"
+            - ":irc.42tokyo.jp 366 user #chan1 :End of /NAMES list."
+            - ":user!user@127.0.0.1 JOIN #chan2"
+            - ":irc.42tokyo.jp 331 user #chan2 :No topic is set"
+            - ":irc.42tokyo.jp 353 user = #chan2 :@user"
+            - ":irc.42tokyo.jp 366 user #chan2 :End of /NAMES list."
+        - send: "JOIN 0"
+          receive:
+            - ":user!user@127.0.0.1 PART #chan1"
+            - ":user!user@127.0.0.1 PART #chan2"
