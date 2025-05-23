@@ -144,9 +144,6 @@ void Parser::setArguments(std::string message, commandS& result) {
     result.args.push_back(token);
     token.clear();
   }
-  if (result.args.size() == 0) {
-    result.args.push_back("");
-  }
 }
 
 /*
