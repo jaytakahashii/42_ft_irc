@@ -92,7 +92,6 @@ void Server::_addCommandHandlers() {
   _commandHandlers["OPER"] = new OperCommand();
   _commandHandlers["SQUIT"] = new SquitCommand();
   _commandHandlers["INVITE"] = new InviteCommand();
-  // TODO : 他のコマンドもここに追加
 }
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html

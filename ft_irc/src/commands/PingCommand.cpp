@@ -16,15 +16,16 @@ void PingCommand::execute(const commandS& cmd, Client& client, Server& server) {
   }
 
   if (cmd.args.size() < 1) {
-    // server が unused なのでとりあえず表示 TODO
-    std::string password = server.getServerPassword();
-	std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(
-		client.getNickname(), cmd.name);
-	client.sendMessage(msg);
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
     return;
   }
 
   std::string target = cmd.args[0];
   std::string msg = ":" + client.getNickname() + " PONG " + target + "\r\n";
   send(client.getFd(), msg.c_str(), msg.size(), 0);
+
+  std::string serverName = server.getServerName();
+  (void)serverName;
 }

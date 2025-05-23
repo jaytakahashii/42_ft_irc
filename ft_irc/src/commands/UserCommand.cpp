@@ -62,8 +62,4 @@ void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
   std::string msg = irc::numericReplies::RPL_WELCOME(
       client.getNickname(), client.getUsername(), client.getHostname());
   client.sendMessage(msg);
-
-  // TODO unused args
-  std::string serverName = server.getServerName();
-  (void)serverName;
 }
