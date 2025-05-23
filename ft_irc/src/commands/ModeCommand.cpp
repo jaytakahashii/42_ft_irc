@@ -12,19 +12,6 @@
 #include "numericsReplies/400-499.hpp"
 #include "numericsReplies/500-599.hpp"
 
-void userMode(const commandS& cmd, Client& client, Server& server) {
-  // TODO
-  std::string mode = cmd.args[1];
-  (void)mode;
-
-  // TODO unused
-  std::string pass = server.getServerPassword();
-  (void)pass;
-
-  std::string clientName = client.getNickname();
-  (void)clientName;
-}
-
 bool isValidSign(char sign) {
   return sign == '+' || sign == '-';
 }
@@ -375,10 +362,8 @@ void ModeCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
     channelMode(cmd, *channel, client, server);
   } else {  // ユーザーモード
-    userMode(cmd, client, server);
+    std::string msg =
+        irc::numericReplies::ERR_NOCHANMODES(client.getNickname(), cmd.args[0]);
+    client.sendMessage(msg);
   }
-
-  // TODO unused
-  std::string pass = server.getServerPassword();
-  (void)pass;
 }

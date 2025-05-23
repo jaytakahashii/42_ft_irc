@@ -88,7 +88,6 @@ void Server::_addCommandHandlers() {
   _commandHandlers["TOPIC"] = new TopicCommand();
   _commandHandlers["MODE"] = new ModeCommand();
   _commandHandlers["INVITE"] = new InviteCommand();
-  // TODO : 他のコマンドもここに追加
 }
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html

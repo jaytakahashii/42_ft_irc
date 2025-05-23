@@ -63,7 +63,6 @@ void UserCommand::execute(const commandS& cmd, Client& client, Server& server) {
       client.getNickname(), client.getUsername(), client.getHostname());
   client.sendMessage(msg);
 
-  // TODO unused args
   std::string serverName = server.getServerName();
   (void)serverName;
 }
