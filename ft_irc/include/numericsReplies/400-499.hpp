@@ -56,6 +56,11 @@ inline std::string ERR_NORECIPIENT(const std::string& nick,
          " :No recipient given\r\n";
 }
 
+// 412
+inline std::string ERR_NOTEXTTOSEND(const std::string& nick) {
+  return ":irc.42tokyo.jp 412 " + nick + " :No text to send\r\n";
+}
+
 // 421
 inline std::string ERR_UNKNOWNCOMMAND(const std::string& nick,
                                       const std::string& command) {
