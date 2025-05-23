@@ -5,9 +5,6 @@
 #include "numericsReplies/300-399.hpp"
 #include "numericsReplies/400-499.hpp"
 
-// 一人が参加できるチャンネルの最大数
-#define MAX_CHANNELS_PER_USER 10
-
 // チャンネルに入れるメンバーの初期最大数
 #define MAX_CHANNEL_MEMBERS 50
 
@@ -52,15 +49,6 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
     }
   }
 
-  // デバッグ情報を出力
-  //   if (!duplicateChannels.empty()) {
-  //     std::cout << "Duplicate channels detected: ";
-  //     for (size_t i = 0; i < duplicateChannels.size(); ++i) {
-  //       std::cout << duplicateChannels[i] << " ";
-  //     }
-  //     std::cout << std::endl;
-  //   }
-
   // キーをパース
   if (!keys.empty()) {
     pos = 0;
@@ -85,14 +73,6 @@ static const std::map<std::string, std::string> parsers(const commandS cmd) {
 
     ret[channelName] = keyValue;
   }
-
-  // デバッグ出力: チャンネルとキーのマッピング
-  //   std::cout << "Channel-Key mapping:" << std::endl;
-  //   for (std::map<std::string, std::string>::iterator it = ret.begin(); it !=
-  //   ret.end(); ++it) {
-  //     std::cout << "  " << it->first << " -> '" << it->second << "'" <<
-  //     std::endl;
-  //   }
 
   return ret;
 }
@@ -129,22 +109,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
-
-  // JOINしているチャンネルの数をカウント上限を超えている場合は405
-  int currentChannelCount = 0;
-  for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
-       it != server.channels.end(); ++it) {
-    if (it->second->hasClient(&client)) {
-      currentChannelCount++;
-    }
-  }
-
-  if (currentChannelCount >= MAX_CHANNELS_PER_USER) {
-    std::string msg = irc::numericReplies::ERR_TOOMANYCHANNELS(
-        client.getNickname(), channels.begin()->first);
-    client.sendMessage(msg);
-    return;
-  }
 
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
@@ -259,13 +223,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
         if (chanIt->second->hasClient(&client)) {
           currentJoinedChannels++;
         }
-      }
-
-      if (currentJoinedChannels >= MAX_CHANNELS_PER_USER) {
-        std::string msg = irc::numericReplies::ERR_TOOMANYCHANNELS(
-            client.getNickname(), it->first);
-        client.sendMessage(msg);
-        continue;
       }
 
       channel->addClient(&client);
