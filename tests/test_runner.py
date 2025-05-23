@@ -91,37 +91,58 @@ def test_case(case):
     steps = case.get("steps", [])
 
     try:
-        all_client_names = {s.get("client", "client1") for s in steps}
+        # クライアント初期化
+        all_client_names = {
+            s["client"] for s in steps if isinstance(s, dict) and "client" in s
+        }
         for name in all_client_names:
             clients[name] = IRCClient(name)
 
+        # 各ステップ処理
         for step in steps:
-            client_name = step.get("client", "client1")
-            if "send" in step:
-                clients[client_name].send(step["send"])
-                time.sleep(0.05)
+            if "client" in step and "actions" in step:
+                client_name = step["client"]
+                for action in step["actions"]:
+                    if "send" in action:
+                        clients[client_name].send(action["send"])
+                        time.sleep(0.05)
 
-            if "receive" in step:
-                expected_lines = step["receive"]
-                if isinstance(expected_lines, str):
-                    expected_lines = [expected_lines]
+                    if "receive" in action:
+                        expected_lines = action["receive"]
+                        if isinstance(expected_lines, str):
+                            expected_lines = [expected_lines]
 
-                # まとめてレスポンスを取得
-                received_text = clients[client_name].receive()
-                received_lines = received_text.splitlines()
+                        response = clients[client_name].receive()
+                        received_lines = response.splitlines()
 
-                for received in received_lines:
-                    print(f"{CYAN}Received from {client_name}:{RESET} {received}")
-
-                for expected in expected_lines:
-                    assert any(expected == line for line in received_lines), (
-                        f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
-                        f"{CYAN}Source{RESET}:    {case.get('_source_file', '')}\n"
-                        f"{CYAN}Client{RESET}:    {client_name}\n"
-                        f"{CYAN}Command{RESET}:   '{step.get('send', '')}'\n"
-                        f"{GREEN}Expected:  {BOLDWHITE}{expected}{RESET}\n"
-                        f"{RED}Received:  {BOLDWHITE}" + "\n".join(received_lines) + f"{RESET}\n"
-                    )
+                        for expected in expected_lines:
+                            assert any(expected == line for line in received_lines), (
+                                f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
+                                f"{CYAN}Client{RESET}:    {client_name}\n"
+                                f"{CYAN}Command{RESET}:   '{action.get('send', '')}'\n"
+                                f"{GREEN}Expected:  {BOLDWHITE}{expected}{RESET}\n"
+                                f"{RED}Received:  {BOLDWHITE}" + "\n".join(received_lines) + f"{RESET}\n"
+                            )
+            else:
+                # fallback: legacy format
+                client_name = step.get("client", "client1")
+                if "send" in step:
+                    clients[client_name].send(step["send"])
+                    time.sleep(0.05)
+                if "receive" in step:
+                    expected_lines = step["receive"]
+                    if isinstance(expected_lines, str):
+                        expected_lines = [expected_lines]
+                    response = clients[client_name].receive()
+                    received_lines = response.splitlines()
+                    for expected in expected_lines:
+                        assert any(expected == line for line in received_lines), (
+                            f"\n{CYAN}Test Name:{RESET} {case.get('name', 'Unnamed')}\n"
+                            f"{CYAN}Client{RESET}:    {client_name}\n"
+                            f"{CYAN}Command{RESET}:   '{step.get('send', '')}'\n"
+                            f"{GREEN}Expected:  {BOLDWHITE}{expected}{RESET}\n"
+                            f"{RED}Received:  {BOLDWHITE}" + "\n".join(received_lines) + f"{RESET}\n"
+                        )
 
     finally:
         for client in clients.values():

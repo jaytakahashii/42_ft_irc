@@ -98,18 +98,18 @@
 - name: "NICK: already in use (other client)"
   steps:
     - client: user1
-      send: "PASS password"
-    - client: user1
-      send: "NICK user1"
-    - client: user1
-      send: "USER user1 0 * :Real Name"
-      receive: ":irc.42tokyo.jp 001 user1 :Welcome to the Internet Relay Network user1!user1@127.0.0.1"
-
+      actions:
+        - send: "PASS password"
+        - send: "NICK user1"
+        - send: "USER user1 0 * :Real Name"
+          receive:
+            - ":irc.42tokyo.jp 001 user1 :Welcome to the Internet Relay Network user1!user1@127.0.0.1"
     - client: user2
-      send: "PASS password"
-    - client: user2
-      send: "NICK user1"
-      receive: ":irc.42tokyo.jp 433 * user1 :Nickname is already in use"
+      actions:
+        - send: "PASS password"
+        - send: "NICK user1"
+          receive:
+            - ":irc.42tokyo.jp 433 * user1 :Nickname is already in use"
 
 - name: "NICK: invalid character"
   steps:
