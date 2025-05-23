@@ -100,7 +100,7 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
     return;
   }
 
-  if (cmd.args.size() < 1) {
+  if (cmd.args.empty()) {
     std::string msg =
         irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
     client.sendMessage(msg);
@@ -109,6 +109,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
 
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
+
+  if (channels.empty()) {
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
+    return;
+  }
 
   for (std::map<std::string, std::string>::iterator it = channels.begin();
        it != channels.end(); ++it) {
