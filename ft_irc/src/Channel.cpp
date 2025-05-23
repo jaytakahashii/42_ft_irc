@@ -46,8 +46,7 @@ bool Channel::hasKey() const {
 }
 
 const std::string& Channel::getNameList() const {
-  static std::string ret;
-  ret.clear();  // 前回の内容をクリア
+  std::string ret;
 
   std::map<std::string, Client*>::const_reverse_iterator it =
       _clientsByNick.rbegin();
