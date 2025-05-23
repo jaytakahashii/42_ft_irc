@@ -1,7 +1,7 @@
-import pytest
+import pytest # type: ignore
 import socket
 import time
-import yaml
+import yaml # type: ignore
 import os
 import glob
 
