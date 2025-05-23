@@ -1,15 +1,12 @@
 #include "commands/PrivmsgCommand.hpp"
 
-#include <vector>
 #include <sstream>
+#include <vector>
 
 #include "Channel.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
 #include "numericsReplies/400-499.hpp"
-
-// 一度に送信できるターゲット（ユーザー、チャンネル）の最大数
-#define MAX_PRIVMSG_TARGETS 5
 
 /**
  * @brief カンマで区切られた文字列を分割するヘルパー関数
@@ -23,19 +20,19 @@ std::vector<std::string> splitByComma(const std::string& str) {
   std::vector<std::string> result;
   std::string token;
   std::istringstream tokenStream(str);
-  
+
   while (std::getline(tokenStream, token, ',')) {
     if (!token.empty()) {
       result.push_back(token);
     }
   }
-  
+
   return result;
 }
 
 /**
  * @brief PRIVMSGコマンドの実行
- * 
+ *
  * RFC2812に準拠したPRIVMSGコマンドを実装。
  * 以下の機能を持つ：
  * - 複数のターゲット（カンマ区切り）へのメッセージ送信
@@ -72,18 +69,10 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
 
   // カンマで区切られたターゲットリストを処理
   std::vector<std::string> targetList = splitByComma(targets);
-  
+
   if (targetList.empty()) {
-    std::string msg = 
+    std::string msg =
         irc::numericReplies::ERR_NORECIPIENT(client.getNickname(), cmd.name);
-    client.sendMessage(msg);
-    return;
-  }
-  
-  // ターゲット数が制限を超えている場合はエラー
-  if (targetList.size() > MAX_PRIVMSG_TARGETS) {
-    std::string msg = irc::numericReplies::ERR_TOOMANYTARGETS(
-        client.getNickname(), targets, "407", "Too many targets specified");
     client.sendMessage(msg);
     return;
   }
@@ -91,12 +80,12 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
   // 各ターゲットに対してメッセージを送信
   for (size_t i = 0; i < targetList.size(); ++i) {
     const std::string& target = targetList[i];
-    
+
     // ターゲットが空の場合はスキップ
     if (target.empty()) {
       continue;
     }
-    
+
     // チャンネルにメッセージを送信
     if (target[0] == '#') {
       Channel* channel = server.channels[target];
@@ -106,16 +95,16 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
           std::string msg = irc::numericReplies::ERR_CANNOTSENDTOCHAN(
               client.getNickname(), target);
           client.sendMessage(msg);
-          continue; // 次のターゲットへ
+          continue;  // 次のターゲットへ
         }
-        
+
         // チャンネルの全員（送信者を除く）にメッセージを送信
-        std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
-                              " :" + message + "\r\n";
+        std::string privmsg = ":" + client.getNickname() + " PRIVMSG " +
+                              target + " :" + message + "\r\n";
         channel->sendToAllExcept(&client, privmsg);
       } else {
-        std::string msg =
-            irc::numericReplies::ERR_NOSUCHCHANNEL(client.getNickname(), target);
+        std::string msg = irc::numericReplies::ERR_NOSUCHCHANNEL(
+            client.getNickname(), target);
         client.sendMessage(msg);
       }
     }
@@ -130,8 +119,8 @@ void PrivmsgCommand::execute(const commandS& cmd, Client& client,
         if (recipient == &client) {
           continue;
         }
-        std::string privmsg = ":" + client.getNickname() + " PRIVMSG " + target +
-                              " :" + message + "\r\n";
+        std::string privmsg = ":" + client.getNickname() + " PRIVMSG " +
+                              target + " :" + message + "\r\n";
         recipient->sendMessage(privmsg);
       } else {  // 受信者が見つからない場合
         std::string msg =
