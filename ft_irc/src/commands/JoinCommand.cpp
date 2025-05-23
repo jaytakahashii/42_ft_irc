@@ -214,9 +214,13 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
                             client.getUsername() + "@" + client.getHostname() +
                             " JOIN " + it->first + "\r\n";
       channel->sendToAll(joinMsg);
+
       std::string topicMsg = irc::numericReplies::RPL_TOPIC(
           client.getNickname(), it->first, channel->getTopic());
       client.sendMessage(topicMsg);
+
+      std::string nameMsg = irc::numericReplies::RPL_NAMREPLY(
+          client.getNickname(), "=", channel->getName(), channel->)
     }
   }
 }

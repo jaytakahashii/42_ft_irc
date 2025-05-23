@@ -30,6 +30,15 @@ inline std::string RPL_INVITING(const std::string& nick,
          "\r\n";
 }
 
+// 353
+inline std::string RPL_NAMREPLY(const std::string& nick,
+                                const std::string& symbol,
+                                const std::string& channel,
+                                const std::string& names) {
+  return ":" + SERVER_NAME + " 353 " + nick + " " + symbol + " " + channel +
+         " :" + names + "\r\n";
+}
+
 // 367
 inline std::string RPL_BANLIST(const std::string& nick,
                                const std::string& channel,
