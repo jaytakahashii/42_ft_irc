@@ -97,7 +97,7 @@ void Server::_addCommandHandlers() {
 
 // 参考 : https://research.nii.ac.jp/~ichiro/syspro98/server.html
 void Server::_setupServerSocket() {
-  _serverSocket = socket(AF_INET, SOCK_STREAM, ENY_PROTOCOL);
+  _serverSocket = socket(AF_INET, SOCK_STREAM, ANY_PROTOCOL);
   if (_serverSocket == ERROR) {
     printError("socket() failed");
     exit(EXIT_FAILURE);

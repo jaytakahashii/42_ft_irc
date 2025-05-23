@@ -8,6 +8,9 @@
 
 #include "Parser.hpp"
 
+// Server name
+const static std::string SERVER_NAME = "irc.42tokyo.jp";
+
 // Forward declarations
 class Client;
 class Channel;
@@ -15,10 +18,9 @@ class ICommand;
 
 // Constants
 #define AUTHORIZED_HOSTS "127.0.0.1"
-#define SERVER_NAME "irc.42tokyo.jp"
 #define NO_LIMIT -1
 #define ERROR -1
-#define ENY_PROTOCOL 0
+#define ANY_PROTOCOL 0
 #define BUFFER_SIZE 512
 #define NON_OPTIONAL 0
 #define MAX_TRY 3
