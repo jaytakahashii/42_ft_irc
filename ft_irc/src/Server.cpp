@@ -173,17 +173,43 @@ void Server::_handleClientActivity(int clientFd) {
 
 void Server::_processClientBuffer(Client* client) {
   std::string& buf = client->getReadBuffer();
-  size_t pos;
+  int clientFd = client->getFd();
 
-  while ((pos = buf.find("\r\n")) != std::string::npos) {
+  while (true) {
+    size_t crlfPos = buf.find("\r\n");
+    size_t lfPos = buf.find("\n");
+    size_t pos;
+    size_t erasePos;
+
+    if (crlfPos != std::string::npos &&
+        (lfPos == std::string::npos || crlfPos < lfPos)) {
+      pos = crlfPos;
+      erasePos = pos + 2;
+    } else if (lfPos != std::string::npos) {
+      pos = lfPos;
+      erasePos = pos + 1;
+    } else {
+      if (!buf.empty()) {
+        commandS cmd = _parser.parseCommand(buf);
+        if (!cmd.name.empty()) {
+          _commandDispatch(cmd, *client);
+        }
+      }
+      buf.clear();  // Clear the buffer if no complete command is found
+      break;        // No more delimiters found
+    }
+
     std::string line = buf.substr(0, pos);
-    buf.erase(0, pos + 2);  // "\r\n"を削除
+    buf.erase(0, erasePos);
     if (line.empty())
       continue;
     commandS cmd = _parser.parseCommand(line);
     if (cmd.name.empty())
       continue;
     _commandDispatch(cmd, *client);
+    if (!isClient(clientFd)) {
+      return;
+    }
   }
 }
 
@@ -204,6 +230,10 @@ void Server::_commandDispatch(const commandS& cmd, Client& client) {
 // ------------------------------
 // Client Utilities / Channel Utilities
 // ------------------------------
+
+bool Server::isClient(int clientFd) const {
+  return clients.find(clientFd) != clients.end();
+}
 
 void Server::removeClient(int clientFd) {
   std::cout << GREEN "Client disconnected: " << clientFd << RESET << std::endl;
@@ -230,7 +260,7 @@ void Server::removeClientFromAllChannels(Client& client) {
         std::map<std::string, Channel*>::iterator tmp = it++;
         channels.erase(tmp);
         continue;
-      } 
+      }
     }
     it++;
   }

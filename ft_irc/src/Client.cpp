@@ -20,7 +20,11 @@ std::string Client::_getClientHostname() const {
 }
 
 Client::Client(int fd)
-    : _fd(fd), _authenticated(false), _registered(false), _isOperator(false) {
+    : _fd(fd),
+      _authenticated(false),
+      _registered(false),
+      _failPassCount(0),
+      _isOperator(false) {
   _hostname = _getClientHostname();
 }
 
@@ -126,6 +130,14 @@ const std::string& Client::getUsername() const {
 
 const std::string& Client::getRealname() const {
   return _realname;
+}
+
+const int& Client::getFailPassCount() const {
+  return _failPassCount;
+}
+
+void Client::incrementFailPassCount() {
+  _failPassCount++;
 }
 
 void Client::setNickname(const std::string& nickname) {

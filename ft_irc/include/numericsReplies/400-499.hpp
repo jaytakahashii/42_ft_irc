@@ -56,6 +56,11 @@ inline std::string ERR_NORECIPIENT(const std::string& nick,
          " :No recipient given\r\n";
 }
 
+// 412
+inline std::string ERR_NOTEXTTOSEND(const std::string& nick) {
+  return ":irc.42tokyo.jp 412 " + nick + " :No text to send\r\n";
+}
+
 // 421
 inline std::string ERR_UNKNOWNCOMMAND(const std::string& nick,
                                       const std::string& command) {
@@ -134,7 +139,7 @@ inline std::string ERR_ALREADYREGISTRED(const std::string& nick) {
 
 // 464
 inline std::string ERR_PASSWDMISMATCH(const std::string& nick) {
-  return ":server 464 " + nick + " :Password incorrect\r\n";
+  return ":irc.42tokyo.jp 464 " + nick + " :Password incorrect\r\n";
 }
 
 // 467
