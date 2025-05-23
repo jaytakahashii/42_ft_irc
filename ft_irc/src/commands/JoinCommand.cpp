@@ -8,9 +8,6 @@
 // 一人が参加できるチャンネルの最大数
 #define MAX_CHANNELS_PER_USER 10
 
-// 一度に参加できるチャンネルの最大数
-#define MAX_JOIN_TARGETS 5
-
 // チャンネルに入れるメンバーの初期最大数
 #define MAX_CHANNEL_MEMBERS 50
 
@@ -133,15 +130,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
   // チャンネル名のバリデーション
   std::map<std::string, std::string> channels = parsers(cmd);
 
-  if (channels.size() > MAX_JOIN_TARGETS) {
-    // std::cout << "JOIN: Too many target channels specified" << std::endl;
-    std::string msg = irc::numericReplies::ERR_TOOMANYTARGETS(
-        client.getNickname(), "JOIN", "407",
-        "Too many target channels specified");
-    client.sendMessage(msg);
-    return;
-  }
-
   // JOINしているチャンネルの数をカウント上限を超えている場合は405
   int currentChannelCount = 0;
   for (std::map<std::string, Channel*>::iterator it = server.channels.begin();
@@ -175,7 +163,6 @@ void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
       client.sendMessage(msg);
       continue;
     }
-
 
     // 使えないチャンネル名について。todo
     if (it->first == "reserved" || it->first == "system" ||
