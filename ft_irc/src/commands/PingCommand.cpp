@@ -1,0 +1,31 @@
+#include "commands/PingCommand.hpp"
+
+#include <sys/socket.h>
+
+#include "Client.hpp"
+#include "Server.hpp"
+#include "numericsReplies/400-499.hpp"
+
+void PingCommand::execute(const commandS& cmd, Client& client, Server& server) {
+  const std::string& nick =
+      client.getNickname().empty() ? "*" : client.getNickname();
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
+    client.sendMessage(msg);
+    return;
+  }
+
+  if (cmd.args.size() < 1) {
+    std::string msg =
+        irc::numericReplies::ERR_NEEDMOREPARAMS(client.getNickname(), cmd.name);
+    client.sendMessage(msg);
+    return;
+  }
+
+  std::string target = cmd.args[0];
+  std::string msg = ":" + client.getNickname() + " PONG " + target + "\r\n";
+  send(client.getFd(), msg.c_str(), msg.size(), 0);
+
+  std::string serverName = server.getServerName();
+  (void)serverName;
+}

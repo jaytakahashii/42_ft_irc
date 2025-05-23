@@ -27,17 +27,17 @@ jobs:
 
       - name: 🚀 Run executable to check behavior
         run: |
-          chmod +x ./ft_irc
-          ./ft_irc &
+          chmod +x ./ircserv
+          ./ircserv 4242 password &
           sleep 1
-          pkill ft_irc || true
+          pkill ircserv || true
 
       - name: 🧠 Run Valgrind Memory Leak Check
         run: |
-          chmod +x ./ft_irc
-          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./ft_irc </dev/null &
+          chmod +x ./ircserv
+          valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 ./ircserv 4242 password </dev/null &
           sleep 2
-          pkill ft_irc || true
+          pkill ircserv || true
 
       - name: ✅ Done
         run: echo "Build and valgrind checks completed successfully."

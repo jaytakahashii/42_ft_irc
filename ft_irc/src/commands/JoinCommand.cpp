@@ -1,0 +1,245 @@
+#include "commands/JoinCommand.hpp"
+
+#include "Channel.hpp"
+#include "Server.hpp"
+#include "numericsReplies/300-399.hpp"
+#include "numericsReplies/400-499.hpp"
+
+// チャンネルに入れるメンバーの初期最大数
+#define MAX_CHANNEL_MEMBERS 50
+
+static const std::map<std::string, std::string> parsers(const commandS cmd) {
+  // ','で分割
+  std::map<std::string, std::string> ret;
+  std::string channels = cmd.args[0];
+  std::string keys = cmd.args.size() == 2 ? cmd.args[1] : "";
+
+  // チャンネルリストとキーリストを作成
+  std::vector<std::string> channelsList;
+  std::vector<std::string> keysList;
+
+  // 重複チャンネル検出用の一時的なセット
+  std::set<std::string> uniqueChannels;
+  std::vector<std::string> duplicateChannels;
+
+  // チャンネルをパース
+  size_t pos = 0;
+  std::string token;
+  while ((pos = channels.find(',')) != std::string::npos) {
+    token = channels.substr(0, pos);
+
+    // 重複チェック
+    if (!token.empty() && uniqueChannels.find(token) == uniqueChannels.end()) {
+      uniqueChannels.insert(token);
+      channelsList.push_back(token);
+    } else if (!token.empty()) {
+      duplicateChannels.push_back(token);
+    }
+
+    channels.erase(0, pos + 1);
+  }
+
+  // 最後のチャンネルも同様に重複チェック
+  if (!channels.empty()) {
+    if (uniqueChannels.find(channels) == uniqueChannels.end()) {
+      uniqueChannels.insert(channels);
+      channelsList.push_back(channels);
+    } else {
+      duplicateChannels.push_back(channels);
+    }
+  }
+
+  // キーをパース
+  if (!keys.empty()) {
+    pos = 0;
+    while ((pos = keys.find(',')) != std::string::npos) {
+      token = keys.substr(0, pos);
+      keysList.push_back(token);  // 空のキーも保持する
+      keys.erase(0, pos + 1);
+    }
+    // 最後のキー
+    keysList.push_back(keys);
+  }
+
+  // チャンネルとキーをマッピング
+  for (size_t i = 0; i < channelsList.size(); ++i) {
+    std::string channelName = channelsList[i];
+    std::string keyValue = "";
+
+    // キーがある場合は対応するキーを取得
+    if (i < keysList.size()) {
+      keyValue = keysList[i];
+    }
+
+    ret[channelName] = keyValue;
+  }
+
+  return ret;
+}
+
+/**
+ * * @brief JoinCommandクラスの実装
+ * * @numericsReplies
+ * * * ERR_NEEDMOREPARAMS
+ * * * ERR_BANNEDFROMCHAN
+ * * * ERR_INVITEONLYCHAN
+ * * * ERR_BADCHANNELKEY
+ * * * ERR_CHANNELISFULL
+ * * * ERR_BADCHANMASK
+ * * * ERR_NOSUCHCHANNEL
+ * * * ERR_TOOMANYCHANNELS
+ * * * ERR_TOOMANYTARGETS
+ * * * ERR_UNAVAILRESOURCE
+ * * * RPL_TOPIC
+ */
+void JoinCommand::execute(const commandS& cmd, Client& client, Server& server) {
+  const std::string& nick =
+      client.getNickname().empty() ? "*" : client.getNickname();
+  if (!client.isRegistered()) {
+    std::string msg = irc::numericReplies::ERR_NOTREGISTERED(nick);
+    client.sendMessage(msg);
+    return;
+  }
+
+  if (cmd.args.empty()) {
+    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(nick, cmd.name);
+    client.sendMessage(msg);
+    return;
+  }
+
+  // チャンネル名のバリデーション
+  std::map<std::string, std::string> channels = parsers(cmd);
+
+  if (channels.empty()) {
+    std::string msg = irc::numericReplies::ERR_NEEDMOREPARAMS(nick, cmd.name);
+    client.sendMessage(msg);
+    return;
+  }
+
+  for (std::map<std::string, std::string>::iterator it = channels.begin();
+       it != channels.end(); ++it) {
+    // Validate channel name
+    if (!server.isValidChannelName(it->first)) {
+      std::string msg = irc::numericReplies::ERR_BADCHANMASK(nick, it->first);
+      client.sendMessage(msg);
+      continue;
+    }
+
+    // Key validation
+    if (!it->second.empty() && !server.isValidChannelKey(it->second)) {
+      std::string msg = irc::numericReplies::ERR_BADCHANNELKEY(nick, it->first);
+      client.sendMessage(msg);
+      continue;
+    }
+
+    // チャンネルが存在しない場合は新規作成
+    // map::operatorを使うとキーが存在しない場合は新しい要素が作成されるため、hasChannel関数で確認
+    if (!server.hasChannel(it->first)) {
+      server.channels[it->first] = new Channel(it->first);
+      Channel* channel = server.channels[it->first];
+      std::string joinMsg = ":" + nick + "!" + client.getUsername() + "@" +
+                            client.getHostname() + " JOIN " + it->first +
+                            "\r\n";
+      channel->addClient(&client);
+      channel->addOperator(nick);
+      client.sendMessage(joinMsg);
+
+      std::string topicMsg =
+          irc::numericReplies::RPL_NOTOPIC(nick, channel->getName());
+      client.sendMessage(topicMsg);
+
+      std::string nameMsg = irc::numericReplies::RPL_NAMREPLY(
+          nick, "=", channel->getName(), channel->getNameList());
+      client.sendMessage(nameMsg);
+
+      std::string nameLastMsg =
+          irc::numericReplies::RPL_ENDOFNAMES(nick, channel->getName());
+      client.sendMessage(nameLastMsg);
+    } else {
+      // チャンネルに参加する
+      Channel* channel = server.channels[it->first];  // チャンネルを取得
+      if (channel->getClientCount() >=
+          MAX_CHANNEL_MEMBERS) {  // Maximum channel capacity check
+        std::string msg =
+            irc::numericReplies::ERR_CHANNELISFULL(nick, it->first);
+        client.sendMessage(msg);
+        continue;
+      }
+      // invite-onlyモードが有効な場合、チェック
+      if (channel->isInviteOnly()) {
+        // オペレータか招待されたユーザーのみ参加可能
+        if (!channel->isOperator(nick) && !channel->isInvited(nick)) {
+          std::string msg =
+              irc::numericReplies::ERR_INVITEONLYCHAN(nick, it->first);
+          client.sendMessage(msg);
+          continue;
+        }
+      }
+
+      // 招待リストから削除（招待によるJOINの場合）
+      if (channel->isInvited(nick)) {
+        channel->removeInvite(nick);
+      }
+      // Check if the user is already in the channel
+      if (channel->hasClient(&client)) {
+        continue;  // User is already in the channel, skip
+      }
+
+      // Check if the user is banned
+      std::string userMask =
+          nick + "!" + client.getUsername() + "@" + client.getHostname();
+      if (channel->getIsUserLimit() &&
+          channel->getClientCount() >= channel->getUserLimit()) {
+        std::string msg =
+            irc::numericReplies::ERR_CHANNELISFULL(nick, it->first);
+        client.sendMessage(msg);
+        continue;
+      }
+      // MODEコマンドで設定されたキーの確認
+      if (channel->hasKey()) {
+        // クライアントがキーを提供しているか確認、提供されたキーが正しいか確認
+        if (it->second.empty() || it->second != channel->getKey()) {
+          // キーが要求されるが提供されていない
+          std::string msg =
+              irc::numericReplies::ERR_BADCHANNELKEY(nick, it->first);
+          client.sendMessage(msg);
+          continue;
+        }
+      }
+
+      // チャンネルの上限を超えている場合は405
+      // クライアントを追加する前にもう一回確認
+      int currentJoinedChannels = 0;
+      for (std::map<std::string, Channel*>::iterator chanIt =
+               server.channels.begin();
+           chanIt != server.channels.end(); ++chanIt) {
+        if (chanIt->second->hasClient(&client)) {
+          currentJoinedChannels++;
+        }
+      }
+
+      channel->addClient(&client);
+      std::string joinMsg = ":" + nick + "!" + client.getUsername() + "@" +
+                            client.getHostname() + " JOIN " + it->first +
+                            "\r\n";
+      channel->sendToAll(joinMsg);
+
+      std::string topicMsg;
+      if (channel->getTopic().empty()) {
+        topicMsg = irc::numericReplies::RPL_NOTOPIC(nick, channel->getName());
+      } else {
+        topicMsg = irc::numericReplies::RPL_TOPIC(nick, it->first,
+                                                  channel->getTopic());
+      }
+      client.sendMessage(topicMsg);
+
+      std::string nameMsg = irc::numericReplies::RPL_NAMREPLY(
+          nick, "=", channel->getName(), channel->getNameList());
+      client.sendMessage(nameMsg);
+
+      std::string nameLastMsg =
+          irc::numericReplies::RPL_ENDOFNAMES(nick, channel->getName());
+      client.sendMessage(nameLastMsg);
+    }
+  }
+}
