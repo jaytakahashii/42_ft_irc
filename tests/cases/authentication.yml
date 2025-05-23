@@ -13,7 +13,9 @@
     - send: "PASS wrong_password"
       receive: ":irc.42tokyo.jp 464 * :Password incorrect"
     - send: "PASS wrong_password"
-      receive: ":irc.42tokyo.jp 484 * :Your connection is restricted!"
+      receive:
+        - ":irc.42tokyo.jp 464 * :Password incorrect"
+        - ":irc.42tokyo.jp 484 * :Your connection is restricted!"
 
 - name: "PASS: no param"
   steps:
